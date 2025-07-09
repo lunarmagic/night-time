@@ -16,6 +16,9 @@
     <Filter Include="color">
       <UniqueIdentifier>{44323D0F-B046-65C0-79C8-0820E59B61F1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="curve">
+      <UniqueIdentifier>{EA96400F-56AB-68C0-1F2D-0C208B0065F1}</UniqueIdentifier>
+    </Filter>
     <Filter Include="debug_renderer">
       <UniqueIdentifier>{A246DFA8-8E14-D3AE-77A8-43D56315AF13}</UniqueIdentifier>
     </Filter>
@@ -51,6 +54,12 @@
     </Filter>
     <Filter Include="node">
       <UniqueIdentifier>{AB469B7C-977D-9C0D-406A-82102C80180F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="node\utility_nodes">
+      <UniqueIdentifier>{A69A5462-927E-15B8-FBDE-0F0BE7E1FF39}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="node\utility_nodes\node_distance_field">
+      <UniqueIdentifier>{48B9C2C0-340B-9AB0-1D2A-D7C0091BB399}</UniqueIdentifier>
     </Filter>
     <Filter Include="overlap">
       <UniqueIdentifier>{BEB5E47E-2A95-631A-33AD-EEF09F0BCA7B}</UniqueIdentifier>
@@ -128,6 +137,12 @@
     </ClInclude>
     <ClInclude Include="src\common.h" />
     <ClInclude Include="src\core.h" />
+    <ClInclude Include="src\curve\Curve.h">
+      <Filter>curve</Filter>
+    </ClInclude>
+    <ClInclude Include="src\curve\Curve2D.h">
+      <Filter>curve</Filter>
+    </ClInclude>
     <ClInclude Include="src\debug_renderer\DebugRenderer.h">
       <Filter>debug_renderer</Filter>
     </ClInclude>
@@ -216,6 +231,15 @@
     </ClInclude>
     <ClInclude Include="src\node\NodeWindow.h">
       <Filter>node</Filter>
+    </ClInclude>
+    <ClInclude Include="src\node\utility_nodes\NodeText.h">
+      <Filter>node\utility_nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="src\node\utility_nodes\node_distance_field\NodeDistanceFields2D.h">
+      <Filter>node\utility_nodes\node_distance_field</Filter>
+    </ClInclude>
+    <ClInclude Include="src\node\utility_nodes\node_distance_field\WorldSpaceRasterizer2D.h">
+      <Filter>node\utility_nodes\node_distance_field</Filter>
     </ClInclude>
     <ClInclude Include="src\overlap\overlap.h">
       <Filter>overlap</Filter>
@@ -328,6 +352,12 @@
     <ClCompile Include="src\color\Color.cpp">
       <Filter>color</Filter>
     </ClCompile>
+    <ClCompile Include="src\curve\Curve.cpp">
+      <Filter>curve</Filter>
+    </ClCompile>
+    <ClCompile Include="src\curve\Curve2D.cpp">
+      <Filter>curve</Filter>
+    </ClCompile>
     <ClCompile Include="src\debug_renderer\DebugRenderer.cpp">
       <Filter>debug_renderer</Filter>
     </ClCompile>
@@ -385,6 +415,15 @@
     </ClCompile>
     <ClCompile Include="src\node\NodeWindow.cpp">
       <Filter>node</Filter>
+    </ClCompile>
+    <ClCompile Include="src\node\utility_nodes\NodeText.cpp">
+      <Filter>node\utility_nodes</Filter>
+    </ClCompile>
+    <ClCompile Include="src\node\utility_nodes\node_distance_field\NodeDistanceFields2D.cpp">
+      <Filter>node\utility_nodes\node_distance_field</Filter>
+    </ClCompile>
+    <ClCompile Include="src\node\utility_nodes\node_distance_field\WorldSpaceRasterizer2D.cpp">
+      <Filter>node\utility_nodes\node_distance_field</Filter>
     </ClCompile>
     <ClCompile Include="src\overlap\overlap.cpp">
       <Filter>overlap</Filter>

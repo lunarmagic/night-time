@@ -13,7 +13,6 @@ namespace night
 		Expanded,
 		Minimized,
 		Fullscreen,
-		//Docked,
 		OutsideMainWindow
 	};
 
@@ -30,7 +29,6 @@ namespace night
 
 	struct NodeWindowParams
 	{
-		//AABB area{ .left = INFINITY, .right = -INFINITY, .top = -INFINITY, .bottom = INFINITY };
 		vec2 position{vec2(-1.0f, 1.0f)}; // top left of window
 		vec2 size{ vec2(2.0f) };
 		u8 borderless = false;
@@ -38,7 +36,12 @@ namespace night
 		ENodeWindowDockWhere dock_where{ ENodeWindowDockWhere::None };
 		AABB dock_space{ AABB{ 0, 0, 0, 0 } };
 
-		//Color clear_color{ LIGHT };
+		/*
+		* NodeWindowParams::down_scale
+		* divides resolution from find_internal_resolution by value on init, and resize
+		*/
+		real internal_resolution_scale{ 1 };
+
 		NodeRenderTargetParams nrt_params;
 	};
 
@@ -59,9 +62,10 @@ namespace night
 		void dock_space(AABB space);
 		AABB const& dock_space() const { return _dockSpace; }
 
-		//ivec2 dock_space_resolution(ENodeWindowDockWhere where);
-
 		ivec2 find_internal_resolution() const;
+
+		void internal_resolution_scale(real scale);
+		real const& internal_resolution_scale() const { return _internalResolutionScale; }
 
 	protected:
 
@@ -82,18 +86,17 @@ namespace night
 		AABB _dockSpace{ AABB{ 0, 0, 0, 0 } };
 		ENodeWindowDockWhere _dockWhere{ ENodeWindowDockWhere::None };
 
+		/*
+		* NodeWindow::_downScale
+		* scales resolution from find_internal_resolution by value on init, and resize
+		*/
+		real _internalResolutionScale{ 1 };
+
 		ivec4 area_internal() const;
 		AABB area_clamped_to_pixel_grid() const;
-		//AABB clamp_area_to_pixel_grid(AABB const& area) const;
 		AABB docking_area(ENodeWindowDockWhere where) const;
-		//Quad _area;
 
 		Quad global_area_rec(AABB area);
-
-#ifdef NIGHT_ENABLE_DEBUG_RENDERER
-		friend struct DebugRenderer;
-#endif
 	};
-
 
 }

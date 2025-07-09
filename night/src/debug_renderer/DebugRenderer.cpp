@@ -350,7 +350,7 @@ namespace night
 
                         _renderGraph.current_buffer(_renderTarget, nullptr, nullptr); // TODO: may remove
 
-                        _renderTarget->resize(nw->size());
+                        _renderTarget->resize(ivec2(nw->width(), nw->height()));
                         _renderTarget->clear(COLOR_ZERO);
                         utility::renderer().update_resources();
 

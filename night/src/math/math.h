@@ -209,4 +209,6 @@ namespace night
 	};
 
 	DecomposedTransform NIGHT_API decompose(mat4 const& x);
+
+	mat4 compose(DecomposedTransform const& decomp);
 }

@@ -202,6 +202,8 @@
     <ClInclude Include="src\color\Color.h" />
     <ClInclude Include="src\common.h" />
     <ClInclude Include="src\core.h" />
+    <ClInclude Include="src\curve\Curve.h" />
+    <ClInclude Include="src\curve\Curve2D.h" />
     <ClInclude Include="src\debug_renderer\DebugRenderer.h" />
     <ClInclude Include="src\entry.h" />
     <ClInclude Include="src\event\ApplicationEvent.h" />
@@ -233,6 +235,9 @@
     <ClInclude Include="src\node\NodeRenderable.h" />
     <ClInclude Include="src\node\NodeSpatial.h" />
     <ClInclude Include="src\node\NodeWindow.h" />
+    <ClInclude Include="src\node\utility_nodes\NodeText.h" />
+    <ClInclude Include="src\node\utility_nodes\node_distance_field\NodeDistanceFields2D.h" />
+    <ClInclude Include="src\node\utility_nodes\node_distance_field\WorldSpaceRasterizer2D.h" />
     <ClInclude Include="src\overlap\overlap.h" />
     <ClInclude Include="src\profiler\Profiler.h" />
     <ClInclude Include="src\random\random.h" />
@@ -272,6 +277,8 @@
     <ClCompile Include="src\application\Application.cpp" />
     <ClCompile Include="src\camera\Camera.cpp" />
     <ClCompile Include="src\color\Color.cpp" />
+    <ClCompile Include="src\curve\Curve.cpp" />
+    <ClCompile Include="src\curve\Curve2D.cpp" />
     <ClCompile Include="src\debug_renderer\DebugRenderer.cpp" />
     <ClCompile Include="src\event\Event.cpp" />
     <ClCompile Include="src\event\EventManager.cpp" />
@@ -294,6 +301,9 @@
     <ClCompile Include="src\node\NodeRenderable.cpp" />
     <ClCompile Include="src\node\NodeSpatial.cpp" />
     <ClCompile Include="src\node\NodeWindow.cpp" />
+    <ClCompile Include="src\node\utility_nodes\NodeText.cpp" />
+    <ClCompile Include="src\node\utility_nodes\node_distance_field\NodeDistanceFields2D.cpp" />
+    <ClCompile Include="src\node\utility_nodes\node_distance_field\WorldSpaceRasterizer2D.cpp" />
     <ClCompile Include="src\overlap\overlap.cpp" />
     <ClCompile Include="src\profiler\Profiler.cpp" />
     <ClCompile Include="src\random\random.cpp" />

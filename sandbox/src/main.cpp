@@ -3,6 +3,7 @@
 #include "application/Application.h"
 #include "entry.h"
 #include "node/NodeRenderTarget.h"
+#include "node/utility_nodes/NodeText.h"
 
 namespace night
 {
@@ -40,8 +41,27 @@ namespace night
 
 		auto nr = nrt->create<test_renderable>("Sandbox Renderable");
 		ASSERT(nr != nullptr);
-	}
 
+
+		struct test_text : public NodeText
+		{
+			test_text(NodeTextParams const& params) : NodeText(params) {}
+
+		protected:
+
+			virtual void on_update(real delta)
+			{
+				quat q = quat(vec3(utility::window().time_elapsed() * 0.5f, utility::window().time_elapsed(), utility::window().time_elapsed() * 0.33f));
+				local_rotation(q);
+			}
+		};
+
+		NodeTextParams ntp;
+		ntp.text = "Hello.";
+		ntp.font = "Font10x";
+		ntp.translation.z = 20.0f; // move test text infront of test renderable
+		auto tt = nrt->create<test_text>("Test Text", ntp);
+	}
 }
 
 

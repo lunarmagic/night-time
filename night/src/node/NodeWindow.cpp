@@ -21,24 +21,18 @@ namespace night
 		_state = params.state;
 		_dockWhere = params.dock_where;
 		_dockSpace = params.dock_space;
+		_internalResolutionScale = params.internal_resolution_scale;
 		
-		//if (params.state == ENodeWindowState::Fullscreen)
-		//{
-		//	params.nrt_params.width = -1;
-		//	params.nrt_params.height = -1;
-		//}
-		//else
-		{
-			ivec2 internal_resolution = find_internal_resolution();
-			params.nrt_params.width = internal_resolution.x;
-			params.nrt_params.height = internal_resolution.y;
-		}
-
+		// TODO: remove nrt_params and use our own variables.
+		ivec2 internal_resolution = find_internal_resolution();
+		params.nrt_params.width = internal_resolution.x;
+		params.nrt_params.height = internal_resolution.y;
 		params.nrt_params.filtering = ETextureFiltering::Linear;
+		params.nrt_params.should_inherit_parent_resolution = false; // disable before initializing
 		NodeRenderTarget::init(params.nrt_params);
 
-		_width = -1; // TODO: add auto resize mem
-		_height = -1;
+		// need to enable this after initializing
+		should_inherit_parent_resolution = true;
 
 		unpass_down_event_type(MouseButtonPressedEvent::get_static_type());
 		unpass_down_event_type(MouseButtonReleasedEvent::get_static_type());
@@ -92,8 +86,7 @@ namespace night
 		bind_event([&](WindowResizeEvent const& event)
 		{
 			ivec2 internal_resolution = find_internal_resolution();
-			//resize(internal_resolution);
-			handle_resize_event(internal_resolution.x, internal_resolution.y);
+			handle_resize(internal_resolution.x, internal_resolution.y);
 			WindowResizeEvent e(internal_resolution.x, internal_resolution.y);
 			pass_down_event(e);
 		});
@@ -104,13 +97,10 @@ namespace night
 			_target->render_flush_priority((real)-depth_from_root()); // TODO: make sure this works.
 
 			ivec2 internal_resolution = find_internal_resolution();
-			//resize(internal_resolution);
-			handle_resize_event(internal_resolution.x, internal_resolution.y);
+			handle_resize(internal_resolution.x, internal_resolution.y);
 			WindowResizeEvent e(internal_resolution.x, internal_resolution.y);
 			pass_down_event(e);
 		});
-
-		//clear_color = PINK;
 	}
 
 	vec2 NodeWindow::window_coord_to_local_coord(vec2 const& window_coord) const
@@ -152,8 +142,6 @@ namespace night
 		{
 			_dockWhere = where;
 			ivec2 internal_resolution = find_internal_resolution();
-			//WindowResizeEvent e(internal_resolution.x, internal_resolution.y);
-			//on_event(e); // dispatch in events because child nodes may not be created yet.
 			resize(internal_resolution);
 		}
 	}
@@ -224,7 +212,6 @@ namespace night
 		ASSERT(target != nullptr);
 		AABB ac = area_clamped_to_pixel_grid();
 		vec2 local = ac.local_coordinate(crt->unproject_from_screen(vec3(parent_mouse_position, 0)));
-		//return target->unproject_from_screen(vec3(local, 0));
 		return local;
 	}
 
@@ -243,7 +230,22 @@ namespace night
 		ivec2 result;
 		result.x = internal.y - internal.x;
 		result.y = internal.z - internal.w;
+
+		ASSERT(_internalResolutionScale != 0);
+		result.x = (s32)((real)result.x * _internalResolutionScale);
+		result.y = (s32)((real)result.y * _internalResolutionScale);
+
 		return result;
+	}
+
+	void NodeWindow::internal_resolution_scale(real scale)
+	{
+		_internalResolutionScale = scale;
+
+		ivec2 internal_resolution = find_internal_resolution();
+		handle_resize(internal_resolution.x, internal_resolution.y);
+		WindowResizeEvent e(internal_resolution.x, internal_resolution.y);
+		pass_down_event(e);
 	}
 
 	// TODO: make iAABB
@@ -334,32 +336,8 @@ namespace night
 		return result;
 	}
 
-	//AABB NodeWindow::clamp_area_to_pixel_grid(AABB const& area) const
-	//{
-	//	auto crt = current_render_target();
-	//	ASSERT(crt != nullptr);
-
-	//	ivec2 internal_tl = crt->global_to_internal(vec2(area.left, area.top));
-	//	ivec2 internal_br = crt->global_to_internal(vec2(area.right, area.bottom));
-
-	//	// TODO: maybe remove
-	//	// make sure it is a even number
-	//	internal_tl.x = (internal_tl.x / 2) * 2;
-	//	internal_tl.y = (internal_tl.y / 2) * 2;
-	//	internal_br.x = (internal_br.x / 2) * 2;
-	//	internal_br.y = (internal_br.y / 2) * 2;
-
-	//	AABB result;
-	//	result.left = internal_tl.x;
-	//	result.right = internal_br.x;
-	//	result.top = internal_tl.y;
-	//	result.bottom = internal_br.y;
-	//	return result;
-	//}
-
 	AABB NodeWindow::docking_area(ENodeWindowDockWhere where) const
 	{
-		//ASSERT(parent_window != nullptr);
 		ASSERT(target() != nullptr);
 		AABB area = target()->area();
 
@@ -412,9 +390,8 @@ namespace night
 	void NodeWindow::on_render(RenderGraph& out_graph) const
 	{
 		auto target = this->target();
-		//const_cast<ITexture*>(target.ptr().lock().get())->update_mvp(); // TODO: remove
 		ASSERT(target != nullptr);
-		//our_dock_space.left += 0.0001f;
+
 		// draw window render target:
 		AABB ac = area_clamped_to_pixel_grid();
 		if (ac.left >= ac.right && ac.bottom >= ac.top)
@@ -442,14 +419,8 @@ namespace night
 			}
 
 			rt_sorted.insert({ node.depth, node });
-		}, exclude<NodeWindow/*, NodeRenderTarget*/>);
+		}, exclude<NodeWindow, NodeRenderTarget>);
 
-		//ivec2 ir = find_internal_resolution(); // TODO: use target resolution
-
-		//const real w = (real)ir.x;
-		//const real h = (real)ir.y;
-		//vec2 ar = { (h < w ? (real)w / (real)h : 1.0f), (w < h ? (real)h / (real)w : 1.0f) };
-		//const Quad rt_quad(QuadParams{ .position = vec3(0.0f, 0.0f, 0.0f), .size = ar });
 		Quad rt_quad(target->area());
 
 		for (const auto& i : rt_sorted)
@@ -461,7 +432,6 @@ namespace night
 			);
 
 			Quad quad = rt_quad;
-			//quad = Quad(QuadParams{.size = vec2(0.5f)});
 			
 			for (s32 j = 0; j < quad.vertices.size(); j++)
 			{
@@ -471,35 +441,5 @@ namespace night
 			out_graph.draw_quad(quad);
 		}
 	}
-
-#if 0
-#ifdef NIGHT_ENABLE_DEBUG_RENDERER
-	template<> void DebugRenderer::draw_format<NodeWindow>(NodeWindow& v)
-	{
-		RenderGraph& out_graph = DebugRenderer::render_graph();
-		out_graph.current_buffer(
-			utility::renderer().default_render_target(),
-			nullptr,
-			nullptr
-		);
-
-		Quad ga = v.global_area();
-
-		DB_RENDERER_DRAW_OBJECT(ga);
-
-		v.dispatch_system([&](NodeWindow& node)
-			{
-				if (node.visibility != EVisibility::Visible)
-				{
-					return;
-				}
-
-				Quad ga2 = node.global_area();
-				DB_RENDERER_DRAW_OBJECT(ga2);
-
-			}, exclude<NodeWindow, NodeRenderTarget>);
-	}
-#endif
-#endif
 
 }

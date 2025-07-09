@@ -11,8 +11,10 @@ namespace night
 
 	struct NodeRenderTargetParams
 	{
-		s32 width{ -1 };
-		s32 height{ -1 };
+		s32 width{ 0 };
+		s32 height{ 0 };
+		u8 should_inherit_parent_resolution{ true };
+
 		real depth{ 0.0f };
 
 		Color clear_color{ COLOR_ZERO };
@@ -31,12 +33,18 @@ namespace night
 		NodeRenderTarget(NodeRenderTargetParams const& params);
 		~NodeRenderTarget();
 
-		// always call this when resizing render target, never call texture resize.
+		/*
+		* dispatch resize event into main thread,
+		* after newly created children are initialized.
+		* getters for width and height are instantly updated.
+		* never resize target directly, always call this function.
+		*/
 		void resize(ivec2 const& new_size);
-		//void clear(Color const& clear_color);
+
+
 		virtual void clear();
 
-		ivec2 size();
+		//ivec2 size();
 		void camera(Camera camera);
 		Camera const& camera() const;
 		Ray mouse_pick(vec2 const& mouse_position) const; // TODO: these may not need to be virtual
@@ -57,12 +65,11 @@ namespace night
 
 		void manually_render_this_frame() { _isPendingManualRender = true; }
 		u8 const& is_pending_manual_render() const { return _isPendingManualRender; }
-		//virtual void clear();
 
 		handle<const ITexture> target() const { return _target; }
 
-		s32 const& width() const { return _width; }
-		s32 const& height() const { return _height; }
+		s32 const& width() const { return _pendingWidth; }
+		s32 const& height() const { return _pendingHeight; }
 
 	protected:
 
@@ -73,30 +80,20 @@ namespace night
 		virtual void on_clear(Color const& clear_color) {};
 		virtual void on_camera(Camera& camera_to_be_set) {};
 		virtual void on_render_flush_priority(real priority) {};
-		//virtual void on_pre_update_initialization() override;
 
-		void handle_resize_event(u32 width, u32 height);
-
-		//handle<ITexture> const& target() const { return _target; }
+		void handle_resize(u32 width, u32 height);
 
 		// do not destroy the target from subclass
 		handle<ITexture> _target{ nullptr };
-		
-		s32 _width{ -1 };
-		s32 _height{ -1 };
+
+		u8 should_inherit_parent_resolution{ true };
 
 	private:
 
+		s32 _pendingWidth;
+		s32 _pendingHeight;
 
 		u8 _isPendingManualRender{ false };
-
-		//struct RenderTargetCache
-		//{
-		//	handle<ITexture> target;
-		//	u8 is_being_used{ false };
-		//};
-
-		//static umap<string, RenderTargetCache> _renderTargetCache;
 
 		friend struct NodeRenderable;
 	};
