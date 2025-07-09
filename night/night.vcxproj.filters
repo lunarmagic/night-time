@@ -1,0 +1,475 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="aabb">
+      <UniqueIdentifier>{EBE9937C-D720-950D-800D-7B106C23110F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="action_mapping">
+      <UniqueIdentifier>{CED23E3E-BAA0-3244-A334-A36A8FA10EA9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application">
+      <UniqueIdentifier>{F9860F5B-653C-8850-EE30-82275AE57E54}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="camera">
+      <UniqueIdentifier>{EE85E6F5-DA27-11CC-C3E2-2420AF23981C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="color">
+      <UniqueIdentifier>{44323D0F-B046-65C0-79C8-0820E59B61F1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="debug_renderer">
+      <UniqueIdentifier>{A246DFA8-8E14-D3AE-77A8-43D56315AF13}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="event">
+      <UniqueIdentifier>{071C650F-7330-8DC0-3CB2-3020A88589F1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="file">
+      <UniqueIdentifier>{25CB967C-1102-980D-BAEE-7D10A604140F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="geometry">
+      <UniqueIdentifier>{5154C4F3-3D21-1FFF-663A-0DA75266548D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="gjk">
+      <UniqueIdentifier>{2177880B-8D80-887C-16FC-9E7C8204947C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="gui">
+      <UniqueIdentifier>{8A78880B-F681-887C-7FFD-9E7CEB05947C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="handle">
+      <UniqueIdentifier>{71D89001-5D7A-BBD7-4635-CF2B32764228}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="input">
+      <UniqueIdentifier>{B54AA90F-215F-D1C0-EAE0-742056B4CDF1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="log">
+      <UniqueIdentifier>{078D880B-7396-887C-FC11-9F7C681A947C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="material">
+      <UniqueIdentifier>{94558654-8022-E15F-A93B-CF07956716EE}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="math">
+      <UniqueIdentifier>{CF809A7C-BBB7-9B0D-64A4-811050BA170F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="node">
+      <UniqueIdentifier>{AB469B7C-977D-9C0D-406A-82102C80180F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="overlap">
+      <UniqueIdentifier>{BEB5E47E-2A95-631A-33AD-EEF09F0BCA7B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="profiler">
+      <UniqueIdentifier>{48484D2A-3415-A835-5D2E-96DD495ADDC3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="random">
+      <UniqueIdentifier>{266FE418-1211-0FEF-FBCB-2243E70C963F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="raycast">
+      <UniqueIdentifier>{BC9A3836-287A-B7D1-3192-42A89DF01D33}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ref">
+      <UniqueIdentifier>{42A5880B-AEAE-887C-372A-9F7CA332947C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="renderer">
+      <UniqueIdentifier>{9C6AA017-8837-FB22-B150-E9CA9D7C30B1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="renderer\backends">
+      <UniqueIdentifier>{4694BD6F-B2AA-BB05-FB21-472767778C8D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="renderer\backends\opengl">
+      <UniqueIdentifier>{1A0B318F-0630-800F-2F7B-659F1BFF7E2D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="renderer\backends\sdl">
+      <UniqueIdentifier>{98037681-0470-317C-CD63-C9D9398F53E4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="resource_manager">
+      <UniqueIdentifier>{8784A045-737D-BF97-9CAF-A41C88079FA3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shape_renderer">
+      <UniqueIdentifier>{ACB9E73B-9887-DB41-811B-4C686D88B7A6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="stl">
+      <UniqueIdentifier>{78AB880B-E4B4-887C-6D30-9F7CD938947C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="text">
+      <UniqueIdentifier>{0A699E7C-F69F-9F0D-9F8C-85108BA21B0F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="texture">
+      <UniqueIdentifier>{964579D9-0225-F874-0B3D-834B779B5ED6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="thread">
+      <UniqueIdentifier>{DD9F0F1E-C941-3AF4-B2FC-4D489E3DC144}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="types">
+      <UniqueIdentifier>{5A5E7610-C672-9EC1-8FF4-4121FBC79AF2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="window">
+      <UniqueIdentifier>{5DFE1E25-49A0-49FB-325B-5D4F1E9CD04B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="window\backends">
+      <UniqueIdentifier>{27F148A8-937C-B66C-9C8D-39610898126D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="window\backends\sdl">
+      <UniqueIdentifier>{F9E83698-654A-14A6-EEB7-5A585A184B65}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\aabb\AABB.h">
+      <Filter>aabb</Filter>
+    </ClInclude>
+    <ClInclude Include="src\action_mapping\ActionMapping.h">
+      <Filter>action_mapping</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\Application.h">
+      <Filter>application</Filter>
+    </ClInclude>
+    <ClInclude Include="src\camera\Camera.h">
+      <Filter>camera</Filter>
+    </ClInclude>
+    <ClInclude Include="src\color\Color.h">
+      <Filter>color</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common.h" />
+    <ClInclude Include="src\core.h" />
+    <ClInclude Include="src\debug_renderer\DebugRenderer.h">
+      <Filter>debug_renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\entry.h" />
+    <ClInclude Include="src\event\ApplicationEvent.h">
+      <Filter>event</Filter>
+    </ClInclude>
+    <ClInclude Include="src\event\Event.h">
+      <Filter>event</Filter>
+    </ClInclude>
+    <ClInclude Include="src\event\EventManager.h">
+      <Filter>event</Filter>
+    </ClInclude>
+    <ClInclude Include="src\event\KeyEvent.h">
+      <Filter>event</Filter>
+    </ClInclude>
+    <ClInclude Include="src\event\MouseEvent.h">
+      <Filter>event</Filter>
+    </ClInclude>
+    <ClInclude Include="src\event\NodeEvent.h">
+      <Filter>event</Filter>
+    </ClInclude>
+    <ClInclude Include="src\event\PenEvent.h">
+      <Filter>event</Filter>
+    </ClInclude>
+    <ClInclude Include="src\file\File.h">
+      <Filter>file</Filter>
+    </ClInclude>
+    <ClInclude Include="src\geometry\Plane.h">
+      <Filter>geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="src\geometry\Quad.h">
+      <Filter>geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="src\geometry\Triangle.h">
+      <Filter>geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="src\geometry\Vertex.h">
+      <Filter>geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gjk\gjk.h">
+      <Filter>gjk</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gui\Gui.h">
+      <Filter>gui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\handle\handle.h">
+      <Filter>handle</Filter>
+    </ClInclude>
+    <ClInclude Include="src\input\EInput.h">
+      <Filter>input</Filter>
+    </ClInclude>
+    <ClInclude Include="src\input\InputKey.h">
+      <Filter>input</Filter>
+    </ClInclude>
+    <ClInclude Include="src\log\log.h">
+      <Filter>log</Filter>
+    </ClInclude>
+    <ClInclude Include="src\material\IComputeShader.h">
+      <Filter>material</Filter>
+    </ClInclude>
+    <ClInclude Include="src\material\IMaterial.h">
+      <Filter>material</Filter>
+    </ClInclude>
+    <ClInclude Include="src\material\IShader.h">
+      <Filter>material</Filter>
+    </ClInclude>
+    <ClInclude Include="src\math\math.h">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="src\nightpch.h" />
+    <ClInclude Include="src\node\INode.h">
+      <Filter>node</Filter>
+    </ClInclude>
+    <ClInclude Include="src\node\NodeFrameBuffer.h">
+      <Filter>node</Filter>
+    </ClInclude>
+    <ClInclude Include="src\node\NodeRenderTarget.h">
+      <Filter>node</Filter>
+    </ClInclude>
+    <ClInclude Include="src\node\NodeRenderable.h">
+      <Filter>node</Filter>
+    </ClInclude>
+    <ClInclude Include="src\node\NodeSpatial.h">
+      <Filter>node</Filter>
+    </ClInclude>
+    <ClInclude Include="src\node\NodeWindow.h">
+      <Filter>node</Filter>
+    </ClInclude>
+    <ClInclude Include="src\overlap\overlap.h">
+      <Filter>overlap</Filter>
+    </ClInclude>
+    <ClInclude Include="src\profiler\Profiler.h">
+      <Filter>profiler</Filter>
+    </ClInclude>
+    <ClInclude Include="src\random\random.h">
+      <Filter>random</Filter>
+    </ClInclude>
+    <ClInclude Include="src\raycast\raycast.h">
+      <Filter>raycast</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ref\ref.h">
+      <Filter>ref</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\IRenderer.h">
+      <Filter>renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\RenderGraph.h">
+      <Filter>renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\backends\opengl\ComputeShaderOpenGL.h">
+      <Filter>renderer\backends\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\backends\opengl\GLCall.h">
+      <Filter>renderer\backends\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\backends\opengl\IndexBufferOpenGL.h">
+      <Filter>renderer\backends\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\backends\opengl\MaterialOpenGL.h">
+      <Filter>renderer\backends\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\backends\opengl\RendererOpenGL.h">
+      <Filter>renderer\backends\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\backends\opengl\ShaderOpenGL.h">
+      <Filter>renderer\backends\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\backends\opengl\ShaderStorageBufferOpenGL.h">
+      <Filter>renderer\backends\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\backends\opengl\TextureOpenGL.h">
+      <Filter>renderer\backends\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\backends\opengl\VertexArrayOpenGL.h">
+      <Filter>renderer\backends\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\backends\opengl\VertexBufferLayoutOpenGL.h">
+      <Filter>renderer\backends\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\backends\opengl\VertexBufferOpenGL.h">
+      <Filter>renderer\backends\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\backends\sdl\RendererSDL.h">
+      <Filter>renderer\backends\sdl</Filter>
+    </ClInclude>
+    <ClInclude Include="src\resource_manager\IResource.h">
+      <Filter>resource_manager</Filter>
+    </ClInclude>
+    <ClInclude Include="src\resource_manager\ResourceManager.h">
+      <Filter>resource_manager</Filter>
+    </ClInclude>
+    <ClInclude Include="src\shape_renderer\ShapeRenderer.h">
+      <Filter>shape_renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\stl\stl.h">
+      <Filter>stl</Filter>
+    </ClInclude>
+    <ClInclude Include="src\text\Text.h">
+      <Filter>text</Filter>
+    </ClInclude>
+    <ClInclude Include="src\texture\ITexture.h">
+      <Filter>texture</Filter>
+    </ClInclude>
+    <ClInclude Include="src\texture\Surface.h">
+      <Filter>texture</Filter>
+    </ClInclude>
+    <ClInclude Include="src\thread\Thread.h">
+      <Filter>thread</Filter>
+    </ClInclude>
+    <ClInclude Include="src\types\types.h">
+      <Filter>types</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utility.h" />
+    <ClInclude Include="src\window\IWindow.h">
+      <Filter>window</Filter>
+    </ClInclude>
+    <ClInclude Include="src\window\backends\sdl\WindowSDL.h">
+      <Filter>window\backends\sdl</Filter>
+    </ClInclude>
+    <ClInclude Include="src\window\backends\sdl\sdl_scancode_map.h">
+      <Filter>window\backends\sdl</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\aabb\AABB.cpp">
+      <Filter>aabb</Filter>
+    </ClCompile>
+    <ClCompile Include="src\action_mapping\ActionMapping.cpp">
+      <Filter>action_mapping</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\Application.cpp">
+      <Filter>application</Filter>
+    </ClCompile>
+    <ClCompile Include="src\camera\Camera.cpp">
+      <Filter>camera</Filter>
+    </ClCompile>
+    <ClCompile Include="src\color\Color.cpp">
+      <Filter>color</Filter>
+    </ClCompile>
+    <ClCompile Include="src\debug_renderer\DebugRenderer.cpp">
+      <Filter>debug_renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\event\Event.cpp">
+      <Filter>event</Filter>
+    </ClCompile>
+    <ClCompile Include="src\event\EventManager.cpp">
+      <Filter>event</Filter>
+    </ClCompile>
+    <ClCompile Include="src\file\File.cpp">
+      <Filter>file</Filter>
+    </ClCompile>
+    <ClCompile Include="src\geometry\Plane.cpp">
+      <Filter>geometry</Filter>
+    </ClCompile>
+    <ClCompile Include="src\geometry\Quad.cpp">
+      <Filter>geometry</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gjk\gjk.cpp">
+      <Filter>gjk</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gui\Gui.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\log\log.cpp">
+      <Filter>log</Filter>
+    </ClCompile>
+    <ClCompile Include="src\material\IComputeShader.cpp">
+      <Filter>material</Filter>
+    </ClCompile>
+    <ClCompile Include="src\material\IMaterial.cpp">
+      <Filter>material</Filter>
+    </ClCompile>
+    <ClCompile Include="src\material\IShader.cpp">
+      <Filter>material</Filter>
+    </ClCompile>
+    <ClCompile Include="src\math\math.cpp">
+      <Filter>math</Filter>
+    </ClCompile>
+    <ClCompile Include="src\nightpch.cpp" />
+    <ClCompile Include="src\node\INode.cpp">
+      <Filter>node</Filter>
+    </ClCompile>
+    <ClCompile Include="src\node\NodeFrameBuffer.cpp">
+      <Filter>node</Filter>
+    </ClCompile>
+    <ClCompile Include="src\node\NodeRenderTarget.cpp">
+      <Filter>node</Filter>
+    </ClCompile>
+    <ClCompile Include="src\node\NodeRenderable.cpp">
+      <Filter>node</Filter>
+    </ClCompile>
+    <ClCompile Include="src\node\NodeSpatial.cpp">
+      <Filter>node</Filter>
+    </ClCompile>
+    <ClCompile Include="src\node\NodeWindow.cpp">
+      <Filter>node</Filter>
+    </ClCompile>
+    <ClCompile Include="src\overlap\overlap.cpp">
+      <Filter>overlap</Filter>
+    </ClCompile>
+    <ClCompile Include="src\profiler\Profiler.cpp">
+      <Filter>profiler</Filter>
+    </ClCompile>
+    <ClCompile Include="src\random\random.cpp">
+      <Filter>random</Filter>
+    </ClCompile>
+    <ClCompile Include="src\raycast\raycast.cpp">
+      <Filter>raycast</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\IRenderer.cpp">
+      <Filter>renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\RenderGraph.cpp">
+      <Filter>renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\backends\opengl\ComputeShaderOpenGL.cpp">
+      <Filter>renderer\backends\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\backends\opengl\IndexBufferOpenGL.cpp">
+      <Filter>renderer\backends\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\backends\opengl\MaterialOpenGL.cpp">
+      <Filter>renderer\backends\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\backends\opengl\RendererOpenGL.cpp">
+      <Filter>renderer\backends\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\backends\opengl\ShaderOpenGL.cpp">
+      <Filter>renderer\backends\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\backends\opengl\ShaderStorageBufferOpenGL.cpp">
+      <Filter>renderer\backends\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\backends\opengl\TextureOpenGL.cpp">
+      <Filter>renderer\backends\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\backends\opengl\VertexArrayOpenGL.cpp">
+      <Filter>renderer\backends\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\backends\opengl\VertexBufferLayoutOpenGL.cpp">
+      <Filter>renderer\backends\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\backends\opengl\VertexBufferOpenGL.cpp">
+      <Filter>renderer\backends\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\backends\sdl\RendererSDL.cpp">
+      <Filter>renderer\backends\sdl</Filter>
+    </ClCompile>
+    <ClCompile Include="src\resource_manager\IResource.cpp">
+      <Filter>resource_manager</Filter>
+    </ClCompile>
+    <ClCompile Include="src\resource_manager\ResourceManager.cpp">
+      <Filter>resource_manager</Filter>
+    </ClCompile>
+    <ClCompile Include="src\shape_renderer\ShapeRenderer.cpp">
+      <Filter>shape_renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\stl\stl.cpp">
+      <Filter>stl</Filter>
+    </ClCompile>
+    <ClCompile Include="src\texture\ITexture.cpp">
+      <Filter>texture</Filter>
+    </ClCompile>
+    <ClCompile Include="src\texture\Surface.cpp">
+      <Filter>texture</Filter>
+    </ClCompile>
+    <ClCompile Include="src\thread\Thread.cpp">
+      <Filter>thread</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types\types.cpp">
+      <Filter>types</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utility.cpp" />
+    <ClCompile Include="src\window\IWindow.cpp">
+      <Filter>window</Filter>
+    </ClCompile>
+    <ClCompile Include="src\window\backends\sdl\WindowSDL.cpp">
+      <Filter>window\backends\sdl</Filter>
+    </ClCompile>
+    <ClCompile Include="src\window\backends\sdl\sdl_scancode_map.cpp">
+      <Filter>window\backends\sdl</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

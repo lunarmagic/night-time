@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="ComputeShader">
+      <UniqueIdentifier>{D915146C-45D6-8FA2-0E11-D91F7A90D47E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Drawing">
+      <UniqueIdentifier>{912F4287-FD0E-C122-0627-4CF972852784}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Polygon">
+      <UniqueIdentifier>{ADACC51C-198C-44B8-22A4-CF8E8E02AB19}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Sandbox">
+      <UniqueIdentifier>{F4C124E3-60A1-A37E-69B9-2E55D5170AE0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="algorithm">
+      <UniqueIdentifier>{ECB2EEC4-581D-A33B-A15B-54E10D058190}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="curve">
+      <UniqueIdentifier>{EA96400F-56AB-68C0-1F2D-0C208B0065F1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="distance_field">
+      <UniqueIdentifier>{93748061-7F42-7467-68D6-E48D544350CC}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="easing">
+      <UniqueIdentifier>{FC3194FA-E8D3-BED0-D18E-D224BDCF4521}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="form">
+      <UniqueIdentifier>{79E5967C-651C-980D-0E09-7E10FA1E140F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="form\intersect_ellipses">
+      <UniqueIdentifier>{59CA2A8F-C501-7326-CE0B-D7493AC2991F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="form\intersection">
+      <UniqueIdentifier>{7F89CEAF-EB9F-CC45-3417-5867A06C9DCD}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="gamemode">
+      <UniqueIdentifier>{E497A4BA-D064-FFC5-F97D-ED6DE5A93454}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="gamemode\form_intersection_mode">
+      <UniqueIdentifier>{C1479D38-2D2B-AC78-362E-DAB4A29072C9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="node_text">
+      <UniqueIdentifier>{EF9A7174-5B05-26EB-A443-D79010ED0340}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="points">
+      <UniqueIdentifier>{42E23415-2E84-5FEB-173F-733F0380E63B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="rasterizer">
+      <UniqueIdentifier>{1013631C-FCCA-A469-65D2-7DC551A93F5A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="test">
+      <UniqueIdentifier>{65689E7C-519F-9F0D-FA8B-8510E6A11B0F}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\Drawing\Canvas.h">
+      <Filter>Drawing</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Drawing\BrushLineMaterial.h">
+      <Filter>Drawing</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Sandbox\Sandbox.h">
+      <Filter>Sandbox</Filter>
+    </ClInclude>
+    <ClInclude Include="src\algorithm\algorithm.h">
+      <Filter>algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="src\curve\Curve.h">
+      <Filter>curve</Filter>
+    </ClInclude>
+    <ClInclude Include="src\distance_field\DistanceField.h">
+      <Filter>distance_field</Filter>
+    </ClInclude>
+    <ClInclude Include="src\easing\easing.h">
+      <Filter>easing</Filter>
+    </ClInclude>
+    <ClInclude Include="src\form\Box.h">
+      <Filter>form</Filter>
+    </ClInclude>
+    <ClInclude Include="src\form\Cone.h">
+      <Filter>form</Filter>
+    </ClInclude>
+    <ClInclude Include="src\form\Convex.h">
+      <Filter>form</Filter>
+    </ClInclude>
+    <ClInclude Include="src\form\Cylinder.h">
+      <Filter>form</Filter>
+    </ClInclude>
+    <ClInclude Include="src\form\IForm.h">
+      <Filter>form</Filter>
+    </ClInclude>
+    <ClInclude Include="src\form\Pyramid.h">
+      <Filter>form</Filter>
+    </ClInclude>
+    <ClInclude Include="src\form\Sphere.h">
+      <Filter>form</Filter>
+    </ClInclude>
+    <ClInclude Include="src\form\Tube.h">
+      <Filter>form</Filter>
+    </ClInclude>
+    <ClInclude Include="src\form\intersection\Intersection.h">
+      <Filter>form\intersection</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gamemode\CameraController.h">
+      <Filter>gamemode</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gamemode\GameModeSelect.h">
+      <Filter>gamemode</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gamemode\IGameMode.h">
+      <Filter>gamemode</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gamemode\form_intersection_mode\FormIntersectionsEditor.h">
+      <Filter>gamemode\form_intersection_mode</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gamemode\form_intersection_mode\FormIntersectionsMode.h">
+      <Filter>gamemode\form_intersection_mode</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gamemode\form_intersection_mode\FormIntersectionsSet.h">
+      <Filter>gamemode\form_intersection_mode</Filter>
+    </ClInclude>
+    <ClInclude Include="src\node_text\NodeText.h">
+      <Filter>node_text</Filter>
+    </ClInclude>
+    <ClInclude Include="src\points\Points.h">
+      <Filter>points</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rasterizer\Rasterizer.h">
+      <Filter>rasterizer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sandboxpch.h" />
+    <ClInclude Include="src\test\test_ellipse_intersection.h">
+      <Filter>test</Filter>
+    </ClInclude>
+    <ClInclude Include="src\test\test_scene.h">
+      <Filter>test</Filter>
+    </ClInclude>
+    <ClInclude Include="src\test\test_shapecast.h">
+      <Filter>test</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Drawing\Brush.h" />
+    <ClInclude Include="src\form\FormRenderTarget.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\Drawing\Canvas.cpp">
+      <Filter>Drawing</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Sandbox\Sandbox.cpp">
+      <Filter>Sandbox</Filter>
+    </ClCompile>
+    <ClCompile Include="src\algorithm\algorithm.cpp">
+      <Filter>algorithm</Filter>
+    </ClCompile>
+    <ClCompile Include="src\curve\Curve.cpp">
+      <Filter>curve</Filter>
+    </ClCompile>
+    <ClCompile Include="src\distance_field\DistanceField.cpp">
+      <Filter>distance_field</Filter>
+    </ClCompile>
+    <ClCompile Include="src\easing\easing.cpp">
+      <Filter>easing</Filter>
+    </ClCompile>
+    <ClCompile Include="src\form\Box.cpp">
+      <Filter>form</Filter>
+    </ClCompile>
+    <ClCompile Include="src\form\Cone.cpp">
+      <Filter>form</Filter>
+    </ClCompile>
+    <ClCompile Include="src\form\Convex.cpp">
+      <Filter>form</Filter>
+    </ClCompile>
+    <ClCompile Include="src\form\Cylinder.cpp">
+      <Filter>form</Filter>
+    </ClCompile>
+    <ClCompile Include="src\form\IForm.cpp">
+      <Filter>form</Filter>
+    </ClCompile>
+    <ClCompile Include="src\form\Pyramid.cpp">
+      <Filter>form</Filter>
+    </ClCompile>
+    <ClCompile Include="src\form\Sphere.cpp">
+      <Filter>form</Filter>
+    </ClCompile>
+    <ClCompile Include="src\form\Tube.cpp">
+      <Filter>form</Filter>
+    </ClCompile>
+    <ClCompile Include="src\form\intersection\Intersection.cpp">
+      <Filter>form\intersection</Filter>
+    </ClCompile>
+    <ClCompile Include="src\form\intersection\triple_intersection.cpp">
+      <Filter>form\intersection</Filter>
+    </ClCompile>
+    <ClCompile Include="src\form\intersection\intersection_convex_convex.cpp">
+      <Filter>form\intersection</Filter>
+    </ClCompile>
+    <ClCompile Include="src\form\intersection\intersection_convex_sphere.cpp">
+      <Filter>form\intersection</Filter>
+    </ClCompile>
+    <ClCompile Include="src\form\intersection\intersection_convex_tube.cpp">
+      <Filter>form\intersection</Filter>
+    </ClCompile>
+    <ClCompile Include="src\form\intersection\intersection_sphere_sphere.cpp">
+      <Filter>form\intersection</Filter>
+    </ClCompile>
+    <ClCompile Include="src\form\intersection\intersection_sphere_tube.cpp">
+      <Filter>form\intersection</Filter>
+    </ClCompile>
+    <ClCompile Include="src\form\intersection\intersection_tube_tube.cpp">
+      <Filter>form\intersection</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gamemode\CameraController.cpp">
+      <Filter>gamemode</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gamemode\GameModeSelect.cpp">
+      <Filter>gamemode</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gamemode\form_intersection_mode\FIM_Intersections.cpp">
+      <Filter>gamemode\form_intersection_mode</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gamemode\form_intersection_mode\FormIntersectionsEditor.cpp">
+      <Filter>gamemode\form_intersection_mode</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gamemode\form_intersection_mode\FormIntersectionsMode.cpp">
+      <Filter>gamemode\form_intersection_mode</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gamemode\form_intersection_mode\FormIntersectionsSet.cpp">
+      <Filter>gamemode\form_intersection_mode</Filter>
+    </ClCompile>
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\node_text\NodeText.cpp">
+      <Filter>node_text</Filter>
+    </ClCompile>
+    <ClCompile Include="src\points\Points.cpp">
+      <Filter>points</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rasterizer\Rasterizer.cpp">
+      <Filter>rasterizer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sandboxpch.cpp" />
+    <ClCompile Include="src\Drawing\Brush.cpp" />
+    <ClCompile Include="src\form\FormRenderTarget.cpp" />
+  </ItemGroup>
+</Project>

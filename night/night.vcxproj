@@ -1,0 +1,335 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseDBAR|x64">
+      <Configuration>ReleaseDBAR</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Dist|x64">
+      <Configuration>Dist</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{5FDF0010-CBF3-28C1-9475-CC20004925F2}</ProjectGuid>
+    <IgnoreWarnCompileDuplicatedFilename>true</IgnoreWarnCompileDuplicatedFilename>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>night</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDBAR|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dist|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='ReleaseDBAR|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Dist|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>..\bin\Debug-windows-x86_64\night\</OutDir>
+    <IntDir>..\bin-int\Debug-windows-x86_64\night\</IntDir>
+    <TargetName>night</TargetName>
+    <TargetExt>.dll</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>..\bin\Release-windows-x86_64\night\</OutDir>
+    <IntDir>..\bin-int\Release-windows-x86_64\night\</IntDir>
+    <TargetName>night</TargetName>
+    <TargetExt>.dll</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDBAR|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>..\bin\ReleaseDBAR-windows-x86_64\night\</OutDir>
+    <IntDir>..\bin-int\ReleaseDBAR-windows-x86_64\night\</IntDir>
+    <TargetName>night</TargetName>
+    <TargetExt>.dll</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dist|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>..\bin\Dist-windows-x86_64\night\</OutDir>
+    <IntDir>..\bin-int\Dist-windows-x86_64\night\</IntDir>
+    <TargetName>night</TargetName>
+    <TargetExt>.dll</TargetExt>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>nightpch.h</PrecompiledHeaderFile>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>NIGHT_PLATFORM_WINDOWS;NIGHT_BUILD_DLL;NIGHT_DEBUG;NIGHT_ENABLE_LOGGING;NIGHT_ENABLE_DEBUG_RENDERER;NIGHT_DB_RENDERER_ENABLE_ALGO_RENDER;NIGHT_CORE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>src;vendor;vendor\glm;$(SolutionDir)\night\vendor\sdl3\include;$(SolutionDir)\night\vendor\SDL3_image\include;$(SolutionDir)\night\vendor\imgui;$(SolutionDir)\night\vendor\glew\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <Optimization>Disabled</Optimization>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>SDL3.lib;SDL3_test.lib;SDL3_image.lib;glew32.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\night\vendor\SDL3\lib\x64;$(SolutionDir)\night\vendor\SDL3_image\lib\x64;$(SolutionDir)\night\vendor\glew\lib\Release\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <ImportLibrary>..\bin\Debug-windows-x86_64\night\night.lib</ImportLibrary>
+    </Link>
+    <PostBuildEvent>
+      <Command>IF EXIST ..\bin\Debug-windows-x86_64\night\night.dll\ (xcopy /Q /E /Y /I ..\bin\Debug-windows-x86_64\night\night.dll ..\bin\Debug-windows-x86_64\sandbox &gt; nul) ELSE (xcopy /Q /Y /I ..\bin\Debug-windows-x86_64\night\night.dll ..\bin\Debug-windows-x86_64\sandbox &gt; nul)</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>nightpch.h</PrecompiledHeaderFile>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>NIGHT_PLATFORM_WINDOWS;NIGHT_BUILD_DLL;NIGHT_RELEASE;NIGHT_ENABLE_LOGGING;NIGHT_ENABLE_DEBUG_RENDERER;NIGHT_CORE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>src;vendor;vendor\glm;$(SolutionDir)\night\vendor\sdl3\include;$(SolutionDir)\night\vendor\SDL3_image\include;$(SolutionDir)\night\vendor\imgui;$(SolutionDir)\night\vendor\glew\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <Optimization>Full</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>SDL3.lib;SDL3_test.lib;SDL3_image.lib;glew32.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\night\vendor\SDL3\lib\x64;$(SolutionDir)\night\vendor\SDL3_image\lib\x64;$(SolutionDir)\night\vendor\glew\lib\Release\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <ImportLibrary>..\bin\Release-windows-x86_64\night\night.lib</ImportLibrary>
+    </Link>
+    <PostBuildEvent>
+      <Command>IF EXIST ..\bin\Release-windows-x86_64\night\night.dll\ (xcopy /Q /E /Y /I ..\bin\Release-windows-x86_64\night\night.dll ..\bin\Release-windows-x86_64\sandbox &gt; nul) ELSE (xcopy /Q /Y /I ..\bin\Release-windows-x86_64\night\night.dll ..\bin\Release-windows-x86_64\sandbox &gt; nul)</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDBAR|x64'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>nightpch.h</PrecompiledHeaderFile>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>NIGHT_PLATFORM_WINDOWS;NIGHT_BUILD_DLL;NIGHT_RELEASE;NIGHT_ENABLE_LOGGING;NIGHT_ENABLE_DEBUG_RENDERER;NIGHT_DB_RENDERER_ENABLE_ALGO_RENDER;NIGHT_CORE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>src;vendor;vendor\glm;$(SolutionDir)\night\vendor\sdl3\include;$(SolutionDir)\night\vendor\SDL3_image\include;$(SolutionDir)\night\vendor\imgui;$(SolutionDir)\night\vendor\glew\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <Optimization>Full</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>SDL3.lib;SDL3_test.lib;SDL3_image.lib;glew32.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\night\vendor\SDL3\lib\x64;$(SolutionDir)\night\vendor\SDL3_image\lib\x64;$(SolutionDir)\night\vendor\glew\lib\Release\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <ImportLibrary>..\bin\ReleaseDBAR-windows-x86_64\night\night.lib</ImportLibrary>
+    </Link>
+    <PostBuildEvent>
+      <Command>IF EXIST ..\bin\ReleaseDBAR-windows-x86_64\night\night.dll\ (xcopy /Q /E /Y /I ..\bin\ReleaseDBAR-windows-x86_64\night\night.dll ..\bin\ReleaseDBAR-windows-x86_64\sandbox &gt; nul) ELSE (xcopy /Q /Y /I ..\bin\ReleaseDBAR-windows-x86_64\night\night.dll ..\bin\ReleaseDBAR-windows-x86_64\sandbox &gt; nul)</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dist|x64'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>nightpch.h</PrecompiledHeaderFile>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>NIGHT_PLATFORM_WINDOWS;NIGHT_BUILD_DLL;NIGHT_DIST;NIGHT_CORE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>src;vendor;vendor\glm;$(SolutionDir)\night\vendor\sdl3\include;$(SolutionDir)\night\vendor\SDL3_image\include;$(SolutionDir)\night\vendor\imgui;$(SolutionDir)\night\vendor\glew\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <Optimization>Full</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>SDL3.lib;SDL3_test.lib;SDL3_image.lib;glew32.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\night\vendor\SDL3\lib\x64;$(SolutionDir)\night\vendor\SDL3_image\lib\x64;$(SolutionDir)\night\vendor\glew\lib\Release\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <ImportLibrary>..\bin\Dist-windows-x86_64\night\night.lib</ImportLibrary>
+    </Link>
+    <PostBuildEvent>
+      <Command>IF EXIST ..\bin\Dist-windows-x86_64\night\night.dll\ (xcopy /Q /E /Y /I ..\bin\Dist-windows-x86_64\night\night.dll ..\bin\Dist-windows-x86_64\sandbox &gt; nul) ELSE (xcopy /Q /Y /I ..\bin\Dist-windows-x86_64\night\night.dll ..\bin\Dist-windows-x86_64\sandbox &gt; nul)</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="src\aabb\AABB.h" />
+    <ClInclude Include="src\action_mapping\ActionMapping.h" />
+    <ClInclude Include="src\application\Application.h" />
+    <ClInclude Include="src\camera\Camera.h" />
+    <ClInclude Include="src\color\Color.h" />
+    <ClInclude Include="src\common.h" />
+    <ClInclude Include="src\core.h" />
+    <ClInclude Include="src\debug_renderer\DebugRenderer.h" />
+    <ClInclude Include="src\entry.h" />
+    <ClInclude Include="src\event\ApplicationEvent.h" />
+    <ClInclude Include="src\event\Event.h" />
+    <ClInclude Include="src\event\EventManager.h" />
+    <ClInclude Include="src\event\KeyEvent.h" />
+    <ClInclude Include="src\event\MouseEvent.h" />
+    <ClInclude Include="src\event\NodeEvent.h" />
+    <ClInclude Include="src\event\PenEvent.h" />
+    <ClInclude Include="src\file\File.h" />
+    <ClInclude Include="src\geometry\Plane.h" />
+    <ClInclude Include="src\geometry\Quad.h" />
+    <ClInclude Include="src\geometry\Triangle.h" />
+    <ClInclude Include="src\geometry\Vertex.h" />
+    <ClInclude Include="src\gjk\gjk.h" />
+    <ClInclude Include="src\gui\Gui.h" />
+    <ClInclude Include="src\handle\handle.h" />
+    <ClInclude Include="src\input\EInput.h" />
+    <ClInclude Include="src\input\InputKey.h" />
+    <ClInclude Include="src\log\log.h" />
+    <ClInclude Include="src\material\IComputeShader.h" />
+    <ClInclude Include="src\material\IMaterial.h" />
+    <ClInclude Include="src\material\IShader.h" />
+    <ClInclude Include="src\math\math.h" />
+    <ClInclude Include="src\nightpch.h" />
+    <ClInclude Include="src\node\INode.h" />
+    <ClInclude Include="src\node\NodeFrameBuffer.h" />
+    <ClInclude Include="src\node\NodeRenderTarget.h" />
+    <ClInclude Include="src\node\NodeRenderable.h" />
+    <ClInclude Include="src\node\NodeSpatial.h" />
+    <ClInclude Include="src\node\NodeWindow.h" />
+    <ClInclude Include="src\overlap\overlap.h" />
+    <ClInclude Include="src\profiler\Profiler.h" />
+    <ClInclude Include="src\random\random.h" />
+    <ClInclude Include="src\raycast\raycast.h" />
+    <ClInclude Include="src\ref\ref.h" />
+    <ClInclude Include="src\renderer\IRenderer.h" />
+    <ClInclude Include="src\renderer\RenderGraph.h" />
+    <ClInclude Include="src\renderer\backends\opengl\ComputeShaderOpenGL.h" />
+    <ClInclude Include="src\renderer\backends\opengl\GLCall.h" />
+    <ClInclude Include="src\renderer\backends\opengl\IndexBufferOpenGL.h" />
+    <ClInclude Include="src\renderer\backends\opengl\MaterialOpenGL.h" />
+    <ClInclude Include="src\renderer\backends\opengl\RendererOpenGL.h" />
+    <ClInclude Include="src\renderer\backends\opengl\ShaderOpenGL.h" />
+    <ClInclude Include="src\renderer\backends\opengl\ShaderStorageBufferOpenGL.h" />
+    <ClInclude Include="src\renderer\backends\opengl\TextureOpenGL.h" />
+    <ClInclude Include="src\renderer\backends\opengl\VertexArrayOpenGL.h" />
+    <ClInclude Include="src\renderer\backends\opengl\VertexBufferLayoutOpenGL.h" />
+    <ClInclude Include="src\renderer\backends\opengl\VertexBufferOpenGL.h" />
+    <ClInclude Include="src\renderer\backends\sdl\RendererSDL.h" />
+    <ClInclude Include="src\resource_manager\IResource.h" />
+    <ClInclude Include="src\resource_manager\ResourceManager.h" />
+    <ClInclude Include="src\shape_renderer\ShapeRenderer.h" />
+    <ClInclude Include="src\stl\stl.h" />
+    <ClInclude Include="src\text\Text.h" />
+    <ClInclude Include="src\texture\ITexture.h" />
+    <ClInclude Include="src\texture\Surface.h" />
+    <ClInclude Include="src\thread\Thread.h" />
+    <ClInclude Include="src\types\types.h" />
+    <ClInclude Include="src\utility.h" />
+    <ClInclude Include="src\window\IWindow.h" />
+    <ClInclude Include="src\window\backends\sdl\WindowSDL.h" />
+    <ClInclude Include="src\window\backends\sdl\sdl_scancode_map.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\aabb\AABB.cpp" />
+    <ClCompile Include="src\action_mapping\ActionMapping.cpp" />
+    <ClCompile Include="src\application\Application.cpp" />
+    <ClCompile Include="src\camera\Camera.cpp" />
+    <ClCompile Include="src\color\Color.cpp" />
+    <ClCompile Include="src\debug_renderer\DebugRenderer.cpp" />
+    <ClCompile Include="src\event\Event.cpp" />
+    <ClCompile Include="src\event\EventManager.cpp" />
+    <ClCompile Include="src\file\File.cpp" />
+    <ClCompile Include="src\geometry\Plane.cpp" />
+    <ClCompile Include="src\geometry\Quad.cpp" />
+    <ClCompile Include="src\gjk\gjk.cpp" />
+    <ClCompile Include="src\gui\Gui.cpp" />
+    <ClCompile Include="src\log\log.cpp" />
+    <ClCompile Include="src\material\IComputeShader.cpp" />
+    <ClCompile Include="src\material\IMaterial.cpp" />
+    <ClCompile Include="src\material\IShader.cpp" />
+    <ClCompile Include="src\math\math.cpp" />
+    <ClCompile Include="src\nightpch.cpp">
+      <PrecompiledHeader>Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="src\node\INode.cpp" />
+    <ClCompile Include="src\node\NodeFrameBuffer.cpp" />
+    <ClCompile Include="src\node\NodeRenderTarget.cpp" />
+    <ClCompile Include="src\node\NodeRenderable.cpp" />
+    <ClCompile Include="src\node\NodeSpatial.cpp" />
+    <ClCompile Include="src\node\NodeWindow.cpp" />
+    <ClCompile Include="src\overlap\overlap.cpp" />
+    <ClCompile Include="src\profiler\Profiler.cpp" />
+    <ClCompile Include="src\random\random.cpp" />
+    <ClCompile Include="src\raycast\raycast.cpp" />
+    <ClCompile Include="src\renderer\IRenderer.cpp" />
+    <ClCompile Include="src\renderer\RenderGraph.cpp" />
+    <ClCompile Include="src\renderer\backends\opengl\ComputeShaderOpenGL.cpp" />
+    <ClCompile Include="src\renderer\backends\opengl\IndexBufferOpenGL.cpp" />
+    <ClCompile Include="src\renderer\backends\opengl\MaterialOpenGL.cpp" />
+    <ClCompile Include="src\renderer\backends\opengl\RendererOpenGL.cpp" />
+    <ClCompile Include="src\renderer\backends\opengl\ShaderOpenGL.cpp" />
+    <ClCompile Include="src\renderer\backends\opengl\ShaderStorageBufferOpenGL.cpp" />
+    <ClCompile Include="src\renderer\backends\opengl\TextureOpenGL.cpp" />
+    <ClCompile Include="src\renderer\backends\opengl\VertexArrayOpenGL.cpp" />
+    <ClCompile Include="src\renderer\backends\opengl\VertexBufferLayoutOpenGL.cpp" />
+    <ClCompile Include="src\renderer\backends\opengl\VertexBufferOpenGL.cpp" />
+    <ClCompile Include="src\renderer\backends\sdl\RendererSDL.cpp" />
+    <ClCompile Include="src\resource_manager\IResource.cpp" />
+    <ClCompile Include="src\resource_manager\ResourceManager.cpp" />
+    <ClCompile Include="src\shape_renderer\ShapeRenderer.cpp" />
+    <ClCompile Include="src\stl\stl.cpp" />
+    <ClCompile Include="src\texture\ITexture.cpp" />
+    <ClCompile Include="src\texture\Surface.cpp" />
+    <ClCompile Include="src\thread\Thread.cpp" />
+    <ClCompile Include="src\types\types.cpp" />
+    <ClCompile Include="src\utility.cpp" />
+    <ClCompile Include="src\window\IWindow.cpp" />
+    <ClCompile Include="src\window\backends\sdl\WindowSDL.cpp" />
+    <ClCompile Include="src\window\backends\sdl\sdl_scancode_map.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="vendor\imgui\ImGui.vcxproj">
+      <Project>{C0FF640D-2C14-8DBE-F595-301E616989EF}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
