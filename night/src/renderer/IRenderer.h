@@ -194,6 +194,10 @@ namespace night
 		void update_mvp();
 
 		function<void(Event&)> _eventCallback{nullptr};
+
+#ifdef NIGHT_ENABLE_DEBUG_RENDERER
+		friend struct DebugRenderer;
+#endif
 	};
 
 	template<typename ...Textures>

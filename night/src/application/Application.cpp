@@ -306,10 +306,24 @@ namespace night
 
 	void Application::create_root()
 	{
+#if 0
 		INode::__name = "Root";
 		INode::__parent = nullptr;
 
-		//_root = shandle<INode>(create_root());
+		void* data = malloc(sizeof(INode));
+		ASSERT(data != nullptr);
+
+		_root = shandle<INode>((INode*)data); // TODO: may not delete
+
+		INode::__handle_from_this = handle<INode>(_root);
+
+		INode* t = new (data) INode();
+
+		INode::__uid++;
+		INode::__name = "";
+#else
+		INode::__name = "Root";
+		INode::__parent = nullptr;
 
 		// root should always be a fullscreen NodeWindow.
 		void* data = malloc(sizeof(NodeWindow));
@@ -323,6 +337,7 @@ namespace night
 
 		INode::__uid++;
 		INode::__name = "";
+#endif
 	}
 
 	//INode* Application::create_root()

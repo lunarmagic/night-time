@@ -363,12 +363,12 @@ namespace night
 
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 5);
 
 		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-		SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-		SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+		SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 32);
+		SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 0); // TODO: set to 8 if using stencil buffer
 
 		_context = SDL_GL_CreateContext(_sdlWindow);
 		if (_context == NULL)
@@ -475,6 +475,9 @@ namespace night
 			camera.type = ECameraType::Orthographic;
 			camera.ortho_region = { .left = -1, .right = 1, .top = 1, .bottom = -1 };
 			_defaultRenderTarget->camera(camera);
+			//_defaultRenderTarget->should_use_depth_peeling = false;
+			//_defaultRenderTarget->should_use_depth_testing = true;
+			//_defaultRenderTarget->should_use_blending = false;
 		}
 
 		this->viewport(viewport);
@@ -499,6 +502,7 @@ namespace night
 
 		flush();
 
+#if 0
 		GLCall(glBindFramebuffer(GL_FRAMEBUFFER, 0)); // must not have render target bound.
 		GLCall(glViewport(viewport().x, viewport().y, viewport().z, viewport().w));
 
@@ -524,7 +528,12 @@ namespace night
 		_depthPeelMaterial->bind();
 		_vbo.data(&vertices, 6);
 
-		GLCall(glDrawElements(GL_TRIANGLES, _vbo.count(), GL_UNSIGNED_INT, nullptr)); // TODO: this crashes if render graph is empty
+		//GLCall(glDrawElements(GL_TRIANGLES, _vbo.count(), GL_UNSIGNED_INT, nullptr)); // TODO: this crashes if render graph is empty
+		// TODO: figure out crash if render graph is empty
+		glDrawElements(GL_TRIANGLES, _vbo.count(), GL_UNSIGNED_INT, nullptr);
+#endif
+
+		//_defaultRenderTarget->on_clear();
 	}
 
 	void RendererOpenGL::present_impl()
@@ -809,6 +818,18 @@ namespace night
 
 	void RendererOpenGL::flush()
 	{
+		if (_drawCalls.empty())
+		{
+			ASSERT(_transformStorage.empty());
+			return;
+		}
+
+		handle<TextureOpenGL> drt = _defaultRenderTarget;
+		GLCall(glBindFramebuffer(GL_FRAMEBUFFER, drt->fbo()));
+		GLCall(glClearColor(0, 0, 0, 0));
+		GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+		GLCall(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+
 		using iterator = map <
 			shandle<const ITexture>, // render targets
 			map<
@@ -825,18 +846,16 @@ namespace night
 				_vbo.bind();
 				_ibo.bind();
 
-				auto render_target = (*i).first;
+				handle<const TextureOpenGL> render_target = (*i).first;
 				ASSERT(render_target != nullptr);
-				((handle<const TextureOpenGL>)(render_target))->bind_fbo();
+				//((handle<const TextureOpenGL>)(render_target))->bind_fbo();
+				GLCall(glBindFramebuffer(GL_FRAMEBUFFER, render_target->fbo()));
+				GLCall(glViewport(0, 0, render_target->width(), render_target->height()));
+				//GLCall(glClear(GL_DEPTH_BUFFER_BIT));
 
 				s32 w = render_target->width();
 				s32 h = render_target->height();
 				mat4 mvp = render_target->mvp();
-
-				//mvp = mvp * glm::scale(vec3(1.0f, -1.0f, 1.0f)); // TODO: correct coordinate issues
-
-				real wr = (h < w ? (real)h / (real)w : 1.0f);
-				real hr = (w < h ? (real)w / (real)h : 1.0f);
 
 				if (render_target->should_use_depth_testing)
 				{
@@ -958,6 +977,9 @@ namespace night
 						GLCall(glDrawElements(GL_TRIANGLES, _vbo.count(), GL_UNSIGNED_INT, nullptr));
 					}
 				}
+
+				GLCall(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+				GLCall(glViewport(0, 0, 0, 0));
 			};
 
 		auto render_depth_peels = [&](iterator i)
@@ -966,7 +988,7 @@ namespace night
 				_vbo.bind();
 				_ibo.bind();
 
-				auto render_target = (*i).first; // TODO: add u8 overrideDepthBuffer to override the depth of the vertices and instead use the render targets stored depth
+				handle<const TextureOpenGL> render_target = (*i).first;
 
 				ASSERT(render_target != nullptr);
 
@@ -985,8 +1007,9 @@ namespace night
 				// if opaque pixel is infront of the depth peel pixel: discard, else blend.
 				for (s32 l = 0; l < _depthPeels.size(); l++)
 				{
-					_depthPeels[l]->bind_fbo();
-					GLCall(glViewport(0, 0, w, h));
+					//_depthPeels[l]->bind_fbo();
+					GLCall(glBindFramebuffer(GL_FRAMEBUFFER, _depthPeels[l]->fbo()));
+					GLCall(glViewport(0, 0, w, h)); // set viewport of depth peel to viewport of render target
 					GLCall(glClearColor(0.0f, 0.0f, 0.0f, 0.0f)); // TODO: clear color messes up rendering to texture
 					GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
@@ -1112,12 +1135,9 @@ namespace night
 
 				// combine depth peels.
 				vec2 ratio;
-				handle<const TextureOpenGL> rtgl = render_target;
-				{
-					ASSERT(rtgl->fbo() != 0);
-					GLCall(glBindFramebuffer(GL_FRAMEBUFFER, rtgl->fbo()));
-				}
-
+				//handle<const TextureOpenGL> rtgl = render_target;
+				ASSERT(render_target->fbo() != 0);
+				GLCall(glBindFramebuffer(GL_FRAMEBUFFER, render_target->fbo()));
 				GLCall(glViewport(0, 0, w, h));
 
 				GLCall(glDisable(GL_DEPTH_TEST));
@@ -1160,12 +1180,47 @@ namespace night
 			}
 		}
 
+		// flush to main framebuffer
+		GLCall(glBindFramebuffer(GL_FRAMEBUFFER, 0)); // must not have render target bound.
+		GLCall(glViewport(viewport().x, viewport().y, viewport().z, viewport().w));
+
+		GLCall(glDisable(GL_DEPTH_TEST));
+		GLCall(glEnable(GL_BLEND));
+		GLCall(glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA));
+
+		Quad quad(QuadParams{ .position = {0, 0, 0}, .size = { 1, 1 } });
+		quad.vertices[0].texture_coord = vec2(0, 1);
+		quad.vertices[1].texture_coord = vec2(1, 1);
+		quad.vertices[2].texture_coord = { 1, 0 };
+		quad.vertices[3].texture_coord = vec2(0, 0);
+
+		VertexOpenGL vertices[6];
+		vertices[0] = { quad.vertices[0], 0 };
+		vertices[1] = { quad.vertices[1], 0 };
+		vertices[2] = { quad.vertices[2], 0 };
+		vertices[3] = { quad.vertices[2], 0 };
+		vertices[4] = { quad.vertices[3], 0 };
+		vertices[5] = { quad.vertices[0], 0 };
+
+		_depthPeelMaterial->uniform("u_texture", TextureUniformData{ .texture = _defaultRenderTarget, .sample_depth_buffer = false });
+		_depthPeelMaterial->bind();
+		_vbo.data(&vertices, 6);
+
+		//GLCall(glDrawElements(GL_TRIANGLES, _vbo.count(), GL_UNSIGNED_INT, nullptr)); // TODO: this crashes if render graph is empty
+		// TODO: figure out crash if render graph is empty
+		glDrawElements(GL_TRIANGLES, _vbo.count(), GL_UNSIGNED_INT, nullptr);
+
 		_drawCalls.clear();
 		_transformStorage.clear();
 	}
 
 	void RendererOpenGL::flush_render_graph(RenderGraph const& graph)
 	{
+		if (graph.sorted_buffers().empty())
+		{
+			return;
+		}
+
 		update_resources();
 		auto& sorted_buffers = graph.sorted_buffers();
 

@@ -25,6 +25,7 @@ namespace night
 
 	protected:
 
+		virtual void on_update(real delta) override;
 		virtual void on_render(RenderGraph& out_graph) const override;
 
 	private:

@@ -27,11 +27,21 @@ namespace night
 		ivec2 internal_resolution = find_internal_resolution();
 		params.nrt_params.width = internal_resolution.x;
 		params.nrt_params.height = internal_resolution.y;
+		//if (name() == "FIM Set")
+		//{
+		//	params.nrt_params.width = 256;
+		//	params.nrt_params.height = 256;
+		//}
 		params.nrt_params.filtering = ETextureFiltering::Linear;
+
+		params.nrt_params.should_use_depth_peeling = false; // TODO: remove
+		params.nrt_params.should_use_depth_testing = false; // TODO: remove
+		params.nrt_params.should_use_blending = true; // TODO: remove
+
 		params.nrt_params.should_inherit_parent_resolution = false; // disable before initializing
 		NodeRenderTarget::init(params.nrt_params);
 
-		// need to enable this after initializing
+		// need to re-enable this after initializing
 		should_inherit_parent_resolution = true;
 
 		unpass_down_event_type(MouseButtonPressedEvent::get_static_type());
@@ -231,10 +241,12 @@ namespace night
 		result.x = internal.y - internal.x;
 		result.y = internal.z - internal.w;
 
-		ASSERT(_internalResolutionScale != 0);
 		result.x = (s32)((real)result.x * _internalResolutionScale);
 		result.y = (s32)((real)result.y * _internalResolutionScale);
+		//result.x *= _internalResolutionScale;
+		//result.y *= _internalResolutionScale;
 
+		ASSERT(result.x > 0 && result.y > 0);
 		return result;
 	}
 
@@ -389,6 +401,7 @@ namespace night
 	// then docking and picking should be easier
 	void NodeWindow::on_render(RenderGraph& out_graph) const
 	{
+#if 1 // TODO: remove
 		auto target = this->target();
 		ASSERT(target != nullptr);
 
@@ -440,6 +453,7 @@ namespace night
 
 			out_graph.draw_quad(quad);
 		}
+#endif
 	}
 
 }

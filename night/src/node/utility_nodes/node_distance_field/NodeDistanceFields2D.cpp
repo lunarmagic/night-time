@@ -62,6 +62,15 @@ namespace night
 		_fieldCount = 0;
 		_fieldWidth = 0;
 		_fieldHeight = 0;
+
+#if defined(NIGHT_ENABLE_DEBUG_RENDERER) && defined (NIGHT_DEBUG)
+		for (const auto& i : __debugTextures)
+		{
+			utility::renderer().destroy_texture(i);
+		}
+
+		__debugTextures.clear();
+#endif
 	}
 
 	void NodeDistanceFields2D::draw_point(ivec2 internal_point, s32 field_index)

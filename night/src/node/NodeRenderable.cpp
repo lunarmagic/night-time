@@ -72,7 +72,7 @@ namespace night
 					}
 					else
 					{
-						out_graph.append_transform(mat4(0));
+						out_graph.append_transform(mat4(1));
 					}
 
 					// TODO: append transform buffer.

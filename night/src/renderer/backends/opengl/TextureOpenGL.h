@@ -18,7 +18,7 @@ namespace night
 		u32 const& dbo() const { return _dbo; }
 
 		//void bind_fbo() const;
-		void bind_fbo() const;
+		//void bind_fbo() const;
 
 		virtual void on_clear() override;
 

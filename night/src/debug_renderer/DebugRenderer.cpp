@@ -38,6 +38,8 @@ namespace night
     umap<handle<INode>, u8> DebugRenderer::_sceneSelectedNodes;
     u8 _isViewingAlgo = false;
     CameraTransform DebugRenderer::_algoCameraTransform = {};
+    string DebugRenderer::_assetsSelectedTexture = "";
+    u8 DebugRenderer::_assetsTextureShowDepthBuffer = false;
 
     //DebugRenderer& DebugRenderer::get()
     //{
@@ -254,8 +256,8 @@ namespace night
         ASSERT(_algoCurrentlyInvolvedNodesStack.empty());// don't forget to call DB_ALGO_POP
 
         utility::renderer().flush();
-
         _renderTarget->clear(COLOR_ZERO);
+        _renderGraph.clear();
         _renderGraph.append_transform(mat4(1));
 
         auto& gui = utility::gui();
@@ -281,6 +283,14 @@ namespace night
                 _guiCurrentTab = EDebugRendererTab::Profiler;
             }
 
+            gui.same_line();
+
+            if (gui.button("Assets"))
+            {
+                _assetsSelectedTexture.clear();
+                _guiCurrentTab = EDebugRendererTab::Assets;
+            }
+
             switch (_guiCurrentTab)
             {
             case EDebugRendererTab::Scene:
@@ -300,6 +310,12 @@ namespace night
                 profiler_render();
                 break;
             }
+
+            case EDebugRendererTab::Assets:
+            {
+                assets_render();
+                break;
+            }
             }
         }
 
@@ -310,7 +326,6 @@ namespace night
         //_algoCurrentlyInvolvedNodes.clear();
         //_algoAlgorithmStack.clear();
         _algoCurrentlyInvolvedNodesStack.clear();
-        _renderGraph.clear();
         //_renderGraph.current_buffer(_sceneRenderTarget, nullptr, nullptr);
     }
 
@@ -1290,15 +1305,90 @@ namespace night
         //}
     }
 
-    //void DebugRenderer::algo_show_onion_skins(s32 count)
-    //{
-    //    if (!_algoIsAutoUpdating || _guiCurrentTab != EDebugRendererTab::Algorithms)
-    //    {
-    //        return;
-    //    }
+    void DebugRenderer::assets_render()
+    {
+        //_renderGraph.current_buffer(_renderTarget, nullptr, nullptr);
 
-    //    // add count to current step.
-    //}
+        auto& gui = utility::gui();
+
+        {
+            // render darkness
+            _renderGraph.current_buffer(utility::renderer().default_render_target(), nullptr, nullptr);
+            _renderGraph.append_transform(mat4(1));
+
+            s32 w = utility::renderer().default_render_target()->width(); // TODO: maybe use NodeFrameBuffer
+            s32 h = utility::renderer().default_render_target()->height();
+            vec2 ar = { (h < w ? (real)h / (real)w : 1.0f), (w < h ? (real)w / (real)h : 1.0f) };
+            vec3 scale = vec3(1.0f / ar.x, 1.0f / ar.y, 1.0f);
+
+            Quad q = Quad(QuadParams{ .position = ORIGIN, .size = scale, .color = PURPLE.opaqued(0.95f) });
+            _renderGraph.draw_quad(q); // lower alpha
+            utility::renderer().flush_render_graph(_renderGraph);
+            utility::renderer().flush();
+            _renderGraph.clear();
+            _renderGraph.append_transform(mat4(1));
+        }
+
+        auto& textures = utility::renderer()._textures;
+
+        if (gui.selectable("Show Depth Buffer", _assetsTextureShowDepthBuffer))
+        {
+            _assetsTextureShowDepthBuffer = !_assetsTextureShowDepthBuffer;
+        }
+
+        gui.seperator();
+
+        for (const auto& i : textures)
+        {
+            if (gui.selectable(i.first, i.first == _assetsSelectedTexture))
+            {
+                if (i.first == _assetsSelectedTexture)
+                {
+                    _assetsSelectedTexture.clear();
+                }
+                else
+                {
+                    _assetsSelectedTexture = i.first;
+                }
+            }
+        }
+
+        if (!_assetsSelectedTexture.empty())
+        {
+            auto f = textures.find(_assetsSelectedTexture);
+            if (f != textures.end())
+            {
+                Quad q = QuadParams{ .position = FORWARD * 20.0f, .size = vec2(1) };
+
+                if (!_assetsTextureShowDepthBuffer)
+                {
+                    _renderGraph.current_buffer(
+                        utility::renderer().default_render_target(),
+                        nullptr,
+                        (*f).second
+                    );
+                }
+                else
+                {
+                    _renderGraph.current_buffer(
+                        utility::renderer().default_render_target(),
+                        nullptr,
+                        (*f).second->depth_buffer()
+                    );
+                }
+
+                _renderGraph.draw_quad(q);
+                utility::renderer().flush_render_graph(_renderGraph);
+                utility::renderer().flush();
+                _renderGraph.clear();
+                _renderGraph.append_transform(mat4(1));
+            }
+            else
+            {
+                _assetsSelectedTexture.clear();
+            }
+        }
+    }
 
     void DebugRenderer::draw_sphere(DrawSphereParams const& params, u8 is_algo)
     {

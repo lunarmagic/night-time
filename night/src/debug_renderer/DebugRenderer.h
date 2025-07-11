@@ -120,8 +120,9 @@ namespace night
 	enum class EDebugRendererTab
 	{
 		Scene = 0,
-		Algorithms = 1,
-		Profiler = 2
+		Algorithms,
+		Profiler,
+		Assets,
 	};
 
 	struct NIGHT_API DebugRenderer
@@ -322,11 +323,13 @@ namespace night
 		static handle<ITexture> _renderTarget;
 		static RenderGraph _renderGraph;
 
-		
+		static string _assetsSelectedTexture;
+		static u8 _assetsTextureShowDepthBuffer;
 
 		static void scene_render();
 		static void algo_render();
 		static void profiler_render();
+		static void assets_render();
 	};
 
 	template<typename ...Nodes>

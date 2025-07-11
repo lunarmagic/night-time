@@ -20,6 +20,12 @@ namespace night
 		textures(texture);
 	}
 
+	void NodeText::on_update(real delta)
+	{
+		quat q = quat(vec3(utility::window().time_elapsed() * 0.5f, utility::window().time_elapsed(), utility::window().time_elapsed() * 0.33f));
+		local_rotation(q);
+	}
+
 	void NodeText::on_render(RenderGraph& out_graph) const
 	{
 		for (s32 i = 0; i < _text.size(); i++)
