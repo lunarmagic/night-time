@@ -2,7 +2,7 @@
 -- TODO: change dialect to c++ 20 and define NIGHT_ENABLE_ASSERT
 -- TODO: include stb_image
 
-workspace "night"
+workspace "night time"
 	architecture "x64"
 
 	configurations
@@ -13,6 +13,8 @@ workspace "night"
 		"ReleaseDBAR",
 		"Dist"
 	}
+
+	startproject "sandbox"
 
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 

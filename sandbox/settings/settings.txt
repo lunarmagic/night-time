@@ -1,12 +1,12 @@
 Night:
-	Application:
-		Low Input Latency Mode: 0
-	Window:
-		Resolution: {1600, 1000}
-		FPS: 144.000000
 	RendererOpenGL:
 		Depth Peel Count: 2
 		Depth Peel Resolution: {4096, 2160}
 		Use VSync: 1
+	Window:
+		Resolution: {1600, 1000}
+		FPS: 144.000000
+	Application:
+		Low Input Latency Mode: 0
 	Action Map:
 		Action: Key Invalid
