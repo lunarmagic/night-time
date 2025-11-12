@@ -43,6 +43,9 @@
     <Filter Include="input">
       <UniqueIdentifier>{B54AA90F-215F-D1C0-EAE0-742056B4CDF1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="intersect">
+      <UniqueIdentifier>{969FBC12-020A-7189-4B48-222FB7F14EDE}</UniqueIdentifier>
+    </Filter>
     <Filter Include="log">
       <UniqueIdentifier>{078D880B-7396-887C-FC11-9F7C681A947C}</UniqueIdentifier>
     </Filter>
@@ -57,6 +60,9 @@
     </Filter>
     <Filter Include="node\utility_nodes">
       <UniqueIdentifier>{A69A5462-927E-15B8-FBDE-0F0BE7E1FF39}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="node\utility_nodes\node_animation">
+      <UniqueIdentifier>{3AFE00C9-A66C-5648-EF55-11485B034CE4}</UniqueIdentifier>
     </Filter>
     <Filter Include="node\utility_nodes\node_distance_field">
       <UniqueIdentifier>{48B9C2C0-340B-9AB0-1D2A-D7C0091BB399}</UniqueIdentifier>
@@ -96,6 +102,9 @@
     </Filter>
     <Filter Include="stl">
       <UniqueIdentifier>{78AB880B-E4B4-887C-6D30-9F7CD938947C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="test">
+      <UniqueIdentifier>{65689E7C-519F-9F0D-FA8B-8510E6A11B0F}</UniqueIdentifier>
     </Filter>
     <Filter Include="text">
       <UniqueIdentifier>{0A699E7C-F69F-9F0D-9F8C-85108BA21B0F}</UniqueIdentifier>
@@ -174,6 +183,9 @@
     <ClInclude Include="src\geometry\Plane.h">
       <Filter>geometry</Filter>
     </ClInclude>
+    <ClInclude Include="src\geometry\Polygon.h">
+      <Filter>geometry</Filter>
+    </ClInclude>
     <ClInclude Include="src\geometry\Quad.h">
       <Filter>geometry</Filter>
     </ClInclude>
@@ -181,6 +193,9 @@
       <Filter>geometry</Filter>
     </ClInclude>
     <ClInclude Include="src\geometry\Vertex.h">
+      <Filter>geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="src\geometry\convex_hull.h">
       <Filter>geometry</Filter>
     </ClInclude>
     <ClInclude Include="src\gjk\gjk.h">
@@ -197,6 +212,9 @@
     </ClInclude>
     <ClInclude Include="src\input\InputKey.h">
       <Filter>input</Filter>
+    </ClInclude>
+    <ClInclude Include="src\intersect\intersect.h">
+      <Filter>intersect</Filter>
     </ClInclude>
     <ClInclude Include="src\log\log.h">
       <Filter>log</Filter>
@@ -220,6 +238,9 @@
     <ClInclude Include="src\node\NodeFrameBuffer.h">
       <Filter>node</Filter>
     </ClInclude>
+    <ClInclude Include="src\node\NodeGui.h">
+      <Filter>node</Filter>
+    </ClInclude>
     <ClInclude Include="src\node\NodeRenderTarget.h">
       <Filter>node</Filter>
     </ClInclude>
@@ -234,6 +255,9 @@
     </ClInclude>
     <ClInclude Include="src\node\utility_nodes\NodeText.h">
       <Filter>node\utility_nodes</Filter>
+    </ClInclude>
+    <ClInclude Include="src\node\utility_nodes\node_animation\NodeAnimation.h">
+      <Filter>node\utility_nodes\node_animation</Filter>
     </ClInclude>
     <ClInclude Include="src\node\utility_nodes\node_distance_field\NodeDistanceFields2D.h">
       <Filter>node\utility_nodes\node_distance_field</Filter>
@@ -310,6 +334,15 @@
     <ClInclude Include="src\stl\stl.h">
       <Filter>stl</Filter>
     </ClInclude>
+    <ClInclude Include="src\test\TestConvex2D.h">
+      <Filter>test</Filter>
+    </ClInclude>
+    <ClInclude Include="src\test\TestLauncher.h">
+      <Filter>test</Filter>
+    </ClInclude>
+    <ClInclude Include="src\test\TestNodeAnimation.h">
+      <Filter>test</Filter>
+    </ClInclude>
     <ClInclude Include="src\text\Text.h">
       <Filter>text</Filter>
     </ClInclude>
@@ -373,6 +406,9 @@
     <ClCompile Include="src\geometry\Plane.cpp">
       <Filter>geometry</Filter>
     </ClCompile>
+    <ClCompile Include="src\geometry\Polygon.cpp">
+      <Filter>geometry</Filter>
+    </ClCompile>
     <ClCompile Include="src\geometry\Quad.cpp">
       <Filter>geometry</Filter>
     </ClCompile>
@@ -381,6 +417,9 @@
     </ClCompile>
     <ClCompile Include="src\gui\Gui.cpp">
       <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\intersect\intersect.cpp">
+      <Filter>intersect</Filter>
     </ClCompile>
     <ClCompile Include="src\log\log.cpp">
       <Filter>log</Filter>
@@ -394,14 +433,14 @@
     <ClCompile Include="src\material\IShader.cpp">
       <Filter>material</Filter>
     </ClCompile>
-    <ClCompile Include="src\math\math.cpp">
-      <Filter>math</Filter>
-    </ClCompile>
     <ClCompile Include="src\nightpch.cpp" />
     <ClCompile Include="src\node\INode.cpp">
       <Filter>node</Filter>
     </ClCompile>
     <ClCompile Include="src\node\NodeFrameBuffer.cpp">
+      <Filter>node</Filter>
+    </ClCompile>
+    <ClCompile Include="src\node\NodeGui.cpp">
       <Filter>node</Filter>
     </ClCompile>
     <ClCompile Include="src\node\NodeRenderTarget.cpp">
@@ -418,6 +457,9 @@
     </ClCompile>
     <ClCompile Include="src\node\utility_nodes\NodeText.cpp">
       <Filter>node\utility_nodes</Filter>
+    </ClCompile>
+    <ClCompile Include="src\node\utility_nodes\node_animation\NodeAnimation.cpp">
+      <Filter>node\utility_nodes\node_animation</Filter>
     </ClCompile>
     <ClCompile Include="src\node\utility_nodes\node_distance_field\NodeDistanceFields2D.cpp">
       <Filter>node\utility_nodes\node_distance_field</Filter>

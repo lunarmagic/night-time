@@ -12,7 +12,7 @@ namespace night
 
 		u8 valid() const { return _future.valid(); }
 
-		void wait();
+		void wait() const;
 
 	private:
 
@@ -30,7 +30,7 @@ namespace night
 	}
 
 	template<typename Return, typename ...Args>
-	inline void Thread<Return, Args...>::wait()
+	inline void Thread<Return, Args...>::wait() const
 	{
 		if (_future.valid())
 		{

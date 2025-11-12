@@ -7,7 +7,7 @@
 #include <gl\glu.h>
 #include "window/backends/sdl/WindowSDL.h"
 #include "math/math.h"
-#include <glm/gtc/matrix_transform.hpp>
+//#include <glm/gtc/matrix_transform.hpp>
 //#include "Renderer3D/Camera.h"
 //#include "node/INode.h"
 //#include "node/NodeRenderable.h"
@@ -262,7 +262,14 @@ namespace night
 			}
 			
 			vec2 aspect = vec2(wr, hr);
+
 			Distance dist = distance_to_line(point / aspect, p1 / aspect, p2 / aspect);
+
+			if(p1 == p2)
+			{
+				dist.distance = 0; // TODO: fix this
+				dist.t = 0;
+			}
 
 			float width = width1 + (width2 - width1) * dist.t;
 
@@ -363,8 +370,8 @@ namespace night
 
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 5);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 
 		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 		SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 32);
@@ -510,7 +517,7 @@ namespace night
 		GLCall(glEnable(GL_BLEND));
 		GLCall(glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA));
 
-		Quad quad(QuadParams{ .position = {0, 0, 0}, .size = { 1, 1 } });
+		Quad<> quad(QuadParams{ .position = {0, 0, 0}, .size = { 1, 1 } });
 		quad.vertices[0].texture_coord = vec2(0, 1);
 		quad.vertices[1].texture_coord = vec2(1, 1);
 		quad.vertices[2].texture_coord = { 1, 0 };
@@ -621,7 +628,7 @@ namespace night
 		draw_line(DrawLineParams{ .p1 = point, .p2 = point + UP * RENDERER_POINT_DEFAULT_HEIGHT, .color = color, .width = RENDERER_POINT_DEFAULT_WIDTH });
 	}
 
-	void RendererOpenGL::draw_quad(Quad const& quad)
+	void RendererOpenGL::draw_quad(Quad<> const& quad)
 	{
 		auto fn = [&](handle<IMaterial> active_material)
 		{
@@ -672,7 +679,7 @@ namespace night
 	vec3 _project_point_to_view_plane(const vec4& point, real view_angle)
 	{
 		vec3 origin = { 0.0f, 0.0f, 0.0f };
-		auto rc = raycast::plane(point, (BACKWARDS * view_angle) - vec3(point), origin, FORWARD);
+		auto rc = Raycast3D<>::plane(point, (BACKWARDS * view_angle) - vec3(point), origin, FORWARD);
 		vec3 contact = rc.contact(point, (BACKWARDS * view_angle) - vec3(point));
 		return { contact.x, contact.y, 0.0f };
 	}
@@ -684,11 +691,11 @@ namespace night
 		transformed_params.p1 = _activeTransform * vec4(transformed_params.p1, 1);
 		transformed_params.p2 = _activeTransform * vec4(transformed_params.p2, 1);
 
-		Quad area = IRenderer::generate_line_quad(transformed_params, _activeRenderTarget);
+		Quad<> area = IRenderer::generate_line_quad(transformed_params, _activeRenderTarget);
 
 		mat4 const& mvp = _activeRenderTarget->mvp(); // TODO: we are doing this twice
-		vec3 p1 = glm::project(transformed_params.p1, mat4(1), mvp, vec4(-1, -1, 2, 2));
-		vec3 p2 = glm::project(transformed_params.p2, mat4(1), mvp, vec4(-1, -1, 2, 2));
+		vec3 p1 = math::project(transformed_params.p1, mat4(1), mvp, vec4(-1, -1, 2, 2));
+		vec3 p2 = math::project(transformed_params.p2, mat4(1), mvp, vec4(-1, -1, 2, 2));
 
 		struct ssbo_layout
 		{
@@ -1145,7 +1152,7 @@ namespace night
 				GLCall(glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA));
 
 				ratio = vec2(w, h) / vec2(_depthPeelResolution);
-				Quad quad(QuadParams{ .position = {0, 0, 0}, .size = {1, 1} });
+				Quad<> quad(QuadParams<>{ .position = {0, 0, 0}, .size = {1, 1} });
 				quad.vertices[0].texture_coord = vec2(0, ratio.y);
 				quad.vertices[1].texture_coord = vec2(ratio.x, ratio.y);
 				quad.vertices[2].texture_coord = { ratio.x, 0 };
@@ -1188,7 +1195,7 @@ namespace night
 		GLCall(glEnable(GL_BLEND));
 		GLCall(glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA));
 
-		Quad quad(QuadParams{ .position = {0, 0, 0}, .size = { 1, 1 } });
+		Quad<> quad(QuadParams<>{ .position = {0, 0, 0}, .size = { 1, 1 } });
 		quad.vertices[0].texture_coord = vec2(0, 1);
 		quad.vertices[1].texture_coord = vec2(1, 1);
 		quad.vertices[2].texture_coord = { 1, 0 };
@@ -1282,7 +1289,7 @@ namespace night
 					
 					for (s32 i = 0; i < current_buffer.quads.size(); i++)
 					{
-						Quad quad(current_buffer.quads[i].quad);
+						Quad<> quad(current_buffer.quads[i].quad);
 					
 						vertices[i * 6].vertex = quad.vertices[0];
 						vertices[i * 6 + 1].vertex = quad.vertices[1];

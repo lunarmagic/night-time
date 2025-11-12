@@ -128,8 +128,28 @@ namespace night
 
 	u8 Gui::drag_s32(string const& name, s32 const* i, r32 speed, s32 min, s32 max)
 	{
+		if (max <= min || min > max)
+		{
+			s32 dummy = min;
+			return ImGui::DragInt(name.c_str(), &dummy, speed, min, max);
+		}
 		return ImGui::DragInt(name.c_str(), const_cast<s32*>(i), speed, min, max);
 	}
+
+	u8 Gui::drag_vec2(string const& name, vec2 const* v, r32 speed, r32 min, r32 max)
+	{
+		return ImGui::DragFloat2(name.c_str(), const_cast<float*>((float*)v), speed, min, max);
+	};
+
+	u8 Gui::drag_vec3(string const& name, vec3 const* v, r32 speed, r32 min, r32 max)
+	{
+		return ImGui::DragFloat3(name.c_str(), const_cast<float*>((float*)v), speed, min, max);
+	};
+
+	u8 Gui::drag_vec4(string const& name, vec4 const* v, r32 speed, r32 min, r32 max)
+	{
+		return ImGui::DragFloat4(name.c_str(), const_cast<float*>((float*)v), speed, min, max);
+	};
 
 	u8 Gui::drag_ivec4(string const& name, ivec4 const* v, r32 speed, s32 min, s32 max)
 	{
@@ -209,7 +229,7 @@ namespace night
 		canvas_sz = ImGui::GetContentRegionAvail();   // Resize canvas to what's available
 		//if (canvas_sz.x > max_size.x) canvas_sz.x = max_size.x;
 		//if (canvas_sz.y > max_size.y) canvas_sz.y = max_size.y;
-		canvas_sz.y = canvas_sz.x / height_ratio;
+		canvas_sz.y = canvas_sz.x * height_ratio;
 		canvas_p1 = ImVec2(canvas_p0.x + canvas_sz.x, canvas_p0.y + canvas_sz.y);
 
 		ImGui::InvisibleButton("Canvas", canvas_sz, ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight);
@@ -229,11 +249,11 @@ namespace night
 	{
 		vec2 p1p;
 		p1p.x = (p1.x + 1.0f) * canvas_sz.x / 2.0f;
-		p1p.y = (p1.y + 1.0f) * canvas_sz.y / 2.0f;
+		p1p.y = (-p1.y + 1.0f) * canvas_sz.y / 2.0f;
 
 		vec2 p2p;
 		p2p.x = (p2.x + 1.0f) * canvas_sz.x / 2.0f;
-		p2p.y = (p2.y + 1.0f) * canvas_sz.y / 2.0f;
+		p2p.y = (-p2.y + 1.0f) * canvas_sz.y / 2.0f;
 
 		Color8 color8 = Color8(color);
 
@@ -251,7 +271,7 @@ namespace night
 	{
 		vec2 pp;
 		pp.x = (point.x + 1.0f) * canvas_sz.x / 2.0f;
-		pp.y = (point.y + 1.0f) * canvas_sz.y / 2.0f;
+		pp.y = (-point.y + 1.0f) * canvas_sz.y / 2.0f;
 
 		Color8 color8 = Color8(color);
 
@@ -268,7 +288,7 @@ namespace night
 	{
 		vec2 pp;
 		pp.x = (point.x + 1.0f) * canvas_sz.x / 2.0f;
-		pp.y = (point.y + 1.0f) * canvas_sz.y / 2.0f;
+		pp.y = (-point.y + 1.0f) * canvas_sz.y / 2.0f;
 
 		Color8 color8 = Color8(color);
 
@@ -288,7 +308,7 @@ namespace night
 		mouse.x = ((mouse.x - canvas_p0.x) / canvas_sz.x - 0.5f) * 2;
 		mouse.y = ((mouse.y - canvas_p0.y) / canvas_sz.y - 0.5f) * 2;
 
-		return { (real)mouse.x, (real)mouse.y };
+		return { (real)mouse.x, -(real)mouse.y };
 	}
 
 	void Gui::end_canvas()
@@ -418,13 +438,26 @@ namespace night
 
 	u8 Gui::set_next_window_size(vec2 const& size)
 	{
-		ImGui::SetNextWindowSize({ size.x, size.y });
+		s32 w = utility::window().width();
+		s32 h = utility::window().height();
+		vec2 ar = { (h < w ? (real)h / (real)w : 1.0f), (w < h ? (real)w / (real)h : 1.0f) };
+
+		real x = (size.x * ar.x) / 2 * w;
+		real y = (size.y * ar.y) / 2 * h;
+
+		ImGui::SetNextWindowSize({ x, y });
 		return true;
 	}
 
 	u8 Gui::set_next_window_position(vec2 const& position)
 	{
-		ImGui::SetNextWindowPos({ position.x, position.y });
+		s32 w = utility::window().width();
+		s32 h = utility::window().height();
+		vec2 ar = { (h < w ? (real)h / (real)w : 1.0f), (w < h ? (real)w / (real)h : 1.0f) };
+
+		real x = ((position.x * ar.x + 1.0f) / 2) * w;
+		real y = ((-position.y * ar.y + 1.0f) / 2) * h;
+		ImGui::SetNextWindowPos({ x, y });
 		return true;
 	}
 

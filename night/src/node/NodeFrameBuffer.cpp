@@ -22,7 +22,7 @@ namespace night
 			s32 w = _target->width();
 			s32 h = _target->height();
 			vec2 ar = { (h < w ? (real)h / (real)w : 1.0f), (w < h ? (real)w / (real)h : 1.0f) };
-			scale(vec3(1.0f / ar.x, 1.0f / ar.y, 1.0f));
+			local_scale(vec3(1.0f / ar.x, 1.0f / ar.y, 1.0f));
 		}
 
 		bind_event([&](WindowResizeEvent const& event)
@@ -30,7 +30,7 @@ namespace night
 				s32 w = event.width();
 				s32 h = event.height();
 				vec2 ar = { (h < w ? (real)h / (real)w : 1.0f), (w < h ? (real)w / (real)h : 1.0f) };
-				scale(vec3(1.0f / ar.x, 1.0f / ar.y, 1.0f));
+				local_scale(vec3(1.0f / ar.x, 1.0f / ar.y, 1.0f));
 			});
 
 		clear_color = COLOR_ZERO;

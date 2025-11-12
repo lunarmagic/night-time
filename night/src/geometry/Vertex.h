@@ -7,11 +7,12 @@
 namespace night
 {
 
+	template<typename T = real>
 	struct Vertex
 	{
-		vec4 point;
+		vec<4, T> point;
 		Color color;
-		vec2 texture_coord;
+		vec<2, r32> texture_coord;
 	};
 
 }

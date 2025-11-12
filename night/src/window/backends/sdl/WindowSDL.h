@@ -18,7 +18,6 @@ namespace night
 
 	struct Event;
 	struct Color;
-	struct Quad;
 	struct WindowResizeEvent;
 	struct Color;
 
@@ -35,6 +34,7 @@ namespace night
 		static SDL_Color sdl_color(const Color& color);
 
 		virtual vec2 mouse() const override;
+		virtual u8 mouse_down(EMouse mouse) const override;
 		virtual u8 key_down(EKey const& key) const override;
 
 		SDL_Window* sdl_window() const { return _sdlWindow; }

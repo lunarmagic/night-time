@@ -1,5 +1,7 @@
 #pragma once
 
+#if 0
+
 #include "math/math.h"
 
 namespace night
@@ -15,3 +17,5 @@ namespace night
 	};
 
 }
+
+#endif

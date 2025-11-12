@@ -34,7 +34,7 @@ namespace night
 
 	struct VertexOpenGL
 	{
-		Vertex vertex;
+		Vertex<> vertex;
 		s32 uniform_index;
 		s32 transform_index;
 	};
@@ -55,7 +55,7 @@ namespace night
 		virtual void close() override;
 		virtual void draw_pixel(ivec2 const& internal_coord, Color const& color) override;
 		virtual void draw_point(const vec3& point, const Color& color) override;
-		virtual void draw_quad(Quad const& quad) override;
+		virtual void draw_quad(Quad<real> const& quad) override;
 		virtual void draw_line(DrawLineParams const& params) override;
 		virtual void draw_text(Text const& text) override;
 

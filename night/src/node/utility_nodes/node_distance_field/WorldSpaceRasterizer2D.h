@@ -17,7 +17,7 @@ namespace night
 	struct WorldSpaceRasterizer2D
 	{
 		WorldSpaceRasterizer2D() = default;
-		WorldSpaceRasterizer2D(T* fragments, s32 width, s32 height, Quad const& area = Quad(QuadParams{}));
+		WorldSpaceRasterizer2D(T* fragments, s32 width, s32 height, Quad<> const& area = Quad<>(QuadParams<>{}));
 
 		// TODO: return vec3
 		vec2 global_to_local(const vec2& global_coordinate) const;
@@ -26,13 +26,13 @@ namespace night
 
 		u8 is_coord_in_bounds(const ivec2& coordinate) const;
 
-		void area(Quad const& a) { _area = a; }
+		void area(Quad<> const& a) { _area = a; }
 		void fragments(T* f) { _fragments = f; };
 		void width(s32 w) { _width = w; }
 		void height(s32 h) { _height = h; }
 
 		// vertex zero should be top-left, winding order is clockwise
-		Quad const& area() const { return _area; }
+		Quad<> const& area() const { return _area; }
 
 		T* fragments() const { return _fragments; };
 		s32 width() const { return  _width; }
@@ -47,14 +47,14 @@ namespace night
 
 	private:
 
-		Quad _area{ QuadParams{} };
+		Quad<> _area{ QuadParams<>{} };
 		T* _fragments = nullptr;
 		s32 _width = 0;
 		s32 _height = 0;
 	};
 
 	template<typename T>
-	inline WorldSpaceRasterizer2D<T>::WorldSpaceRasterizer2D(T* fragments, s32 width, s32 height, Quad const& area)
+	inline WorldSpaceRasterizer2D<T>::WorldSpaceRasterizer2D(T* fragments, s32 width, s32 height, Quad<> const& area)
 		: _fragments(fragments)
 		, _width(width)
 		, _height(height)
@@ -79,9 +79,12 @@ namespace night
 			max_y = MAX(vertex.point.y, max_y);
 		}
 
+		real div_x = abs(max_x - min_x);
+		real div_y = abs(max_y - min_y);
+
 		vec2 result;
-		result.x = ((global_coordinate.x - min_x) / abs(max_x - min_x)) * 2.0f - 1.0f;
-		result.y = ((global_coordinate.y - min_y) / abs(max_y - min_y)) * 2.0f - 1.0f;
+		result.x = ((global_coordinate.x - min_x) / div_x) * 2.0f - 1.0f;
+		result.y = ((global_coordinate.y - min_y) / div_y) * 2.0f - 1.0f;
 
 		return result;
 	}
@@ -166,21 +169,24 @@ namespace night
 		{
 			u8 in_bounds = is_coord_in_bounds(current);
 
-			if (!in_bounds && !should_draw_out_of_bounds)
+			//if (!in_bounds && !should_draw_out_of_bounds)
+			//{
+			//	continue;
+			//}
+
+			if (in_bounds || should_draw_out_of_bounds)
 			{
-				continue;
+				s32 index = current.x + current.y * _width;
+				real t = (real)i / (real)(d_long - 1);
+
+				callback(
+					{
+					.fragment = in_bounds ? &_fragments[index] : nullptr,
+					.coordinate = current,
+					.t = t,
+					}
+					); // TODO: impl t
 			}
-
-			s32 index = current.x + current.y * _width;
-			real t = (real)i / (real)(d_long - 1);
-
-			callback(
-				{
-				.fragment = in_bounds ? &_fragments[index] : nullptr,
-				.coordinate = current,
-				.t = t,
-				}
-			); // TODO: impl t
 
 			if (error >= 0)
 			{
@@ -200,6 +206,11 @@ namespace night
 	{
 		ivec2 p1i = local_to_internal(global_to_local(p1));
 		ivec2 p2i = local_to_internal(global_to_local(p2));
+
+		//if (p1i.x >= 100 || p1i.y >= 100 || p2i.x >= 100 || p2i.y >= 100)
+		//{
+		//	int b = 0;
+		//}
 
 		draw_line(p1i, p2i, callback, should_draw_out_of_bounds);
 	}

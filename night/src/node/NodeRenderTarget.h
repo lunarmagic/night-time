@@ -7,7 +7,9 @@ namespace night
 {
 	struct ITexture;
 	struct Color;
-	struct Ray;
+
+	template<typename T>
+	struct Ray3D;
 
 	struct NodeRenderTargetParams
 	{
@@ -26,6 +28,18 @@ namespace night
 		u8 should_automatically_render{ true };
 
 		ETextureFiltering filtering{ETextureFiltering::Nearest};
+
+		Camera camera =
+		{
+			.translation = FORWARD * (RENDERER_DEFAULT_RENDER_TARGET_FAR_CLIP / 2.0f),
+			.look_at = ORIGIN,
+			.up = UP,
+			.type = ECameraType::Orthographic,
+			.fov = NIGHT_CAMERA_DEFAULT_FOV,
+			.ortho_region = {.left = -1, .right = 1, .top = 1, .bottom = -1 },
+			.near_clip = RENDERER_DEFAULT_RENDER_TARGET_NEAR_CLIP,
+			.far_clip = RENDERER_DEFAULT_RENDER_TARGET_FAR_CLIP
+		};
 	};
 
 	struct NIGHT_API NodeRenderTarget : public NodeRenderable
@@ -47,8 +61,10 @@ namespace night
 		//ivec2 size();
 		void camera(Camera camera);
 		Camera const& camera() const;
-		Ray mouse_pick(vec2 const& mouse_position) const; // TODO: these may not need to be virtual
-		vec4 project_to_screen(vec3 const& point) const;
+		Ray3D<real> mouse_pick(vec2 const& mouse_position) const; // TODO: these may not need to be virtual
+		vec4 project(vec3 const& point) const;
+		vec3 unproject(vec2 const& point) const;
+		vec3 unproject(vec3 const& point) const;
 		real render_flush_priority() const;
 		ivec2 global_to_internal(vec2 const& global) const;
 		vec2 internal_to_global(ivec2 const& internal) const;

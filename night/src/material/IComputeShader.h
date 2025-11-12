@@ -23,7 +23,7 @@ namespace night
 		virtual void __tempInitHandle() override;
 		virtual void clean() = 0;
 
-		void dispatch_to_main_thread(function<void(IComputeShader&)> fn, function<void(IComputeShader&)> callback);
+		//void dispatch_to_main_thread(function<void(IComputeShader&)> fn, function<void(IComputeShader&)> callback);
 
 		// TODO: implement reserve
 		//virtual void reserve(s32 size, s32 binding = 0) = 0;
@@ -60,14 +60,14 @@ namespace night
 
 		//void dispatch_to_main_thread_impl(function<void(IComputeShader&)> fn);
 
-		struct MainThreadDispatch
-		{
-			function<void(IComputeShader&)> fn{ nullptr };
-			function<void(IComputeShader&)> callback{ nullptr };
-			handle<IComputeShader> compute_shader{ nullptr };
+		//struct MainThreadDispatch
+		//{
+		//	function<void(IComputeShader&)> fn{ nullptr };
+		//	function<void(IComputeShader&)> callback{ nullptr };
+		//	handle<IComputeShader> compute_shader{ nullptr };
 
-		};
-		static vector<MainThreadDispatch> _toBeDispatchedInMainThread;
+		//};
+		//static vector<MainThreadDispatch> _toBeDispatchedInMainThread;
 
 		static set<handle<IComputeShader>> _toBeInitialized;
 		//ivec3 _numGroups{ ivec3(1, 1, 1) };

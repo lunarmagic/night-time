@@ -3,6 +3,7 @@
 #include "math/math.h"
 #include "color/Color.h"
 #include "renderer/IRenderer.h"
+#include "geometry/Plane.h"
 
 #define NIGHT_SHAPE_RENDERER_DRAW_THROUGH_OPACITY 0.1f
 #define NIGHT_SHAPE_RENDERER_LINE_WIDTH RENDERER_LINE_DEFAULT_WIDTH
@@ -15,7 +16,6 @@
 namespace night
 {
 	struct RenderGraph;
-	struct Plane;
 
 	// TODO: ellipse, arrow, plane
 
@@ -79,7 +79,7 @@ namespace night
 
 	struct DrawConvexParams
 	{
-		vector<Plane> const* planes;
+		vector<Plane<>> const* planes;
 		mat4 transform{ mat4(1) };
 		RenderGraph* out_graph{ nullptr };
 		u8 wireframe{ true };

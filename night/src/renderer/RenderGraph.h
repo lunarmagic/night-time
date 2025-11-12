@@ -2,7 +2,6 @@
 
 #include "IRenderer.h"
 #include "utility.h"
-//#include "ref/ref.h"
 #include "handle/handle.h"
 #include "geometry/Triangle.h"
 #include "geometry/Quad.h"
@@ -20,14 +19,14 @@ namespace night
 	{
 		struct TriangleToken
 		{
-			Triangle triangle;
+			Triangle<> triangle;
 			s32 uniform_index;
 			s32 transform_index;
 		};
 
 		struct QuadToken
 		{
-			QuadParams quad;
+			QuadParams<> quad;
 			s32 uniform_index;
 			s32 transform_index;
 		};
@@ -38,7 +37,7 @@ namespace night
 			s32 transform_index;
 		};
 
-		void draw_triangle(Triangle const& triangle)
+		void draw_triangle(Triangle<> const& triangle)
 		{
 			ASSERT(_currentBuffer != nullptr);
 
@@ -50,7 +49,7 @@ namespace night
 			_currentBuffer->triangles.emplace_back(token);
 		}
 
-		void draw_quad(QuadParams const& quad)
+		void draw_quad(QuadParams<> const& quad)
 		{
 			ASSERT(_currentBuffer != nullptr);
 
@@ -62,7 +61,7 @@ namespace night
 			_currentBuffer->quads.emplace_back(token);
 		}
 
-		void draw_quad(Quad const& quad)
+		void draw_quad(Quad<> const& quad)
 		{
 			ASSERT(_currentBuffer != nullptr);
 
@@ -86,7 +85,7 @@ namespace night
 
 		void draw_point(const vec3& point, const Color& color = BLACK)
 		{
-			draw_line(point, point + UP * RENDERER_POINT_DEFAULT_HEIGHT, color, RENDERER_POINT_DEFAULT_WIDTH);
+			draw_line(point, point + UP * RENDERER_POINT_DEFAULT_HEIGHT, color, RENDERER_POINT_DEFAULT_WIDTH * 1.5f);
 		};
 
 		void draw_point(const vec2& point, const Color& color = BLACK)

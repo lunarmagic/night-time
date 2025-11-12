@@ -90,9 +90,12 @@ namespace night
 		virtual u8 begin(string const& name, u8* p_open = nullptr, EGuiWindow flags = EGuiWindow::None) { return false; };
 		virtual u8 button(string const& name) { { return false; } };
 		virtual u8 checkbox(string const& name, u8 const* x) { { return false; } };
-		virtual u8 drag_r32(string const& name, r32 const* r, r32 speed = 1.0f, r32 min = 0.0f, r32 max = 0.0f) { { return false; } };
-		virtual u8 drag_s32(string const& name, s32 const* i, r32 speed = 1.0f, s32 min = 0, s32 max = 0) { { return false; } };
-		virtual u8 drag_ivec4(string const& name, ivec4 const* v, r32 speed = 1.0f, s32 min = 0, s32 max = 0) { { return false; } };
+		virtual u8 drag_r32(string const& name, r32 const* r, r32 speed = 0.1f, r32 min = 0.0f, r32 max = 0.0f) { { return false; } };
+		virtual u8 drag_s32(string const& name, s32 const* i, r32 speed = 0.1f, s32 min = 0, s32 max = 0) { { return false; } };
+		virtual u8 drag_vec2(string const& name, vec2 const* v, r32 speed = 0.1f, r32 min = 0, r32 max = 0) { return false; }
+		virtual u8 drag_vec3(string const& name, vec3 const* v, r32 speed = 0.1f, r32 min = 0, r32 max = 0) { return false; }
+		virtual u8 drag_vec4(string const& name, vec4 const* v, r32 speed = 0.1f, r32 min = 0, r32 max = 0) { return false; }
+		virtual u8 drag_ivec4(string const& name, ivec4 const* v, r32 speed = 0.1f, s32 min = 0, s32 max = 0) { { return false; } };
 		virtual u8 input_text(string const& name, string& out_buffer, string const& hint = "") { { return false; } };
 		virtual u8 tree_node(string const& name, u8 selected = false) { { return false; } };
 		virtual void tree_pop() {};
@@ -141,9 +144,12 @@ namespace night
 		virtual u8 begin(string const& name, u8* p_open = nullptr, EGuiWindow flags = EGuiWindow::None)  override;
 		virtual u8 button(string const& name)  override;
 		virtual u8 checkbox(string const& name, u8 const* x)  override;
-		virtual u8 drag_r32(string const& name, r32 const* r, r32 speed = 1.0f, r32 min = 0.0f, r32 max = 0.0f)  override;
-		virtual u8 drag_s32(string const& name, s32 const* i, r32 speed = 1.0f, s32 min = 0, s32 max = 0)  override;
-		virtual u8 drag_ivec4(string const& name, ivec4 const* v, r32 speed = 1.0f, s32 min = 0, s32 max = 0)  override;
+		virtual u8 drag_r32(string const& name, r32 const* r, r32 speed = 0.1f, r32 min = 0.0f, r32 max = 0.0f)  override;
+		virtual u8 drag_s32(string const& name, s32 const* i, r32 speed = 0.1f, s32 min = 0, s32 max = 0)  override;
+		virtual u8 drag_vec2(string const& name, vec2 const* v, r32 speed = 0.1f, r32 min = 0, r32 max = 0) override;
+		virtual u8 drag_vec3(string const& name, vec3 const* v, r32 speed = 0.1f, r32 min = 0, r32 max = 0) override;
+		virtual u8 drag_vec4(string const& name, vec4 const* v, r32 speed = 0.1f, r32 min = 0, r32 max = 0) override;
+		virtual u8 drag_ivec4(string const& name, ivec4 const* v, r32 speed = 0.1f, s32 min = 0, s32 max = 0)  override;
 		virtual u8 input_text(string const& name, string& out_buffer, string const& hint = "")  override;
 		virtual u8 tree_node(string const& name, u8 selected = false)  override;
 		virtual void tree_pop()  override;

@@ -73,10 +73,13 @@ namespace night
 		
 		// TODO: get vector.
 
-		u8 empty()
+		u8 empty() const
 		{
 			return _data.empty();
 		}
+
+		//File branch(std::initializer_list<string> path);
+		File& operator[](std::initializer_list<string> path);
 
 	private:
 

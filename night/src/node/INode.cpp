@@ -23,9 +23,24 @@ namespace night
 	handle<INode> INode::__parent = nullptr;
 	handle<INode> INode::__handle_from_this = nullptr;
 	type_index INode::__type_id = typeid(INode);
+	//string INode::__typeName = {};
+
+	//map<
+	//	string,
+	//	map<
+	//	type_index,
+	//	map<
+	//	handle<INode>,
+	//	sref<ISignalCallback>
+	//	>
+	//	>
+	//> INode::_globalSignals = {};
+
+	map<string, map<handle<INode>, sref<ISignalCallback>>> INode::_globalSignals;
 
 	INode::INode()
 		: _type_id(__type_id)
+		//, _typeName(__typeName)
 	{
 		_unique_id = __uid;
 		_name = __name;
@@ -40,11 +55,9 @@ namespace night
 
 	INode::~INode()
 	{
-		TRACE("Destroying ", _name);
+		TRACE("Destroying ", name_and_id());
 		_children.clear();
 		_created.clear();
-
-		//remove_all();
 	}
 
 	void INode::reset_timestamp()
@@ -70,8 +83,8 @@ namespace night
 		for (const auto& i : _created)
 		{
 			ASSERT(i != nullptr);
-			//i->_timestamp = utility::window().time_elapsed(); // TODO: move out of here
 			_children.push_back(i);
+			i->on_initialized();
 		}
 
 		//_created.clear();
@@ -85,11 +98,11 @@ namespace night
 
 	void INode::cleanup_and_initialize_created_children() // TODO: combine with initialize_created_children
 	{
-		for (const auto& i : _created)
-		{
-			ASSERT(i != nullptr);
-			i->on_initialized();
-		}
+		//for (const auto& i : _created)
+		//{
+		//	ASSERT(i != nullptr);
+		//	i->on_initialized();
+		//}
 
 		_created.clear();
 
@@ -122,6 +135,7 @@ namespace night
 			ASSERT((*i) != nullptr);
 			if ((*i)->_isPendingDestruction)
 			{
+				(*i)->cleanup_destroyed_signals();
 				i = _children.erase(i);
 			}
 			else
@@ -130,6 +144,7 @@ namespace night
 
 				if ((*i)->_isPendingDestruction) // lifespan may have run out, or it was destroyed in a child nodes destructor
 				{
+					(*i)->cleanup_destroyed_signals();
 					i = _children.erase(i);
 				}
 				else
@@ -140,7 +155,7 @@ namespace night
 		}
 
 		// if lifespan runs out, destroy
-		if (lifespan != -1.0f)
+		if (lifespan != -1.0f && _timestamp != -1.0f)
 		{
 			r64 time_elapsed = utility::window().time_elapsed() - _timestamp;
 
@@ -149,6 +164,56 @@ namespace night
 				destroy();
 			}
 		}
+	}
+
+	void INode::shut_down()
+	{
+		cleanup_destroyed_signals();
+
+		for (auto i = _children.begin(); i != _children.end();)
+		{
+			ASSERT((*i) != nullptr);
+			(*i)->shut_down();
+			i = _children.erase(i);
+		}
+
+		ASSERT(_created.empty());
+	}
+
+	void INode::cleanup_destroyed_signals()
+	{
+		// clean up signals:
+		for (const auto& i : _localSignals)
+		{
+			auto global_signal = _globalSignals.find(i);
+			if (global_signal != _globalSignals.end())
+			{
+				auto this_node = (*global_signal).second.find(handle_from_this());
+				if (this_node != (*global_signal).second.end())
+				{
+					TRACE("Node " + name_and_id() + " is removing signal: " + (*global_signal).first);
+					(*global_signal).second.erase(this_node);
+				}
+
+				if ((*global_signal).second.empty())
+				{
+					TRACE("Erasing global signal: " + (*global_signal).first);
+					_globalSignals.erase(global_signal);
+				}
+			}
+		}
+
+		for (auto& i : _children)
+		{
+			ASSERT(i != nullptr);
+			i->cleanup_destroyed_signals();
+		}
+
+		//for (auto& i : _created) // just in case there is a _created signal
+		//{
+		//	ASSERT(i != nullptr);
+		//	i->cleanup_destroyed_signals();
+		//}
 	}
 
 	void INode::update(real delta)
@@ -333,32 +398,91 @@ namespace night
 		on_event(event);
 	}
 
+	void INode::listen_signal_impl(string const& signal, function<void()> fn)
+	{
+		auto& global_signal = _globalSignals[signal];
+		auto f = global_signal.find(handle_from_this());
+		if (f == global_signal.end())
+		{
+			global_signal.insert({ handle_from_this(), sref<ISignalCallback>(new SignalCallback<SignalEmptyParams>(fn)) });
+			_localSignals.insert(signal);
+		}
+		else
+		{
+			(*f).second = sref<ISignalCallback>(new SignalCallback<SignalEmptyParams>(fn));
+		}
+
+		TRACE("Node " + name_and_id() + " is listening for signal: " + signal);
+	}
+
+	void INode::unlisten_signal(string const& signal)
+	{
+		auto s = _localSignals.find(signal);
+		if (s != _localSignals.end())
+		{
+			auto g = _globalSignals.find((*s));
+			if (g != _globalSignals.end())
+			{
+				auto n = (*g).second.find(handle_from_this());
+				if (n != (*g).second.end())
+				{
+					TRACE("Node " + name_and_id() + " is unlistening signal " + (*g).first);
+					(*g).second.erase(n);
+				}
+			}
+
+			if ((*g).second.empty())
+			{
+				TRACE("Erasing global signal: " + (*g).first);
+				_globalSignals.erase(g);
+			}
+		}
+	}
 
 	// EVENT SYSTEM:
-	void INode::on_event(Event& event)
+	void INode::on_event(Event& event, u8 pass_down)
 	{
 		if (!is_taking_events || !is_active)
 		{
 			return;
 		}
 
-		// TODO: handle blocked categories.
 		if (_blockedEventTypes.find(event.type()) == _blockedEventTypes.end())
 		{
-			_eventManager.on_event(handle_from_this(), event);
+			if (!(_blockedEventCategoryMask & event.category()))
+			{
+				_eventManager.on_event(handle_from_this(), event);
+			}
 		}
 
-		// TODO: node can't differentiate between parents NodeMovedEvents or it's own
-
-		// TODO: handle blocked categories.
-
-		if (_notPassedDownEventTypes.find(event.type()) != _notPassedDownEventTypes.end())
+		if (!pass_down)
 		{
 			return;
 		}
 
-		pass_down_event(event);
+		// TODO: node can't differentiate between parents NodeMovedEvents or it's own
 
+		pass_down_event(event);
+	}
+
+	void INode::block_event_category(EEventCategory category)
+	{
+		_blockedEventCategoryMask = _blockedEventCategoryMask | category;
+	}
+
+	void INode::unblock_event_category(EEventCategory category)
+	{
+		_blockedEventCategoryMask = (EEventCategory)((s32)_blockedEventCategoryMask & ~(s32)category);
+	}
+
+	void INode::pass_down_event_category(EEventCategory category)
+	{
+		_passedDownEventCategoryMask = _passedDownEventCategoryMask | category;
+	}
+
+	void INode::unpass_down_event_category(EEventCategory category)
+	{
+		_passedDownEventCategoryMask = (EEventCategory)((s32)_passedDownEventCategoryMask & ~(s32)category);
 	}
 
 	void INode::pass_down_event(Event& event, u8 include_newly_created_children)
@@ -378,6 +502,16 @@ namespace night
 			}
 		}
 #endif
+		if (_notPassedDownEventTypes.find(event.type()) != _notPassedDownEventTypes.end())
+		{
+			return;
+		}
+
+		if (!(_passedDownEventCategoryMask & event.category()))
+		{
+			return;
+		}
+
 		for (const auto& i : _children)
 		{
 			ASSERT(i != nullptr);

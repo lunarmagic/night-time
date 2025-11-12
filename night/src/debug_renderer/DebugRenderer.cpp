@@ -12,11 +12,13 @@
 #include "application/Application.h"
 #include "node/NodeRenderTarget.h"
 #include "node/NodeWindow.h"
+#include "shape_renderer/ShapeRenderer.h"
 
 // TODO: make involved nodes a stack.
 // TODO: exclude text rendering of parent algorithm steps.
 // TODO: make gui accessable through algo callback, we can use sliders and buttons to see better
 
+#define NIGHT_DB_RENDERER_ALGO_FADE 2
 #ifdef NIGHT_ENABLE_DEBUG_RENDERER
 
 namespace night
@@ -31,7 +33,7 @@ namespace night
      handle<ITexture> DebugRenderer::_renderTarget = nullptr;
     //handle<ITexture> DebugRenderer::_sceneRenderTarget = nullptr;
     //vector<handle<ITexture>> DebugRenderer::_algoRenderTargets;
-    u8 DebugRenderer::_algoIsAutoUpdating = true; // TODO: add button to toggle this
+    //u8 DebugRenderer::_algoIsAutoUpdating = true; // TODO: add button to toggle this
     RenderGraph DebugRenderer::_renderGraph;
     EDebugRendererTab DebugRenderer::_guiCurrentTab = EDebugRendererTab::Scene;
     umap<type_index, function<void(void*)>> DebugRenderer::_sceneObjectDrawFunctionTable;
@@ -40,6 +42,7 @@ namespace night
     CameraTransform DebugRenderer::_algoCameraTransform = {};
     string DebugRenderer::_assetsSelectedTexture = "";
     u8 DebugRenderer::_assetsTextureShowDepthBuffer = false;
+    u8 DebugRenderer::_assetsShouldSaveDebugTextures = false;
 
     //DebugRenderer& DebugRenderer::get()
     //{
@@ -101,17 +104,20 @@ namespace night
         _renderTarget->should_use_depth_peeling = false;
         _renderTarget->should_use_depth_testing = false;
         _renderTarget->should_use_blending = true;
+
+        algo_involve_nodes(handle<INode>()); // base nodes are null
     }
 
     // TODO: don't do a map lookup every step.
     void DebugRenderer::algo_push(string const& name)
     {
-        if (!_algoIsAutoUpdating || _guiCurrentTab != EDebugRendererTab::Algorithms)
+        if (!_algoIsActive)
         {
             return;
         }
 
         ASSERT(!_algoCurrentlyInvolvedNodesStack.empty());
+
         auto& top = _algoCurrentlyInvolvedNodesStack.back();
         ASSERT(!top.involved_nodes.empty());
         //ASSERT(!top.algorithm_stack.empty());
@@ -163,7 +169,7 @@ namespace night
 
     void DebugRenderer::algo_increment_step()
     {
-        if (!_algoIsAutoUpdating || _guiCurrentTab != EDebugRendererTab::Algorithms)
+        if (!_algoIsActive)
         {
             return;
         }
@@ -208,7 +214,7 @@ namespace night
 
     void DebugRenderer::algo_pop()
     {
-        if (!_algoIsAutoUpdating || _guiCurrentTab != EDebugRendererTab::Algorithms)
+        if (!_algoIsActive)
         {
             return;
         }
@@ -246,14 +252,32 @@ namespace night
 
     void DebugRenderer::render()
     {
-        //// handle resize:
-        //ASSERT(_renderTarget != nullptr);
-        //if (_renderTarget->width() != utility::renderer().width() || _renderTarget->height() != utility::renderer().height())
-        //{
-        //    _renderTarget->resize(ivec2(utility::renderer().width(), utility::renderer().height()));
-        //}
+        ASSERT(_algoCurrentlyInvolvedNodesStack.size() == 1);
 
-        ASSERT(_algoCurrentlyInvolvedNodesStack.empty());// don't forget to call DB_ALGO_POP
+        for (auto i = _algoInvolvedNodes.begin(); i != _algoInvolvedNodes.end();)
+        {
+            for (s32 j = 0; j < (*i).first.size(); j++)
+            {
+                if ((*i).first[j] == nullptr)
+                {
+                    i = _algoInvolvedNodes.erase(i);
+                    goto CONTINUE;
+                }
+            }
+
+            i++;
+        CONTINUE:
+            continue;
+        }
+
+        for (const auto& i : _guiSelectedInvolvedNodes)
+        {
+            if (i == nullptr)
+            {
+                _guiSelectedInvolvedNodes.clear();
+                break;
+            }
+        }
 
         utility::renderer().flush();
         _renderTarget->clear(COLOR_ZERO);
@@ -321,12 +345,9 @@ namespace night
 
         gui.end();
 
-        //utility::renderer().flush_render_graph(_renderGraph);
-
-        //_algoCurrentlyInvolvedNodes.clear();
-        //_algoAlgorithmStack.clear();
         _algoCurrentlyInvolvedNodesStack.clear();
-        //_renderGraph.current_buffer(_sceneRenderTarget, nullptr, nullptr);
+        // TODO: us dummy node because nullptr is used to clean up algo selection view.
+        algo_involve_nodes(handle<INode>());
     }
 
     void DebugRenderer::scene_render()
@@ -407,6 +428,7 @@ namespace night
                                         utility::renderer().flush_render_graph(_renderGraph);
                                         utility::renderer().flush();
                                         _renderGraph.clear();
+                                        _renderGraph.current_buffer(_renderTarget, nullptr, nullptr);
                                         _renderGraph.append_transform(mat4(1));
                                     }
                                 }
@@ -613,29 +635,57 @@ namespace night
         auto& gui = utility::gui();
         u8 is_viewing_step = false;
 
+        if (gui.button(_algoIsActive ? "Deactivate" : "Activate"))
+        {
+            _algoIsActive = !_algoIsActive;
+        }
+
+        gui.same_line();
+
+        if (gui.button("Clear"))
+        {
+            _guiSelectedInvolvedNodes.clear();
+            _guiSelectedAlgorithmSteps.clear();
+            _guiBreak = {};
+            _guiSelectedAlgorithm.clear();
+            _algoInvolvedNodes.clear();
+            _algoCurrentlyInvolvedNodesStack.clear();
+            _algoCameraTransform = {};
+        }
+
+        gui.seperator();
+
         // display node tree, allow nodes to be selected
         for (auto i = _algoInvolvedNodes.begin(); i != _algoInvolvedNodes.end(); i++)
         {
-            if ((*i).first.empty())
-            {
-                if (gui.selectable("Nodeless", false))
-                {
+            //if ((*i).first.empty())
+            //{
+            //    if (gui.selectable("Nodeless", false))
+            //    {
 
-                }
-            }
+            //    }
+            //}
 
             string names;
-            for (s32 j = 0; j < (*i).first.size(); j++)
-            {
-                if ((*i).first[j] == nullptr)
-                {
-                    continue;
-                }
 
-                names += (*i).first[j]->name() + "(" + to_string((*i).first[j]->unique_id()) + ")";
-                if (j < (*i).first.size() - 1)
+            if ((*i).first.size() == 1 && (*i).first.back() == nullptr)
+            {
+                names = "Nodeless";
+            }
+            else
+            {
+                for (s32 j = 0; j < (*i).first.size(); j++)
                 {
-                    names += ", ";
+                    if ((*i).first[j] == nullptr)
+                    {
+                        continue;
+                    }
+
+                    names += (*i).first[j]->name() + "(" + to_string((*i).first[j]->unique_id()) + ")";
+                    if (j < (*i).first.size() - 1)
+                    {
+                        names += ", ";
+                    }
                 }
             }
 
@@ -664,13 +714,13 @@ namespace night
             }
         }
 
-        for (const auto& i : _guiSelectedInvolvedNodes)
-        {
-            if (i == nullptr)
-            {
-                _guiSelectedInvolvedNodes.clear();
-            }
-        }
+        //for (const auto& i : _guiSelectedInvolvedNodes)
+        //{
+        //    if (i == nullptr)
+        //    {
+        //        _guiSelectedInvolvedNodes.clear();
+        //    }
+        //}
 
 
         // drag step sliders
@@ -685,7 +735,7 @@ namespace night
                 vec2 ar = { (h < w ? (real)h / (real)w : 1.0f), (w < h ? (real)w / (real)h : 1.0f) };
                 vec3 scale = vec3(1.0f / ar.x, 1.0f / ar.y, 1.0f);
 
-                _renderGraph.draw_quad(QuadParams{ .position = ORIGIN, .size = scale, .color = BLACK.opaqued(0.95f) }); // lower alpha
+                _renderGraph.draw_quad(QuadParams<>{ .position = ORIGIN, .size = scale, .color = BLACK.opaqued(0.95f) }); // lower alpha
                 utility::renderer().flush_render_graph(_renderGraph);
                 utility::renderer().flush();
                 _renderGraph.clear();
@@ -728,14 +778,38 @@ namespace night
                         Camera camera;
                         if (!_guiSelectedInvolvedNodes.empty())
                         {
-                            ASSERT(_guiSelectedInvolvedNodes.front() != nullptr);
-                            auto crt = _guiSelectedInvolvedNodes.front()->current_render_target();
-                            ASSERT(crt != nullptr);
-                            camera = crt->camera();
+                            //ASSERT(_guiSelectedInvolvedNodes.front() != nullptr);
+                            if (_guiSelectedInvolvedNodes.front() == nullptr)
+                            {
+                                Camera c;
+                                c.type = ECameraType::Perspective;
+                                c.fov = 60.0f;
+                                c.translation = FORWARD * 10.0f;
+                                c.look_at = ORIGIN;
+                                c.near_clip = NIGHT_CAMERA_DEFAULT_NEAR_CLIP;
+                                c.far_clip = NIGHT_CAMERA_DEFAULT_FAR_CLIP;
+                                c.up = UP;
+                                camera = c;
+                            }
+                            else
+                            {
+                                auto crt = _guiSelectedInvolvedNodes.front()->current_render_target();
+                                ASSERT(crt != nullptr);
+                                camera = crt->camera();
+                            }
                         }
                         else
                         {
-                            camera = utility::renderer().default_render_target()->camera();
+                            Camera c;
+                            c.type = ECameraType::Perspective;
+                            c.fov = 60.0f;
+                            c.translation = FORWARD * 10.0f;
+                            c.look_at = ORIGIN;
+                            c.near_clip = NIGHT_CAMERA_DEFAULT_NEAR_CLIP;
+                            c.far_clip = NIGHT_CAMERA_DEFAULT_FAR_CLIP;
+                            c.up = UP;
+                            camera = c;
+                            //camera = utility::renderer().default_render_target()->camera();
                         }
 
                         camera = camera * _algoCameraTransform;
@@ -824,7 +898,7 @@ namespace night
 
                                             Quad area;
 
-                                            if (!_guiSelectedInvolvedNodes.empty())
+                                            if (!_guiSelectedInvolvedNodes.empty() && _guiSelectedInvolvedNodes.front() != nullptr)
                                             {
                                                 auto nw = _guiSelectedInvolvedNodes.front()->find_parent<NodeWindow>();
                                                 if (nw != nullptr)
@@ -842,7 +916,7 @@ namespace night
                                             }
 
                                             Color color = WHITE;
-                                            color.a /= (1 + (inverse_depth * 4));
+                                            color.a /= (1 + (inverse_depth * NIGHT_DB_RENDERER_ALGO_FADE));
                                             area.vertices[0].color = color;
                                             area.vertices[1].color = color;
                                             area.vertices[2].color = color;
@@ -1250,6 +1324,15 @@ namespace night
         auto& gui = utility::gui();
         auto& root = Profiler::root();
 
+        if (gui.button("Clear"))
+        {
+            // clear all profiler timers below the root layer.
+            for (auto& i : Profiler::_root.children)
+            {
+                i.second.children.clear();
+            }
+        }
+
         function<void(string const&, Profiler::Node const&, s32)> rec = [&](string const& name, Profiler::Node const& node, s32 tabs)
         {
             if (node.timer_history.empty())
@@ -1311,6 +1394,8 @@ namespace night
 
         auto& gui = utility::gui();
 
+        gui.checkbox("Should Save Debug Textures", &_assetsShouldSaveDebugTextures);
+
         {
             // render darkness
             _renderGraph.current_buffer(utility::renderer().default_render_target(), nullptr, nullptr);
@@ -1321,7 +1406,7 @@ namespace night
             vec2 ar = { (h < w ? (real)h / (real)w : 1.0f), (w < h ? (real)w / (real)h : 1.0f) };
             vec3 scale = vec3(1.0f / ar.x, 1.0f / ar.y, 1.0f);
 
-            Quad q = Quad(QuadParams{ .position = ORIGIN, .size = scale, .color = PURPLE.opaqued(0.95f) });
+            Quad q = Quad(QuadParams<>{ .position = ORIGIN, .size = scale, .color = PURPLE.opaqued(0.95f) });
             _renderGraph.draw_quad(q); // lower alpha
             utility::renderer().flush_render_graph(_renderGraph);
             utility::renderer().flush();
@@ -1394,6 +1479,17 @@ namespace night
     {
         push_draw_function([=]()
             {
+                ::night::DrawSphereParams dsp;
+                dsp.origin = params.origin;
+                dsp.radius = params.radius;
+                dsp.color = params.color;
+                //dsp.wireframe = false;
+                //dsp.outline_only = true;
+                dsp.width = RENDERER_LINE_DEFAULT_WIDTH;
+                dsp.out_graph = &_renderGraph;
+
+                ShapeRenderer::draw_sphere(dsp);
+#if 0
                 ASSERT(_renderTarget != nullptr);
                 Camera const& camera = _renderTarget->camera();
                 vec3 const& eye_location = camera.translation;
@@ -1402,11 +1498,11 @@ namespace night
 
                 if (camera.type == ECameraType::Orthographic)
                 {
-                    oe = normalize(camera.look_at - camera.translation);
+                    oe = math::normalize(camera.look_at - camera.translation);
                 }
                 else
                 {
-                    oe = normalize(eye_location - params.origin);
+                    oe = math::normalize(eye_location - params.origin);
                 }
 
                 mat4 forward_to_oe = rotate_about_vector(FORWARD, oe);
@@ -1423,12 +1519,12 @@ namespace night
                 {
                     real origin_distance = distance(eye_location, params.origin);
                     real surface_distance = origin_distance - params.radius;
-                    vec3 oe_perp = normalize(cross(RIGHT, oe));
-                    vec3 perp_perp = normalize(cross(oe, oe_perp));
+                    vec3 oe_perp = math::normalize(math::cross(RIGHT, oe));
+                    vec3 perp_perp = math::normalize(math::cross(oe, oe_perp));
 
                     vec3 back = params.origin - oe * params.radius;
                     vec3 side = back + oe_perp / surface_distance + oe_perp * params.radius;
-                    vec3 frostrum_dir = cross(normalize(side - eye_location), perp_perp);
+                    vec3 frostrum_dir = math::cross(math::normalize(side - eye_location), perp_perp);
                     vec3 frostrum = params.origin + frostrum_dir * params.radius;
                     real ellipse_distance = distance(ellipse_origin, params.origin);
 
@@ -1460,6 +1556,7 @@ namespace night
 
                     _renderGraph.draw_line(p1, p2, params.color);
                 }
+#endif
             }, is_algo);
     }
 
@@ -1478,15 +1575,15 @@ namespace night
                 vec3 cap_near = params.origin + params.direction * params.height;
                 vec3 cap_far = params.origin - params.direction * params.height;
 
-                if (dot(cap_far - cap_near, camera_direction) > 0.0f)
+                if (math::dot(cap_far - cap_near, camera_direction) > 0.0f)
                 {
                     SWAP(cap_near, cap_far);
                 }
 
-                mat4 forward_to_direction = rotate_about_vector(FORWARD, params.direction);
+                mat4 forward_to_direction = math::rotate_about_vector(FORWARD, params.direction);
 
                 // draw the body:
-                vec3 dxcd = normalize(cross(params.direction, camera_direction));
+                vec3 dxcd = math::normalize(math::cross(params.direction, camera_direction));
                 _renderGraph.draw_line(cap_near + dxcd * params.radius, cap_far + dxcd * params.radius, params.color);
                 _renderGraph.draw_line(cap_near - dxcd * params.radius, cap_far - dxcd * params.radius, params.color);
 
@@ -1517,7 +1614,7 @@ namespace night
                     vec3 fp1 = p1 + cap_far;
                     vec3 fp2 = p2 + cap_far;
 
-                    if (dot(cap_far - fp1, camera_direction) < 0.0f)
+                    if (math::dot(cap_far - fp1, camera_direction) < 0.0f)
                     {
                         _renderGraph.draw_line(fp1, fp2, params.color);
                     }
@@ -1616,9 +1713,9 @@ namespace night
             return;
         }
 
-        if (is_algo && _guiCurrentTab == EDebugRendererTab::Algorithms)
+        if (is_algo)
         {
-            if (!_algoIsAutoUpdating)
+            if (!_algoIsActive)
             {
                 return;
             }
@@ -1675,7 +1772,7 @@ namespace night
         }, is_algo);
     }
 
-    void DebugRenderer::draw_quad(Quad const& quad, u8 is_algo)
+    void DebugRenderer::draw_quad(Quad<> const& quad, u8 is_algo)
     {
         push_draw_function([=]()
             {
@@ -1752,7 +1849,7 @@ namespace night
     {
         push_draw_function([=]()
             {
-                vec3 direction = normalize(params.direction);
+                vec3 direction = math::normalize(params.direction);
                 _renderGraph.draw_line(params.origin, params.origin + direction * params.length, params.color);
                 _renderGraph.draw_point(params.origin + direction * params.length * 0.95f, WHITE); // TODO: draw 3D arrow
             }, is_algo);
@@ -1762,7 +1859,7 @@ namespace night
     {
         push_draw_function([=]()
             {
-                mat4 forward_to_normal = rotate_about_vector(FORWARD, params.normal);
+                mat4 forward_to_normal = math::rotate_about_vector(FORWARD, params.normal);
 
                 Color grid_color = params.color;
                 //grid_color.a *= 0.5f;
@@ -1777,10 +1874,10 @@ namespace night
                         real tx1 = (real)x / (params.grid_resolution - 1);
                         real tx2 = (real)(x + 1) / (params.grid_resolution - 1);
 
-                        vec3 p1 = forward_to_normal * vec4(lerp(-params.grid_size, params.grid_size, tx1), lerp(-params.grid_size, params.grid_size, ty1), 0.0f, 1.0f);
-                        vec3 p2 = forward_to_normal * vec4(lerp(-params.grid_size, params.grid_size, tx2), lerp(-params.grid_size, params.grid_size, ty1), 0.0f, 1.0f);
-                        vec3 p3 = forward_to_normal * vec4(lerp(-params.grid_size, params.grid_size, tx2), lerp(-params.grid_size, params.grid_size, ty2), 0.0f, 1.0f);
-                        vec3 p4 = forward_to_normal * vec4(lerp(-params.grid_size, params.grid_size, tx1), lerp(-params.grid_size, params.grid_size, ty2), 0.0f, 1.0f);
+                        vec3 p1 = forward_to_normal * vec4(math::lerp(-params.grid_size, params.grid_size, tx1), math::lerp(-params.grid_size, params.grid_size, ty1), 0.0f, 1.0f);
+                        vec3 p2 = forward_to_normal * vec4(math::lerp(-params.grid_size, params.grid_size, tx2), math::lerp(-params.grid_size, params.grid_size, ty1), 0.0f, 1.0f);
+                        vec3 p3 = forward_to_normal * vec4(math::lerp(-params.grid_size, params.grid_size, tx2), math::lerp(-params.grid_size, params.grid_size, ty2), 0.0f, 1.0f);
+                        vec3 p4 = forward_to_normal * vec4(math::lerp(-params.grid_size, params.grid_size, tx1), math::lerp(-params.grid_size, params.grid_size, ty2), 0.0f, 1.0f);
 
                         p1 += params.origin;
                         p2 += params.origin;
@@ -1802,26 +1899,26 @@ namespace night
     {
         push_draw_function([=]()
             {
-                vec3 major_axis_n = normalize(params.major_axis);
-                real major_axis_len = length(params.major_axis);
-                vec3 normal = normalize(params.normal);
+                vec3 major_axis_n = math::normalize(params.major_axis);
+                real major_axis_len = math::length(params.major_axis);
+                vec3 normal = math::normalize(params.normal);
 
-                mat4 up_to_normal = rotate_about_vector(UP, normal);
+                mat4 up_to_normal = math::rotate_about_vector(UP, normal);
 
-                mat4 normal_to_major_axis = rotate_about_vector(normal, major_axis_n);
+                mat4 normal_to_major_axis = math::rotate_about_vector(normal, major_axis_n);
 
                 vec3 up_on_ellipse = normal_to_major_axis * up_to_normal * vec4(UP, 1);
                 vec3 right_on_ellipse = normal_to_major_axis * up_to_normal * vec4(RIGHT, 1);
-                vec3 uxr = normalize(cross(up_on_ellipse, right_on_ellipse));
+                vec3 uxr = math::normalize(math::cross(up_on_ellipse, right_on_ellipse));
 
-                mat4 uxr_to_normal = rotate_about_vector(uxr, normal);
+                mat4 uxr_to_normal = math::rotate_about_vector(uxr, normal);
 
                 for (s32 i = 0; i < params.segments - 1; i++)
                 {
                     real t1 = (real)i / (real)(params.segments - 1);
                     real t2 = (real)(i + 1) / (real)(params.segments - 1);
-                    t1 = lerp(params.min_theta, params.max_theta, t1);
-                    t2 = lerp(params.min_theta, params.max_theta, t2);
+                    t1 = math::lerp(params.min_theta, params.max_theta, t1);
+                    t2 = math::lerp(params.min_theta, params.max_theta, t2);
 
                     vec3 p1;
                     p1.x = sin(t1) * params.radii.x;

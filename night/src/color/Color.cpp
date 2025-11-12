@@ -45,7 +45,7 @@ namespace night
 
 	Color Color::lerp(const Color& a, const Color& b, real t)
 	{
-		return Color(night::lerp(a.r, b.r, t), night::lerp(a.g, b.g, t), night::lerp(a.b, b.b, t), night::lerp(a.a, b.a, t));
+		return Color(math::lerp(a.r, b.r, t), math::lerp(a.g, b.g, t), math::lerp(a.b, b.b, t), math::lerp(a.a, b.a, t));
 	}
 }
 

@@ -6,9 +6,10 @@
 namespace night
 {
 
+	template<typename T = real>
 	struct NIGHT_API Triangle
 	{
-		array<Vertex, 3> vertices;
+		array<Vertex<T>, 3> vertices;
 	};
 
 }

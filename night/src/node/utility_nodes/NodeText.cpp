@@ -13,17 +13,11 @@ namespace night
 		_text = params.text;
 		_color = params.color;
 
-		local_transform(compose({.scale = params.scale, .translation = params.translation, .rotation = params.rotation}));
+		local_transform(math::compose({.scale = params.scale, .translation = params.translation, .rotation = params.rotation}));
 
 		auto texture = utility::renderer().find_texture(params.font);
 		ASSERT(texture != nullptr); // font missing
 		textures(texture);
-	}
-
-	void NodeText::on_update(real delta)
-	{
-		quat q = quat(vec3(utility::window().time_elapsed() * 0.5f, utility::window().time_elapsed(), utility::window().time_elapsed() * 0.33f));
-		local_rotation(q);
 	}
 
 	void NodeText::on_render(RenderGraph& out_graph) const

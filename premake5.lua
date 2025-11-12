@@ -1,10 +1,14 @@
 
-workspace "night time"
+-- TODO: change dialect to c++ 20 and define NIGHT_ENABLE_ASSERT
+-- TODO: include stb_image
+
+workspace "night"
 	architecture "x64"
 
 	configurations
 	{
 		"Debug",
+		"DebugNDBAR",
 		"Release",
 		"ReleaseDBAR",
 		"Dist"
@@ -48,8 +52,6 @@ project "night"
 	includedirs
 	{
 		"%{prj.name}/src",
-		"%{prj.name}/vendor",
-		--"%{prj.name}/vendor/spdlog/include",
 		"%{prj.name}/vendor",
 		"%{prj.name}/vendor/glm",
 		"%{IncludeDir.SDL3}",
@@ -103,6 +105,16 @@ project "night"
 			}
 			symbols "On"
 
+		filter "configurations:DebugNDBAR"
+			defines 
+			{ 
+				"NIGHT_DEBUG",
+				"NIGHT_ENABLE_LOGGING",
+				"NIGHT_ENABLE_DEBUG_RENDERER",
+				"NIGHT_CORE"
+			}
+			symbols "On"
+
 		filter "configurations:Release"
 			defines 
 			{
@@ -141,9 +153,6 @@ project "sandbox"
 	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
 	objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
 
-	pchheader "sandboxpch.h"
-	pchsource "sandbox/src/sandboxpch.cpp"
-
 	files
 	{
 		"%{prj.name}/src/**.h",
@@ -171,6 +180,7 @@ project "sandbox"
 		defines
 		{
 			"NIGHT_PLATFORM_WINDOWS",
+			--"NIGHT_USE_DOUBLE_PRECISION"
 		}
 
 		filter "configurations:Debug"
@@ -180,6 +190,15 @@ project "sandbox"
 				"NIGHT_ENABLE_LOGGING",
 				"NIGHT_ENABLE_DEBUG_RENDERER",
 				"NIGHT_DB_RENDERER_ENABLE_ALGO_RENDER"
+			}
+			symbols "On"
+
+		filter "configurations:DebugNDBAR"
+			defines
+			{
+				"NIGHT_DEBUG",
+				"NIGHT_ENABLE_LOGGING",
+				"NIGHT_ENABLE_DEBUG_RENDERER",
 			}
 			symbols "On"
 

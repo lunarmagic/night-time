@@ -11,7 +11,7 @@ namespace night
 		string text{ "" };
 		string font{ "Font10x" }; // TODO: load default font from memory
 		vec3 translation = vec3(0);
-		vec3 scale = vec3(0.1f, 0.1f, 1.0f);
+		vec3 scale = vec3(0.04f, 0.04f, 1.0f);
 		quat rotation = quat(vec3(0));
 		Color color{ LIGHT };
 	};
@@ -25,7 +25,7 @@ namespace night
 
 	protected:
 
-		virtual void on_update(real delta) override;
+		//virtual void on_update(real delta) override;
 		virtual void on_render(RenderGraph& out_graph) const override;
 
 	private:

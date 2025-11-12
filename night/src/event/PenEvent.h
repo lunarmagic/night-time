@@ -9,7 +9,7 @@ namespace night
 	struct PenEvent : public Event
 	{
 		PenEvent(u32 id) : _id(id) {};
-		EVENT_CLASS_CATEGORY(EventCategoryPen)
+		EVENT_CLASS_CATEGORY(EventCategoryPen | EventCategoryInput)
 
 		u32 const& id() const { return _id; }
 

@@ -4,10 +4,12 @@
 #include "WorldSpaceRasterizer2D.h"
 #include "node/INode.h"
 #include "debug_renderer/DebugRenderer.h"
+#include "geometry/Quad.h"
+
+//#define NIGHT_DEBUG_SAVE_FIELD_TEXTURES
 
 namespace night
 {
-	struct Quad;
 	struct IComputeShader;
 
 	struct NodeDistanceFields2DParams
@@ -15,7 +17,14 @@ namespace night
 		s32 field_width{ -1 };
 		s32 field_height{ -1 };
 		s32 field_count{ -1 };
-		u8 should_use_gpu{ true };
+		//u8 should_use_gpu{ true };
+	};
+
+	struct NDF2DDrawLineParams
+	{
+		vec2 p1 = {};
+		vec2 p2 = {};
+		s32 field_index = -1;
 	};
 
 	/*
@@ -28,7 +37,8 @@ namespace night
 		void init(NodeDistanceFields2DParams const& params);
 		void clear();
 
-		void area(Quad const& area, s32 field_index);
+		void area(Quad<> const& area, s32 field_index);
+		Quad<> const& area(s32 field_index) const;
 
 		void draw_point(ivec2 internal_point, s32 field_index);
 		void draw_point(vec2 point, s32 field_index);
@@ -36,9 +46,14 @@ namespace night
 		void draw_line(ivec2 internal_p1, ivec2 internal_p2, s32 field_index);
 		void draw_line(vec2 p1, vec2 p2, s32 field_index);
 
-		void dispatch_in_main_thread(function<void(IComputeShader&)> main_thread_callback);
+		//void dispatch_in_main_thread(function<void(IComputeShader&)> main_thread_callback);
+		//void dispatch_in_this_thread();
 
-		vec2 compare_fields(s32 field_a_index, s32 field_b_index);
+		//void compute_in_main_thread(function<void()> main_thread_callback);
+		void compute_in_this_thread(u8 use_gpu = true, s32 begin = -1, s32 end = -1);
+
+		//void draw_line(NDF2DDrawLineParams const& params);
+		real compare_fields(s32 field_a_index, s32 field_b_index);
 
 		vector<real>& fields() { return _fields; }
 		vector<real> const& fields() const { return _fields; }
@@ -48,6 +63,7 @@ namespace night
 		s32 const& field_count() const { return _fieldCount; }
 		s32 const& field_width() const { return _fieldWidth; }
 		s32 const& field_height() const { return _fieldHeight; }
+		s32 field_index(s32 x, s32 y) const;
 		void should_use_gpu(u8 x) { _shouldUseGPU = x; }
 		u8 const& should_use_gpu() const { return _shouldUseGPU; }
 		WorldSpaceRasterizer2D<real>& rasterizer(s32 field_index) { ASSERT(field_index < _rasterizers.size()); return _rasterizers[field_index]; };
@@ -81,44 +97,43 @@ namespace night
 #ifdef NIGHT_ENABLE_DEBUG_RENDERER
 		friend struct DebugRenderer;
 		s32 __debugTextureSlider{ 0 };
-#ifdef NIGHT_DEBUG
 		vector<handle<ITexture>> __debugTextures;
-#endif
 #endif
 	};
 
 #ifdef NIGHT_ENABLE_DEBUG_RENDERER
 	template<> inline void DebugRenderer::draw_format<NodeDistanceFields2D>(NodeDistanceFields2D& v)
 	{
-		IGui& gui = DebugRenderer::gui();
-		gui.drag_s32("Current Time", &v.__debugTextureSlider, 0.5f, 0, v._fieldCount - 1);
-
-		ASSERT(v.__debugTextureSlider < v._rasterizers.size());
-		Quad area = v._rasterizers[v.__debugTextureSlider].area();
-		// TODO: draw all areas, skip duplicates
-		DB_RENDERER_DRAW_OBJECT(area);
-
-#ifdef NIGHT_DEBUG
-		if (v.__debugTextures.empty())
+		if (!v._rasterizers.empty())
 		{
-			return;
+			IGui& gui = DebugRenderer::gui();
+			gui.drag_s32("Current Time", &v.__debugTextureSlider, 0.5f, 0, v._fieldCount - 1);
+
+			ASSERT(v.__debugTextureSlider < v._rasterizers.size());
+			Quad area = v._rasterizers[v.__debugTextureSlider].area();
+			// TODO: draw all areas, skip duplicates
+			DB_RENDERER_DRAW_OBJECT(area);
+
+			if (v.__debugTextures.empty())
+			{
+				return;
+			}
+
+			ASSERT(v.__debugTextureSlider < v.__debugTextures.size());
+
+			area.vertices[0].point.z -= 0.001f;
+			area.vertices[1].point.z -= 0.001f;
+			area.vertices[2].point.z -= 0.001f;
+			area.vertices[3].point.z -= 0.001f;
+
+			auto& tx = v.__debugTextures[v.__debugTextureSlider];
+			if (tx != nullptr)
+			{
+				auto& graph = DebugRenderer::render_graph();
+				graph.current_buffer(graph.current_render_target(), nullptr, tx);
+				graph.draw_quad(area);
+			}
 		}
-
-		ASSERT(v.__debugTextureSlider < v.__debugTextures.size());
-
-		area.vertices[0].point.z -= 0.001f;
-		area.vertices[1].point.z -= 0.001f;
-		area.vertices[2].point.z -= 0.001f;
-		area.vertices[3].point.z -= 0.001f;
-
-		auto& tx = v.__debugTextures[v.__debugTextureSlider];
-		if (tx != nullptr)
-		{
-			auto& graph = DebugRenderer::render_graph();
-			graph.current_buffer(graph.current_render_target(), nullptr, tx);
-			graph.draw_quad(area);
-		}
-#endif
 	}
 #endif
 

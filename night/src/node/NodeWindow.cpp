@@ -22,6 +22,7 @@ namespace night
 		_dockWhere = params.dock_where;
 		_dockSpace = params.dock_space;
 		_internalResolutionScale = params.internal_resolution_scale;
+		_onClose = params.on_close;
 		
 		// TODO: remove nrt_params and use our own variables.
 		ivec2 internal_resolution = find_internal_resolution();
@@ -34,9 +35,9 @@ namespace night
 		//}
 		params.nrt_params.filtering = ETextureFiltering::Linear;
 
-		params.nrt_params.should_use_depth_peeling = false; // TODO: remove
-		params.nrt_params.should_use_depth_testing = false; // TODO: remove
-		params.nrt_params.should_use_blending = true; // TODO: remove
+		//params.nrt_params.should_use_depth_peeling = false; // TODO: remove
+		//params.nrt_params.should_use_depth_testing = false; // TODO: remove
+		//params.nrt_params.should_use_blending = true; // TODO: remove
 
 		params.nrt_params.should_inherit_parent_resolution = false; // disable before initializing
 		NodeRenderTarget::init(params.nrt_params);
@@ -44,6 +45,7 @@ namespace night
 		// need to re-enable this after initializing
 		should_inherit_parent_resolution = true;
 
+#if 0
 		unpass_down_event_type(MouseButtonPressedEvent::get_static_type());
 		unpass_down_event_type(MouseButtonReleasedEvent::get_static_type());
 		unpass_down_event_type(MouseMotionEvent::get_static_type());
@@ -53,10 +55,12 @@ namespace night
 		unpass_down_event_type(PenMotionEvent::get_static_type());
 
 		unpass_down_event_type(WindowResizeEvent::get_static_type());
+#endif
 
 		// TODO: fix unbind event function.
 		unbind_all_events();
 
+#if 0
 		bind_event([&](MouseButtonPressedEvent const& event)
 			{
 				MouseButtonPressedEvent e(event.button(), event_mouse_position(event.position()));
@@ -89,7 +93,7 @@ namespace night
 
 		bind_event([&](PenMotionEvent const& event)
 			{
-				PenMotionEvent e(event_mouse_motion(event.position()), event.id());
+				PenMotionEvent e(event_mouse_position(event.position()), event.id());
 				pass_down_event(e);
 			});
 
@@ -111,6 +115,7 @@ namespace night
 			WindowResizeEvent e(internal_resolution.x, internal_resolution.y);
 			pass_down_event(e);
 		});
+#endif
 	}
 
 	vec2 NodeWindow::window_coord_to_local_coord(vec2 const& window_coord) const
@@ -125,16 +130,16 @@ namespace night
 		return event_mouse_motion(window_motion);
 	}
 
-	Ray NodeWindow::mouse_pick(vec2 const& window_mouse_position) const
+	Ray3D<real> NodeWindow::mouse_pick(vec2 const& window_mouse_position) const
 	{
 		ASSERT(_target != nullptr);
 		vec2 local_coord = window_coord_to_local_coord(window_mouse_position);
 		return _target->mouse_pick(local_coord);
 	}
 
-	Quad NodeWindow::global_area()
+	Quad<> NodeWindow::global_area()
 	{
-		AABB ac = area_clamped_to_pixel_grid();
+		AABB<> ac = area_clamped_to_pixel_grid();
 		auto parent_window = find_parent<NodeWindow>();
 		if (parent_window != nullptr)
 		{
@@ -156,7 +161,7 @@ namespace night
 		}
 	}
 
-	void NodeWindow::dock_space(AABB space)
+	void NodeWindow::dock_space(AABB<> space)
 	{
 		// TODO: may wan't to only resize children of which docks have actually changed.
 		_dockSpace = space;
@@ -172,12 +177,12 @@ namespace night
 			}, exclude<NodeWindow, NodeRenderTarget>);
 	}
 
-	Quad NodeWindow::global_area_rec(AABB area)
+	Quad<> NodeWindow::global_area_rec(AABB<> area)
 	{
 		auto target = this->target();
 		ASSERT(target != nullptr);
-		vec3 tlproj = target->project_to_screen({ area.left, area.top, 0 });
-		vec3 brproj = target->project_to_screen({ area.right, area.bottom, 0 });
+		vec3 tlproj = target->project({ area.left, area.top, 0 });
+		vec3 brproj = target->project({ area.right, area.bottom, 0 });
 
 		tlproj.x += 1;
 		tlproj.x /= 2;
@@ -194,13 +199,13 @@ namespace night
 		brproj.z = 0;
 		brproj.z = 0;
 
-		AABB ac = area_clamped_to_pixel_grid();
+		AABB<> ac = area_clamped_to_pixel_grid();
 
-		AABB ap;
-		ap.left = lerp(ac.left, ac.right, tlproj.x);
-		ap.right = lerp(ac.left, ac.right, brproj.x);
-		ap.bottom = lerp(ac.bottom, ac.top, brproj.y);
-		ap.top = lerp(ac.bottom, ac.top, tlproj.y);
+		AABB<> ap;
+		ap.left = math::lerp(ac.left, ac.right, tlproj.x);
+		ap.right = math::lerp(ac.left, ac.right, brproj.x);
+		ap.bottom = math::lerp(ac.bottom, ac.top, brproj.y);
+		ap.top = math::lerp(ac.bottom, ac.top, tlproj.y);
 		
 
 		auto parent_window = find_parent<NodeWindow>();
@@ -220,18 +225,18 @@ namespace night
 		ASSERT(crt != nullptr);
 		auto target = this->target();
 		ASSERT(target != nullptr);
-		AABB ac = area_clamped_to_pixel_grid();
-		vec2 local = ac.local_coordinate(crt->unproject_from_screen(vec3(parent_mouse_position, 0)));
+		AABB<> ac = area_clamped_to_pixel_grid();
+		vec2 local = ac.local_coordinate(crt->unproject(vec3(parent_mouse_position, 0)));
 		return local;
 	}
 
 	vec2 NodeWindow::event_mouse_motion(vec2 const& parent_mouse_motion) const
 	{
-		AABB ac = area_clamped_to_pixel_grid();
+		AABB<> ac = area_clamped_to_pixel_grid();
 		vec2 m = (parent_mouse_motion / vec2(ac.width(), ac.height())) * 2.0f;
 		auto crt = current_render_target();
 		ASSERT(crt != nullptr);
-		return crt->unproject_from_screen(vec3(m, 0));
+		return crt->unproject(vec3(m, 0));
 	}
 
 	ivec2 NodeWindow::find_internal_resolution() const
@@ -260,7 +265,7 @@ namespace night
 		pass_down_event(e);
 	}
 
-	// TODO: make iAABB
+	// TODO: make iAABB<>
 	ivec4 NodeWindow::area_internal() const
 	{
 		if (_dockWhere != ENodeWindowDockWhere::None)
@@ -270,7 +275,7 @@ namespace night
 			{
 				auto prt = parent_window->target();
 				ASSERT(prt != nullptr);
-				AABB docked_area = parent_window->docking_area(_dockWhere);
+				AABB<> docked_area = parent_window->docking_area(_dockWhere);
 
 				ivec2 internal_tl = prt->global_to_internal(vec2(docked_area.left, docked_area.top));
 				ivec2 internal_br = prt->global_to_internal(vec2(docked_area.right, docked_area.bottom));
@@ -329,9 +334,9 @@ namespace night
 	}
 
 	// TODO areas do not match up for windows that are the same size as there parents
-	AABB NodeWindow::area_clamped_to_pixel_grid() const
+	AABB<> NodeWindow::area_clamped_to_pixel_grid() const
 	{
-		AABB result;
+		AABB<> result;
 		auto crt = current_render_target();
 		ASSERT(crt != nullptr);
 
@@ -348,10 +353,10 @@ namespace night
 		return result;
 	}
 
-	AABB NodeWindow::docking_area(ENodeWindowDockWhere where) const
+	AABB<> NodeWindow::docking_area(ENodeWindowDockWhere where) const
 	{
 		ASSERT(target() != nullptr);
-		AABB area = target()->area();
+		AABB<> area = target()->area();
 
 		switch (where)
 		{
@@ -406,7 +411,7 @@ namespace night
 		ASSERT(target != nullptr);
 
 		// draw window render target:
-		AABB ac = area_clamped_to_pixel_grid();
+		AABB<> ac = area_clamped_to_pixel_grid();
 		if (ac.left >= ac.right && ac.bottom >= ac.top)
 		{
 			// window is closed.
@@ -453,6 +458,150 @@ namespace night
 
 			out_graph.draw_quad(quad);
 		}
+#endif
+	}
+
+	vec2 NodeWindow::mouse()
+	{
+		return window_coord_to_local_coord(utility::window().mouse());
+	}
+
+	void NodeWindow::on_event(Event& event, u8 pass_down)
+	{
+		switch (event.type())
+		{
+		case EEventType::MouseButtonPressed:
+		{
+			__super::on_event(event, false);
+			MouseButtonPressedEvent e(((MouseButtonPressedEvent&)event).button(), event_mouse_position(((MouseButtonPressedEvent&)event).position()));
+			pass_down_event(e);
+			break;
+		}
+
+		case EEventType::MouseButtonReleased:
+		{
+			__super::on_event(event, false);
+			MouseButtonReleasedEvent e(((MouseButtonPressedEvent&)event).button(), event_mouse_position(((MouseButtonReleasedEvent&)event).position()));
+			pass_down_event(e);
+			break;
+		}
+
+		case EEventType::MouseMotion:
+		{
+			__super::on_event(event, false);
+			MouseMotionEvent e(event_mouse_motion(((MouseMotionEvent&)event).motion()));
+			pass_down_event(e);
+			break;
+		}
+
+		case EEventType::PenDown:
+		{
+			__super::on_event(event, false);
+			PenDownEvent e(event_mouse_position(((PenDownEvent&)event).position()), ((PenDownEvent&)event).is_eraser(), ((PenDownEvent&)event).id());
+			pass_down_event(e);
+			break;
+		}
+
+		case EEventType::PenUp:
+		{
+			__super::on_event(event, false);
+			PenUpEvent e(event_mouse_position(((PenUpEvent&)event).position()), ((PenUpEvent&)event).is_eraser(), ((PenUpEvent&)event).id());
+			pass_down_event(e);
+			break;
+		}
+
+		case EEventType::PenMotion:
+		{
+			__super::on_event(event, false);
+			PenMotionEvent e(event_mouse_position(((PenMotionEvent&)event).position()), ((PenMotionEvent&)event).id());
+			pass_down_event(e);
+			break;
+		}
+
+		case EEventType::WindowResize:
+		{
+			__super::on_event(event, false);
+			ivec2 internal_resolution = find_internal_resolution();
+			handle_resize(internal_resolution.x, internal_resolution.y);
+			WindowResizeEvent e(internal_resolution.x, internal_resolution.y);
+			pass_down_event(e);
+			break;
+		}
+
+		case EEventType::NodeMoved:
+		{
+			__super::on_event(event, false);
+			ASSERT(_target != nullptr);
+			_target->render_flush_priority((real)-depth_from_root()); // TODO: make sure this works.
+			ivec2 internal_resolution = find_internal_resolution();
+			handle_resize(internal_resolution.x, internal_resolution.y);
+			WindowResizeEvent e(internal_resolution.x, internal_resolution.y);
+			pass_down_event(e);
+			break;
+		}
+
+		default:
+		{
+			__super::on_event(event, true);
+			break;
+		}
+		}
+
+#if 0
+		bind_event([&](MouseButtonPressedEvent const& event)
+			{
+				MouseButtonPressedEvent e(event.button(), event_mouse_position(event.position()));
+				pass_down_event(e);
+			});
+
+		bind_event([&](MouseButtonReleasedEvent const& event)
+			{
+				MouseButtonReleasedEvent e(event.button(), event_mouse_position(event.position()));
+				pass_down_event(e);
+			});
+
+		bind_event([&](MouseMotionEvent const& event)
+			{
+				MouseMotionEvent e(event_mouse_motion(event.motion()));
+				pass_down_event(e);
+			});
+
+		bind_event([&](PenDownEvent const& event)
+			{
+				PenDownEvent e(event_mouse_position(event.position()), event.is_eraser(), event.id());
+				pass_down_event(e);
+			});
+
+		bind_event([&](PenUpEvent const& event)
+			{
+				PenUpEvent e(event_mouse_position(event.position()), event.is_eraser(), event.id());
+				pass_down_event(e);
+			});
+
+		bind_event([&](PenMotionEvent const& event)
+			{
+				PenMotionEvent e(event_mouse_position(event.position()), event.id());
+				pass_down_event(e);
+			});
+
+		bind_event([&](WindowResizeEvent const& event)
+			{
+				ivec2 internal_resolution = find_internal_resolution();
+				handle_resize(internal_resolution.x, internal_resolution.y);
+				WindowResizeEvent e(internal_resolution.x, internal_resolution.y);
+				pass_down_event(e);
+			});
+
+		bind_event([&](NodeMovedEvent const& event)
+			{
+				ASSERT(_target != nullptr);
+				_target->render_flush_priority((real)-depth_from_root()); // TODO: make sure this works.
+
+				ivec2 internal_resolution = find_internal_resolution();
+				handle_resize(internal_resolution.x, internal_resolution.y);
+				WindowResizeEvent e(internal_resolution.x, internal_resolution.y);
+				pass_down_event(e);
+			});
 #endif
 	}
 

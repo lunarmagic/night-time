@@ -17,7 +17,9 @@ namespace night
 {
 	struct WindowSDL;
 	struct Surface;
-	struct Ray;
+
+	template<typename T>
+	struct Ray3D;
 	//struct Color;
 
 	struct DepthBuffer;
@@ -55,10 +57,10 @@ namespace night
 
 		mat4 const& mvp() const { return _mvp; }
 
-		Ray mouse_pick(vec2 const& mouse_position) const; // TODO: these may not need to be virtual
-		vec4 project_to_screen(vec3 const& point) const;
-		vec3 unproject_from_screen(vec3 const& point) const;
-		vec3 unproject_from_screen(vec2 const& point) const;
+		Ray3D<real> mouse_pick(vec2 const& mouse_position) const; // TODO: these may not need to be virtual
+		vec4 project(vec3 const& point) const;
+		vec3 unproject(vec3 const& point) const;
+		vec3 unproject(vec2 const& point) const;
 
 		virtual void on_resize() = 0;
 		virtual void on_clear() = 0;
@@ -84,8 +86,10 @@ namespace night
 
 		DepthBuffer depth_buffer() const;
 
+		vec2 aspect_ratio() const;
+
 		//Quad area() const;
-		AABB area() const;
+		AABB<> area() const;
 
 	protected:
 

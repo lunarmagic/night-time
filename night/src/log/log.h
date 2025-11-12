@@ -172,7 +172,7 @@ namespace night { namespace debug {
 }
 
 #undef ASSERT
-#ifdef NIGHT_DEBUG
+#ifndef NIGHT_DIST
 #define ASSERT(x) { if(!(x)) { __debugbreak(); } }
 #else
 #define ASSERT(x)

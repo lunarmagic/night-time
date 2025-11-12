@@ -18,6 +18,7 @@
 #include <time.h>
 #include <typeinfo>
 #include <typeindex>
+#include <type_traits>
 #include <fstream>
 #include <algorithm>
 #include <execution>
@@ -29,6 +30,7 @@
 #include <cmath>
 #include <iostream>
 #include <initializer_list>
+#include <utility>
 
 
 #include "types/types.h"
@@ -109,6 +111,9 @@ namespace night
 	//using fstream = std::fstream;
 	using ofstream = std::ofstream;
 	using ifstream = std::ifstream;
+
+	template<typename T>
+	using initializer_list = std::initializer_list<T>;
 
 	template<typename T>
 	inline string to_string(const T& t)

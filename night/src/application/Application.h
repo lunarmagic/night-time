@@ -120,6 +120,8 @@ namespace night
 		void unbind_all_events();
 #endif
 
+		void queue_for_main_thread(function<void()> callback);
+
 		// TODO: make singletons
 		File settings;
 		umultimap<string, InputKey> action_map;
@@ -189,6 +191,8 @@ namespace night
 		friend struct EventManager;
 		EventManager _eventManager;
 		u8 _isPendingTermination{ false };
+
+		vector<function<void()>> _mainThreadCallbacks = {};
 
 		shandle<INode> _root;
 		void create_root();

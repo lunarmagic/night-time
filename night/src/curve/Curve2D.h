@@ -14,5 +14,8 @@ namespace night
 		real interpolate(vec2 const& t) const;
 
 		map<real, map<real, real>> map; // TODO: make struct into full wrapper
+
+		static night::map<real, night::map<real, real>>::const_iterator upper_bound(night::map<real, night::map<real, real>> const& curve, real t);
+		//static night::map<real, night::map<real, real>>::const_iterator lower_bound(night::map<real, night::map<real, real>> const& curve, real t);
 	};
 }

@@ -21,11 +21,11 @@ namespace night
 	SphereBackfacePlane ShapeRenderer::sphere_backface_plane(vec3 const& origin, real const& radius, vec3 const& point)
 	{
 		vec3 const& eye_location = point;
-		vec3 oe = normalize(eye_location - origin);
+		vec3 oe = math::normalize(eye_location - origin);
 
-		real inv_dist = radius / distance(eye_location, origin);
+		real inv_dist = radius / math::length(eye_location - origin);
 		vec3 ellipse_origin = origin + oe * (inv_dist * radius);
-		real d = distance(ellipse_origin, origin); // TODO: can probably avoid distance here
+		real d = math::length(ellipse_origin - origin); // TODO: can probably avoid distance here
 
 		real det = radius * radius - d * d;
 		if (det <= 0.0f)
@@ -50,7 +50,7 @@ namespace night
 
 	void ShapeRenderer::draw_sphere(DrawSphereParams const& params)
 	{
-		NIGHT_PROFILER_SCOPED(SR_draw_sphere);
+		NIGHT_PROFILER_SCOPED("ShapeRenderer::draw_sphere");
 		ASSERT(params.out_graph != nullptr);
 
 		RenderGraph& out_graph = *params.out_graph;
@@ -58,9 +58,9 @@ namespace night
 		ASSERT(crt != nullptr);
 		Camera const& camera = crt->camera();
 
-		auto fn = [&](real u, real v) -> Vertex
+		auto fn = [&](real u, real v) -> Vertex<>
 		{
-			Vertex result;
+			Vertex<> result;
 			real r = sin(R_PI * v);
 			result.point.x = (r * cos(2.0f * R_PI * u)) * params.radius + params.origin.x;
 			result.point.y = (r * sin(2.0f * R_PI * u)) * params.radius + params.origin.y;
@@ -94,11 +94,11 @@ namespace night
 					tri_1.vertices[0] = fn(u0, v0);
 					tri_1.vertices[1] = fn(u1, v0);
 					
-					Vertex v = fn(u0, v1);
+					Vertex<> v = fn(u0, v1);
 					tri_1.vertices[2] = v;
 					tri_2.vertices[0] = v;
 
-					vec3 n = -cross(vec3(tri_1.vertices[1].point) - vec3(tri_1.vertices[0].point), vec3(tri_1.vertices[2].point) - vec3(tri_1.vertices[1].point));
+					vec3 n = -math::cross(vec3(tri_1.vertices[1].point) - vec3(tri_1.vertices[0].point), vec3(tri_1.vertices[2].point) - vec3(tri_1.vertices[1].point));
 					if (camera.should_cull_plane(vec3(tri_1.vertices[0].point), n))
 					{
 						continue;
@@ -129,7 +129,7 @@ namespace night
 
 			auto [ellipse_origin, ellipse_normal, ellipse_radius] = ShapeRenderer::sphere_backface_plane(origin, params.radius, camera);
 
-			mat4 forward_to_ellipse_normal = rotate_about_vector(FORWARD, ellipse_normal);
+			mat4 forward_to_ellipse_normal = math::rotate_about_vector(FORWARD, ellipse_normal);
 
 			for (s32 i = 0; i < segments; i++)
 			{
@@ -174,9 +174,9 @@ namespace night
 			{
 				Tube::BackfacePlane result;
 
-				vec3 undesired_angle = direction * dot(-camera.direction(), direction);
-				vec3 desired_angle = normalize(-camera.direction() - undesired_angle);
-				vec3 normal_perp = normalize(cross(desired_angle, direction));
+				vec3 undesired_angle = direction * math::dot(-camera.direction(), direction);
+				vec3 desired_angle = math::normalize(-camera.direction() - undesired_angle);
+				vec3 normal_perp = math::normalize(math::cross(desired_angle, direction));
 
 				result.edge_1_a = cap_a_origin + normal_perp * cap_a_radius;
 				result.edge_1_b = cap_b_origin + normal_perp * cap_b_radius;
@@ -224,7 +224,7 @@ namespace night
 				result.edge_1_b = pi.origin + pi.direction * rc.t0;
 				result.edge_2_b = pi.origin + pi.direction * rc.t1;
 			}
-			result.normal = -cross(result.edge_1_b - result.edge_1_a, result.edge_2_a - result.edge_1_a); // TODO: make sure this faces the camera
+			result.normal = -math::cross(result.edge_1_b - result.edge_1_a, result.edge_2_a - result.edge_1_a); // TODO: make sure this faces the camera
 
 			return result;
 		}
@@ -236,7 +236,7 @@ namespace night
 				vec3 camera_direction = -camera.direction();
 				auto cot = cone_of_tube(origin, direction, radii, height);
 
-				real d = dot(camera_direction, direction);
+				real d = math::dot(camera_direction, direction);
 				if (abs(d) < TUBE_BACKFACE_PLANE_EPSILON)
 				{
 					return cylinder_case();
@@ -253,7 +253,7 @@ namespace night
 						return { .normal = vec3(0) };
 					}
 
-					vec3 perp = normalize(cross(sbf.normal, camera_direction));
+					vec3 perp = math::normalize(math::cross(sbf.normal, camera_direction));
 
 					vec3 p1 = sbf.origin + perp * sbf.radius;
 					vec3 p2 = sbf.origin - perp * sbf.radius;
@@ -262,7 +262,7 @@ namespace night
 					result.edge_1_b = cot.tip_origin;
 					result.edge_2_a = p2;
 					result.edge_2_b = cot.tip_origin;
-					result.normal = normalize(cross(p2 - p1, p2 - cot.tip_origin));
+					result.normal = math::normalize(math::cross(p2 - p1, p2 - cot.tip_origin));
 
 					return result;
 				}
@@ -303,7 +303,7 @@ namespace night
 				SWAP(result.edge_1_b, result.edge_2_b);
 			}
 
-			result.normal = -cross(result.edge_1_b - result.edge_1_a, result.edge_2_a - result.edge_1_a); // TODO: make sure this faces the camera
+			result.normal = -math::cross(result.edge_1_b - result.edge_1_a, result.edge_2_a - result.edge_1_a); // TODO: make sure this faces the camera
 
 			return result;
 		}
@@ -320,9 +320,9 @@ namespace night
 
 		if (camera.type == ECameraType::Orthographic)
 		{
-			vec3 undesired_angle = direction * dot(-camera.direction(), direction);
-			vec3 desired_angle = normalize(-camera.direction() - undesired_angle);
-			vec3 normal_perp = normalize(cross(desired_angle, direction));
+			vec3 undesired_angle = direction * math::dot(-camera.direction(), direction);
+			vec3 desired_angle = math::normalize(-camera.direction() - undesired_angle);
+			vec3 normal_perp = math::normalize(math::cross(desired_angle, direction));
 
 			result.edge_1_a = cap_a_origin + normal_perp * radius;
 			result.edge_1_b = cap_b_origin + normal_perp * radius;
@@ -364,7 +364,7 @@ namespace night
 				result.edge_1_b = pi.origin + pi.direction * rc.t0;
 				result.edge_2_b = pi.origin + pi.direction * rc.t1;
 			}
-			result.normal = -cross(result.edge_1_b - result.edge_1_a, result.edge_2_a - result.edge_1_a); // TODO: make sure this faces the camera
+			result.normal = -math::cross(result.edge_1_b - result.edge_1_a, result.edge_2_a - result.edge_1_a); // TODO: make sure this faces the camera
 
 			return result;
 #endif
@@ -388,12 +388,12 @@ namespace night
 			// TODO: use this solution for all cases.
 			vec3 camera_direction = -camera.direction();
 
-			real d = dot(camera_direction, direction);
+			real d = math::dot(camera_direction, direction);
 			if (abs(d) < BACKFACE_PLANE_EPSILON)
 			{
-				vec3 undesired_angle = direction * dot(-camera.direction(), direction);
-				vec3 desired_angle = normalize(-camera.direction() - undesired_angle);
-				vec3 normal_perp = normalize(cross(desired_angle, direction));
+				vec3 undesired_angle = direction * math::dot(-camera.direction(), direction);
+				vec3 desired_angle = math::normalize(-camera.direction() - undesired_angle);
+				vec3 normal_perp = math::normalize(math::cross(desired_angle, direction));
 
 				result.edge_1_a = base_origin + normal_perp * radius;
 				result.edge_1_b = tip_origin;
@@ -405,7 +405,7 @@ namespace night
 			}
 			else
 			{
-				auto rc = raycast::plane(tip_origin, camera_direction, base_origin, direction);
+				auto rc = Raycast3D<>::plane(tip_origin, camera_direction, base_origin, direction);
 
 				vec3 contact = rc.contact(tip_origin, camera_direction);
 				auto sbf = ShapeRenderer::sphere_backface_plane(base_origin, radius, contact);
@@ -415,7 +415,7 @@ namespace night
 					return { .normal = vec3(0) };
 				}
 
-				vec3 perp = normalize(cross(sbf.normal, camera_direction));
+				vec3 perp = math::normalize(math::cross(sbf.normal, camera_direction));
 
 				vec3 p1 = sbf.origin + perp * sbf.radius;
 				vec3 p2 = sbf.origin - perp * sbf.radius;
@@ -424,7 +424,7 @@ namespace night
 				result.edge_1_b = tip_origin;
 				result.edge_2_a = p2;
 				result.edge_2_b = tip_origin;
-				result.normal = normalize(cross(p2 - p1, p2 - tip_origin));
+				result.normal = math::normalize(math::cross(p2 - p1, p2 - tip_origin));
 
 				return result;
 			}
@@ -470,7 +470,7 @@ namespace night
 			SWAP(result.edge_1_b, result.edge_2_b);
 		}
 
-		result.normal = -cross(result.edge_1_b - result.edge_1_a, result.edge_2_a - result.edge_1_a); // TODO: make sure this faces the camera
+		result.normal = -math::cross(result.edge_1_b - result.edge_1_a, result.edge_2_a - result.edge_1_a); // TODO: make sure this faces the camera
 
 #endif
 		return {};
@@ -478,7 +478,7 @@ namespace night
 
 	static void _draw_tube(DrawCylinderParams const& params, CylinderBackfacePlane const& backface_plane, u8 is_cone)
 	{
-		NIGHT_PROFILER_SCOPED(SR__draw_tube);
+		NIGHT_PROFILER_SCOPED("ShapeRenderer::_draw_tube");
 		ASSERT(params.out_graph != nullptr);
 		RenderGraph& out_graph = *params.out_graph;
 		handle<const ITexture> const& crt = out_graph.current_render_target();
@@ -498,10 +498,10 @@ namespace night
 		//auto backface_plane = cylinder_backface_plane(params.origin, params.direction, params.radius, params.height, camera);
 
 		mat4 ftd;
-		ftd = rotate_about_vector(FORWARD, params.direction);
+		ftd = math::rotate_about_vector(FORWARD, params.direction);
 
 		constexpr real epsilon = 0.000001f;
-		real d = dot(camera_direction, params.direction);
+		real d = math::dot(camera_direction, params.direction);
 		u8 x = abs(d) < 1.0f - epsilon;
 
 		if (x)
@@ -563,7 +563,7 @@ namespace night
 
 				if (x)
 				{
-					vec3 n = cross(ca2 - ca1, cb2 - ca2);
+					vec3 n = math::cross(ca2 - ca1, cb2 - ca2);
 					if (!camera.should_cull_plane(ca1, n))
 					{
 						Triangle tri1;
@@ -618,7 +618,7 @@ namespace night
 
 
 		vec3 up_on_cap_plane = ftd * vec4(UP, 1);
-		mat4 inv_ftd = glm::inverse(ftd);
+		mat4 inv_ftd = math::inverse(ftd);
 		vec3 inv_pn = inv_ftd * vec4(backface_plane.normal, 1);
 
 		auto draw_cap_ff = [&](vec3 const& cap_origin, real const& cap_radius, vec3 const& cap_normal)
@@ -671,8 +671,8 @@ namespace night
 				if (params.draw_through_opacity != 0)
 				{
 					// calculate range of theta we will be drawing the cap in:
-					auto ip = line_of_intersection_between_to_planes(cap_origin, -cap_normal, backface_plane.edge_1_a, backface_plane.normal);
-					auto sc = raycast::sphere(ip.origin, ip.direction, cap_origin, cap_radius);
+					auto ip = math::line_of_intersection_between_to_planes(cap_origin, -cap_normal, backface_plane.edge_1_a, backface_plane.normal);
+					auto sc = Raycast3D<>::sphere(ip.origin, ip.direction, cap_origin, cap_radius);
 
 					real bmin_theta;
 					real bmax_theta;
@@ -687,13 +687,13 @@ namespace night
 						c1 = inv_ftd * vec4(c1, 1);
 						c2 = inv_ftd * vec4(c2, 1);
 
-						if (orientation(c1, c2, inv_pn) == EOrientation::CounterClockwise)
+						if (math::orientation(c1, c2, inv_pn) == EOrientation::CounterClockwise)
 						{
 							SWAP(c1, c2);
 						}
 
-						bmin_theta = angle_clockwise(c1, vec2(UP));
-						bmax_theta = bmin_theta + angle_clockwise(c2, c1);
+						bmin_theta = math::angle_clockwise(c1, vec2(UP));
+						bmax_theta = bmin_theta + math::angle_clockwise(c2, c1);
 
 					}
 					else
@@ -711,10 +711,10 @@ namespace night
 						// backface:
 						{
 							real t1 = (real)i / (real)(segments);
-							t1 = lerp(bmin_theta, bmax_theta, t1);
+							t1 = math::lerp(bmin_theta, bmax_theta, t1);
 
 							real t2 = (real)(i + 1) / (real)(segments);
-							t2 = lerp(bmin_theta, bmax_theta, t2);
+							t2 = math::lerp(bmin_theta, bmax_theta, t2);
 
 							vec3 p1;
 							p1.x = sin(t1) * cap_radius;
@@ -745,10 +745,10 @@ namespace night
 						// front face:
 						{
 							real t1 = (real)i / (real)(segments);
-							t1 = lerp(fmin_theta, fmax_theta, t1);
+							t1 = math::lerp(fmin_theta, fmax_theta, t1);
 
 							real t2 = (real)(i + 1) / (real)(segments);
-							t2 = lerp(fmin_theta, fmax_theta, t2);
+							t2 = math::lerp(fmin_theta, fmax_theta, t2);
 
 							vec3 p1;
 							p1.x = sin(t1) * cap_radius;
@@ -839,9 +839,9 @@ namespace night
 
 	void ShapeRenderer::draw_convex(DrawConvexParams const& params)
 	{
-		NIGHT_PROFILER_SCOPED(SR_draw_convex);
+		NIGHT_PROFILER_SCOPED("ShapeRenderer::draw_convex");
 		ASSERT(params.planes != nullptr);
-		vector<Plane> planes = *params.planes;
+		vector<Plane<>> planes = *params.planes;
 
 		ASSERT(params.out_graph != nullptr); // TODO: draw to renderer if nulltr
 		RenderGraph& out_graph = *params.out_graph;
@@ -849,16 +849,16 @@ namespace night
 		ASSERT(crt != nullptr);
 		vec3 camera_direction = crt->camera().direction();
 
-		auto decomp = decompose(params.transform);
+		auto decomp = math::decompose(params.transform);
 
 		for (s32 i = 0; i < planes.size(); i++)
 		{
-			Plane& plane = planes[i];
+			Plane<>& plane = planes[i];
 
 			plane.normal = Camera::triangle_normal(plane.vertices[0], plane.vertices[1], plane.vertices[2]);
 			plane.normal *= decomp.scale;
 			plane.normal = decomp.rotation * plane.normal;
-			plane.normal = normalize(plane.normal);
+			plane.normal = math::normalize(plane.normal);
 
 			// apply transform:
 			for (s32 j = 0; j < plane.vertices.size(); j++)

@@ -255,13 +255,13 @@ namespace night
 		auto current = std::chrono::time_point_cast<std::chrono::microseconds>(fps_current_time).time_since_epoch().count();
 		u64 duration = (u64)(current - start);
 		r64 fps_delta_time = 1.0 / ((r64)duration / 1000000.0);
-		if (std::_Is_nan(lerp(_framerate, (real)fps_delta_time, 0.01f)))
+		if (std::_Is_nan(math::lerp(_framerate, (real)fps_delta_time, 0.01f)))
 		{
 			_framerate = (real)fps_delta_time;
 		}
 		else
 		{
-			_framerate = lerp(_framerate, (real)fps_delta_time, 0.01f);
+			_framerate = math::lerp(_framerate, (real)fps_delta_time, 0.01f);
 		}
 		
 
@@ -310,6 +310,47 @@ namespace night
 		y = height() - y; // flip coord for opengl
 
 		return internal_to_local({ x, y }); // TODO: pass in r32s
+	}
+
+	u8 WindowSDL::mouse_down(EMouse mouse) const
+	{
+		r32 x;
+		r32 y;
+		SDL_MouseButtonFlags flags = SDL_GetMouseState(&x, &y);
+
+		switch (flags)
+		{
+		case SDL_BUTTON_LEFT:
+		{
+			return mouse == EMouse::Left;
+			break;
+		}
+
+		case SDL_BUTTON_MIDDLE:
+		{
+			return mouse == EMouse::Middle;
+		}
+
+		case SDL_BUTTON_RIGHT:
+		{
+			return mouse == EMouse::Right;
+		}
+
+		case SDL_BUTTON_X1:
+		{
+			return mouse == EMouse::X1;
+		}
+
+		case SDL_BUTTON_X2:
+		{
+			return mouse == EMouse::X2;
+		}
+
+		default:
+		{
+			return false;
+		}
+		}
 	}
 
 	u8 WindowSDL::key_down(EKey const& key) const

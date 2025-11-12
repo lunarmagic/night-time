@@ -1,8 +1,6 @@
 #pragma once
 
-//#include "utility.h"
 #include "core.h"
-//#include "random/random.h"
 
 #define COLOR_ZERO	night::Color(0.0f, 0.0f, 0.0f, 0.0f)
 #define INVISIBLE	night::Color(1.0f, 1.0f, 1.0f, 0.0f)
@@ -30,27 +28,27 @@ namespace night
 
 	struct NIGHT_API Color
 	{
-		real r{ 1.0f };
-		real g{ 1.0f };
-		real b{ 1.0f };
-		real a{ 1.0f };
+		r32 r{ 1.0f };
+		r32 g{ 1.0f };
+		r32 b{ 1.0f };
+		r32 a{ 1.0f };
 
 		Color() = default;
 		Color(const Color& other) = default;
-		Color(real r, real g, real b, real a = 1.0f) : r(r), g(g), b(b), a(a) {}
+		Color(r32 r, r32 g, r32 b, r32 a = 1.0f) : r(r), g(g), b(b), a(a) {}
 		Color(const Color8& color8);
 
-		inline const Color operator* (const real& f) const
+		inline const Color operator* (const r32& f) const
 		{
 			return Color((r * f), (g * f), (b * f), a);
 		}
 
-		inline const Color operator/ (const real& f) const
+		inline const Color operator/ (const r32& f) const
 		{
 			return Color((r / f), (g / f), (b / f), a);
 		}
 
-		inline const Color operator*= (const real& f)
+		inline const Color operator*= (const r32& f)
 		{
 			r = (r * f);
 			g = (g * f);
@@ -58,7 +56,7 @@ namespace night
 			return *this;
 		}
 
-		inline const Color operator/= (const real& f)
+		inline const Color operator/= (const r32& f)
 		{
 			r = (r / f);
 			g = (g / f);
@@ -78,18 +76,18 @@ namespace night
 
 		static Color random();
 
-		static Color rainbow(real t);
+		static Color rainbow(r32 t);
 
-		static Color lerp(const Color& a, const Color& b, real t);
+		static Color lerp(const Color& a, const Color& b, r32 t);
 
-		Color opaqued(real opacity) const
+		Color opaqued(r32 opacity) const
 		{
 			Color result = *this;
 			result.a *= opacity;
 			return result;
 		}
 
-		Color darken(real lightness) const
+		Color darken(r32 lightness) const
 		{
 			Color result = *this;
 			result.r *= lightness;

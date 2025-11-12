@@ -57,17 +57,17 @@ namespace night
 		_target = utility::renderer().create_texture(RENDER_TARGET_NAME, { .surface = surface, .filtering = params.filtering });
 		ASSERT(_target != nullptr);
 
-		Camera camera;
-		camera.translation = FORWARD * (RENDERER_DEFAULT_RENDER_TARGET_FAR_CLIP / 2.0f);
-		camera.look_at = ORIGIN;
-		camera.up = UP;
-		camera.near_clip = RENDERER_DEFAULT_RENDER_TARGET_NEAR_CLIP;
-		camera.far_clip = RENDERER_DEFAULT_RENDER_TARGET_FAR_CLIP;
+		//Camera camera;
+		//camera.translation = FORWARD * (RENDERER_DEFAULT_RENDER_TARGET_FAR_CLIP / 2.0f);
+		//camera.look_at = ORIGIN;
+		//camera.up = UP;
+		//camera.near_clip = RENDERER_DEFAULT_RENDER_TARGET_NEAR_CLIP;
+		//camera.far_clip = RENDERER_DEFAULT_RENDER_TARGET_FAR_CLIP;
 
-		camera.type = ECameraType::Orthographic;
-		camera.ortho_region = { .left = -1, .right = 1, .top = 1, .bottom = -1 };
+		//camera.type = ECameraType::Orthographic;
+		//camera.ortho_region = { .left = -1, .right = 1, .top = 1, .bottom = -1 };
 
-		_target->camera(camera);
+		_target->camera(params.camera);
 
 		_target->should_use_blending = params.should_use_blending;
 		_target->should_use_depth_peeling = params.should_use_depth_peeling;
@@ -153,16 +153,28 @@ namespace night
 		return _target->camera();
 	}
 
-	Ray NodeRenderTarget::mouse_pick(vec2 const& mouse_position) const
+	Ray3D<real> NodeRenderTarget::mouse_pick(vec2 const& mouse_position) const
 	{
 		ASSERT(target() != nullptr);
 		return _target->mouse_pick(mouse_position);
 	}
 
-	vec4 NodeRenderTarget::project_to_screen(vec3 const& point) const
+	vec4 NodeRenderTarget::project(vec3 const& point) const
 	{
 		ASSERT(target() != nullptr);
-		return _target->project_to_screen(point);
+		return _target->project(point);
+	}
+
+	vec3 NodeRenderTarget::unproject(vec2 const& point) const
+	{
+		ASSERT(target() != nullptr);
+		return _target->unproject(point);
+	}
+
+	vec3 NodeRenderTarget::unproject(vec3 const& point) const
+	{
+		ASSERT(target() != nullptr);
+		return _target->unproject(point);
 	}
 
 	real NodeRenderTarget::render_flush_priority() const

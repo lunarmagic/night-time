@@ -42,6 +42,11 @@ namespace night
 
 				if (!branch.second.is_leaf())
 				{
+					if (branch.second.branches().empty())
+					{
+						continue;
+					}
+
 					out_stream << branch.first << ":\n";
 					rf(branch.second, out_stream, depth + 1);
 				}
@@ -167,12 +172,35 @@ namespace night
 	void File::clear()
 	{
 		_branches.clear();
-		_data.clear();
+		//_data.clear();
 	}
 
 	File& File::operator[](string const& name)
 	{
 		return _branches[name];
+	}
+
+	File& File::operator[](std::initializer_list<string> path)
+	{
+		ASSERT(path.size() != 0);
+
+		auto i = path.begin();
+
+		function<File& (File&)> rec = [&](File& node) -> File&
+			{
+				if (i != path.end())
+				{
+					auto& j = node._branches[*i];
+					i++;
+					return rec(j);
+				}
+				else
+				{
+					return node;
+				}
+			};
+
+		return rec(*this);
 	}
 
 	EDataType File::data_type()

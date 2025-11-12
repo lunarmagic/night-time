@@ -7,6 +7,7 @@
 #include "handle/handle.h"
 #include "camera/Camera.h"
 #include "material/IMaterial.h"
+#include "texture/ITexture.h"
 
 namespace night
 {
@@ -14,10 +15,12 @@ namespace night
 	struct INode;
 	struct RenderGraph;
 	struct Event;
+	template<typename T>
 	struct Quad;
+	template<typename T>
 	struct QuadParams;
 	struct Text;
-	struct ITexture;
+	//struct ITexture;
 	struct TextureParams;
 	struct IShader;
 	//struct IMaterial;
@@ -25,8 +28,10 @@ namespace night
 	struct ShaderParams;
 	struct MaterialParams;
 	struct ComputeShaderParams;
-	struct Ray;
+	//struct Ray3D;
 	//struct TextureUniformData;
+
+	using RenderTarget = handle<const ITexture>;
 
 	struct RendererParams
 	{
@@ -85,8 +90,8 @@ namespace night
 			draw_line(DrawLineParams{ .p1 = (vec3)p1, .p2 = (vec3)p2, .color = color, .width = width });
 		}
 
-		virtual void draw_quad(Quad const& quad) = 0;
-		void draw_quad(QuadParams const& params);
+		virtual void draw_quad(Quad<real> const& quad) = 0;
+		void draw_quad(QuadParams<real> const& params);
 
 		virtual void draw_text(Text const& text) = 0;
 
@@ -152,7 +157,7 @@ namespace night
 
 		handle<const ITexture> default_render_target() const { return _defaultRenderTarget; }
 
-		static Quad generate_line_quad(DrawLineParams const& params, handle<const ITexture> target);
+		static Quad<real> generate_line_quad(DrawLineParams const& params, handle<const ITexture> target);
 
 	protected:
 

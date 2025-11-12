@@ -31,7 +31,7 @@ namespace night
 		vec3 up{ UP };
 		ECameraType type{ECameraType::Perspective};
 		real fov{ NIGHT_CAMERA_DEFAULT_FOV };
-		AABB ortho_region{ .left = -1, .right = 1, .top = 1, .bottom = -1 };
+		AABB<> ortho_region{ .left = -1, .right = 1, .top = 1, .bottom = -1 };
 		real near_clip{ NIGHT_CAMERA_DEFAULT_NEAR_CLIP };
 		real far_clip{ NIGHT_CAMERA_DEFAULT_FAR_CLIP };
 

@@ -5,6 +5,10 @@
       <Configuration>Debug</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="DebugNDBAR|x64">
+      <Configuration>DebugNDBAR</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Release|x64">
       <Configuration>Release</Configuration>
       <Platform>x64</Platform>
@@ -27,6 +31,12 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugNDBAR|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
@@ -56,6 +66,9 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='DebugNDBAR|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
@@ -70,6 +83,13 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>..\bin\Debug-windows-x86_64\night\</OutDir>
     <IntDir>..\bin-int\Debug-windows-x86_64\night\</IntDir>
+    <TargetName>night</TargetName>
+    <TargetExt>.dll</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugNDBAR|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>..\bin\DebugNDBAR-windows-x86_64\night\</OutDir>
+    <IntDir>..\bin-int\DebugNDBAR-windows-x86_64\night\</IntDir>
     <TargetName>night</TargetName>
     <TargetExt>.dll</TargetExt>
   </PropertyGroup>
@@ -114,6 +134,28 @@
     </Link>
     <PostBuildEvent>
       <Command>IF EXIST ..\bin\Debug-windows-x86_64\night\night.dll\ (xcopy /Q /E /Y /I ..\bin\Debug-windows-x86_64\night\night.dll ..\bin\Debug-windows-x86_64\sandbox &gt; nul) ELSE (xcopy /Q /Y /I ..\bin\Debug-windows-x86_64\night\night.dll ..\bin\Debug-windows-x86_64\sandbox &gt; nul)</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugNDBAR|x64'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>nightpch.h</PrecompiledHeaderFile>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>NIGHT_PLATFORM_WINDOWS;NIGHT_BUILD_DLL;NIGHT_DEBUG;NIGHT_ENABLE_LOGGING;NIGHT_ENABLE_DEBUG_RENDERER;NIGHT_CORE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>src;vendor;vendor\glm;$(SolutionDir)\night\vendor\sdl3\include;$(SolutionDir)\night\vendor\SDL3_image\include;$(SolutionDir)\night\vendor\imgui;$(SolutionDir)\night\vendor\glew\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <Optimization>Disabled</Optimization>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>SDL3.lib;SDL3_test.lib;SDL3_image.lib;glew32.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\night\vendor\SDL3\lib\x64;$(SolutionDir)\night\vendor\SDL3_image\lib\x64;$(SolutionDir)\night\vendor\glew\lib\Release\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <ImportLibrary>..\bin\DebugNDBAR-windows-x86_64\night\night.lib</ImportLibrary>
+    </Link>
+    <PostBuildEvent>
+      <Command>IF EXIST ..\bin\DebugNDBAR-windows-x86_64\night\night.dll\ (xcopy /Q /E /Y /I ..\bin\DebugNDBAR-windows-x86_64\night\night.dll ..\bin\DebugNDBAR-windows-x86_64\sandbox &gt; nul) ELSE (xcopy /Q /Y /I ..\bin\DebugNDBAR-windows-x86_64\night\night.dll ..\bin\DebugNDBAR-windows-x86_64\sandbox &gt; nul)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -215,14 +257,17 @@
     <ClInclude Include="src\event\PenEvent.h" />
     <ClInclude Include="src\file\File.h" />
     <ClInclude Include="src\geometry\Plane.h" />
+    <ClInclude Include="src\geometry\Polygon.h" />
     <ClInclude Include="src\geometry\Quad.h" />
     <ClInclude Include="src\geometry\Triangle.h" />
     <ClInclude Include="src\geometry\Vertex.h" />
+    <ClInclude Include="src\geometry\convex_hull.h" />
     <ClInclude Include="src\gjk\gjk.h" />
     <ClInclude Include="src\gui\Gui.h" />
     <ClInclude Include="src\handle\handle.h" />
     <ClInclude Include="src\input\EInput.h" />
     <ClInclude Include="src\input\InputKey.h" />
+    <ClInclude Include="src\intersect\intersect.h" />
     <ClInclude Include="src\log\log.h" />
     <ClInclude Include="src\material\IComputeShader.h" />
     <ClInclude Include="src\material\IMaterial.h" />
@@ -231,11 +276,13 @@
     <ClInclude Include="src\nightpch.h" />
     <ClInclude Include="src\node\INode.h" />
     <ClInclude Include="src\node\NodeFrameBuffer.h" />
+    <ClInclude Include="src\node\NodeGui.h" />
     <ClInclude Include="src\node\NodeRenderTarget.h" />
     <ClInclude Include="src\node\NodeRenderable.h" />
     <ClInclude Include="src\node\NodeSpatial.h" />
     <ClInclude Include="src\node\NodeWindow.h" />
     <ClInclude Include="src\node\utility_nodes\NodeText.h" />
+    <ClInclude Include="src\node\utility_nodes\node_animation\NodeAnimation.h" />
     <ClInclude Include="src\node\utility_nodes\node_distance_field\NodeDistanceFields2D.h" />
     <ClInclude Include="src\node\utility_nodes\node_distance_field\WorldSpaceRasterizer2D.h" />
     <ClInclude Include="src\overlap\overlap.h" />
@@ -261,6 +308,9 @@
     <ClInclude Include="src\resource_manager\ResourceManager.h" />
     <ClInclude Include="src\shape_renderer\ShapeRenderer.h" />
     <ClInclude Include="src\stl\stl.h" />
+    <ClInclude Include="src\test\TestConvex2D.h" />
+    <ClInclude Include="src\test\TestLauncher.h" />
+    <ClInclude Include="src\test\TestNodeAnimation.h" />
     <ClInclude Include="src\text\Text.h" />
     <ClInclude Include="src\texture\ITexture.h" />
     <ClInclude Include="src\texture\Surface.h" />
@@ -284,24 +334,27 @@
     <ClCompile Include="src\event\EventManager.cpp" />
     <ClCompile Include="src\file\File.cpp" />
     <ClCompile Include="src\geometry\Plane.cpp" />
+    <ClCompile Include="src\geometry\Polygon.cpp" />
     <ClCompile Include="src\geometry\Quad.cpp" />
     <ClCompile Include="src\gjk\gjk.cpp" />
     <ClCompile Include="src\gui\Gui.cpp" />
+    <ClCompile Include="src\intersect\intersect.cpp" />
     <ClCompile Include="src\log\log.cpp" />
     <ClCompile Include="src\material\IComputeShader.cpp" />
     <ClCompile Include="src\material\IMaterial.cpp" />
     <ClCompile Include="src\material\IShader.cpp" />
-    <ClCompile Include="src\math\math.cpp" />
     <ClCompile Include="src\nightpch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="src\node\INode.cpp" />
     <ClCompile Include="src\node\NodeFrameBuffer.cpp" />
+    <ClCompile Include="src\node\NodeGui.cpp" />
     <ClCompile Include="src\node\NodeRenderTarget.cpp" />
     <ClCompile Include="src\node\NodeRenderable.cpp" />
     <ClCompile Include="src\node\NodeSpatial.cpp" />
     <ClCompile Include="src\node\NodeWindow.cpp" />
     <ClCompile Include="src\node\utility_nodes\NodeText.cpp" />
+    <ClCompile Include="src\node\utility_nodes\node_animation\NodeAnimation.cpp" />
     <ClCompile Include="src\node\utility_nodes\node_distance_field\NodeDistanceFields2D.cpp" />
     <ClCompile Include="src\node\utility_nodes\node_distance_field\WorldSpaceRasterizer2D.cpp" />
     <ClCompile Include="src\overlap\overlap.cpp" />

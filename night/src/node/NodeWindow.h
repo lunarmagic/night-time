@@ -34,13 +34,15 @@ namespace night
 		u8 borderless = false;
 		ENodeWindowState state{ENodeWindowState::Free};
 		ENodeWindowDockWhere dock_where{ ENodeWindowDockWhere::None };
-		AABB dock_space{ AABB{ 0, 0, 0, 0 } };
+		AABB<> dock_space{ AABB<>{ 0, 0, 0, 0 } };
 
 		/*
 		* NodeWindowParams::down_scale
 		* divides resolution from find_internal_resolution by value on init, and resize
 		*/
 		real internal_resolution_scale{ 1 };
+
+		function<void()> on_close = nullptr;
 
 		NodeRenderTargetParams nrt_params;
 	};
@@ -52,20 +54,27 @@ namespace night
 		vec2 window_coord_to_local_coord(vec2 const& window_coord) const;
 		vec2 window_motion_to_local_motion(vec2 const& window_motion) const;
 
-		Ray mouse_pick(vec2 const& window_mouse_position) const;
+		Ray3D<real> mouse_pick(vec2 const& window_mouse_position) const;
 
-		Quad global_area();
+		Quad<> global_area();
 
 		void dock_where(ENodeWindowDockWhere where);
 		ENodeWindowDockWhere const& dock_where() const { return _dockWhere; }
 
-		void dock_space(AABB space);
-		AABB const& dock_space() const { return _dockSpace; }
+		void dock_space(AABB<> space);
+		AABB<> const& dock_space() const { return _dockSpace; }
 
 		ivec2 find_internal_resolution() const;
 
 		void internal_resolution_scale(real scale);
 		real const& internal_resolution_scale() const { return _internalResolutionScale; }
+
+		void on_close(function<void()> callback) { _onClose = callback; };
+		function<void()> const& on_close() const { return _onClose; }
+
+		vec2 mouse();
+
+		virtual void on_event(Event& event, u8 pass_down_event = true) override;
 
 	protected:
 
@@ -83,7 +92,7 @@ namespace night
 		u8 _borderless;
 		ENodeWindowState _state;
 		u64 _windowDepth{ 0 };
-		AABB _dockSpace{ AABB{ 0, 0, 0, 0 } };
+		AABB<> _dockSpace{ AABB<>{ 0, 0, 0, 0 } };
 		ENodeWindowDockWhere _dockWhere{ ENodeWindowDockWhere::None };
 
 		/*
@@ -92,11 +101,14 @@ namespace night
 		*/
 		real _internalResolutionScale{ 1 };
 
-		ivec4 area_internal() const;
-		AABB area_clamped_to_pixel_grid() const;
-		AABB docking_area(ENodeWindowDockWhere where) const;
+		// TODO: add close button to window.
+		function<void()> _onClose = nullptr;
 
-		Quad global_area_rec(AABB area);
+		ivec4 area_internal() const;
+		AABB<> area_clamped_to_pixel_grid() const;
+		AABB<> docking_area(ENodeWindowDockWhere where) const;
+
+		Quad<> global_area_rec(AABB<> area);
 	};
 
 }

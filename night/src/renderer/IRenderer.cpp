@@ -44,7 +44,7 @@ namespace night
 	{
 	}
 
-	void IRenderer::draw_quad(QuadParams const& params)
+	void IRenderer::draw_quad(QuadParams<> const& params)
 	{
 		draw_quad(Quad(params));
 	}
@@ -266,22 +266,22 @@ namespace night
 	void IRenderer::update_mvp()
 	{
 		Camera const& camera = _defaultRenderTarget->camera();
-		glm::mat4 view = glm::lookAt(camera.translation, camera.look_at, camera.up);
+		mat4 view = math::look_at(camera.translation, camera.look_at, camera.up);
 
-		glm::mat4 projection;
+		mat4 projection;
 
 		if (camera.type == ECameraType::Perspective)
 		{
-			projection = glm::perspective(glm::radians(camera.fov), (real)_viewport.z / (real)_viewport.w, camera.near_clip, camera.far_clip);
+			projection = math::perspective(RADIANS(camera.fov), (real)_viewport.z / (real)_viewport.w, camera.near_clip, camera.far_clip);
 		}
 		else if (camera.type == ECameraType::Orthographic)
 		{
-			projection = glm::ortho(camera.ortho_region.left, camera.ortho_region.right, camera.ortho_region.bottom, camera.ortho_region.top, camera.near_clip, camera.far_clip);
+			projection = math::ortho(camera.ortho_region.left, camera.ortho_region.right, camera.ortho_region.bottom, camera.ortho_region.top, camera.near_clip, camera.far_clip);
 
 			s32 w = viewport().z;
 			s32 h = viewport().w;
 			vec2 ar = { (h < w ? (real)h / (real)w : 1.0f), (w < h ? (real)w / (real)h : 1.0f) };
-			mat4 scale = glm::scale(mat4(1), vec3(ar.x, ar.y, 1.0f)); // we need to manualy scale for ortho
+			mat4 scale = math::scale(vec3(ar.x, ar.y, 1.0f)); // we need to manualy scale for ortho
 
 			projection *= scale;
 		}
@@ -293,7 +293,7 @@ namespace night
 	{
 		vec3 eye = glm::unProject(vec3( mouse_position.x, mouse_position.y, 0.0f ), mat4(1), _mvp, vec4(-1, -1, 2, 2));
 		vec3 forward = glm::unProject(vec3(mouse_position.x, mouse_position.y, 1.0f), mat4(1), _mvp, vec4(-1, -1, 2, 2));
-		vec3 direction = normalize(forward - eye);
+		vec3 direction = math::normalize(forward - eye);
 		return {.origin = eye, .direction = direction};
 	}
 
@@ -308,11 +308,11 @@ namespace night
 		vec2 pp2 = project_to_screen(p2);
 		vec2 pp3 = project_to_screen(p3);
 
-		return (perp_dot(pp2 - pp1, pp3 - pp2) >= 0.0f);
+		return (perp_math::dot(pp2 - pp1, pp3 - pp2) >= 0.0f);
 	}
 #endif
 
-	Quad IRenderer::generate_line_quad(DrawLineParams const& params, handle<const ITexture> target)
+	Quad<> IRenderer::generate_line_quad(DrawLineParams const& params, handle<const ITexture> target)
 	{
 		// if p0 == p1, return square of size max width
 		Quad area;
@@ -323,14 +323,24 @@ namespace night
 
 		vec2 ar = { (h < w ? (real)h / (real)w : 1.0f), (w < h ? (real)w / (real)h : 1.0f) };
 
-		mat4 scale = glm::scale(mat4(1), vec3(ar.x, ar.y, 1.0f)); // TODO: remove this.
+		mat4 scale = math::scale(vec3(ar.x, ar.y, 1.0f)); // TODO: remove this.
 
 		mat4 const& mvp = target->mvp();
 
-		vec3 p1 = glm::project(params.p1, mat4(1), mvp, vec4(-1, -1, 2, 2));
-		vec3 p2 = glm::project(params.p2, mat4(1), mvp, vec4(-1, -1, 2, 2));
+		vec3 p1 = math::project(params.p1, mat4(1), mvp, vec4(-1, -1, 2, 2));
+		vec3 p2 = math::project(params.p2, mat4(1), mvp, vec4(-1, -1, 2, 2));
 
-		vec2 normal = normalize(vec2(p2) / ar - vec2(p1) / ar);
+		if (p1 == p2)
+		{
+			real width = MAX(params.width, params.width2);
+			area.vertices[0].point = vec4(p1 + vec3((vec2(-1.0f, 1.0f) * ar) * width, p1.z), 1);
+			area.vertices[1].point = vec4(p1 + vec3((vec2(1.0f, 1.0f) * ar) * width, p1.z), 1);
+			area.vertices[2].point = vec4(p1 + vec3((vec2(1.0f, -1.0f) * ar) * width, p1.z), 1);
+			area.vertices[3].point = vec4(p1 + vec3((vec2(-1.0f, -1.0f) * ar) * width, p1.z), 1);
+			return area;
+		}
+
+		vec2 normal = math::normalize(vec2(p2) / ar - vec2(p1) / ar);
 		vec2 perpendicular = vec2(-normal.y, normal.x);
 		normal = scale * vec4(normal, 0, 1);
 		perpendicular = scale * vec4(perpendicular, 0, 1);

@@ -24,7 +24,7 @@ namespace night
 
 	void NodeSpatial::local_rotate(const vec3& axis, real radians)
 	{
-		_rotation *= glm::angleAxis(radians, axis);
+		_rotation *= math::angle_axis(radians, axis);
 		update_transform();
 	}
 
@@ -64,9 +64,9 @@ namespace night
 	void NodeSpatial::update_transform()
 	{
 		_transform = mat4(1);
-		_transform = glm::scale(_scale) * _transform;
-		_transform = glm::mat4_cast(_rotation) * _transform;
-		_transform = glm::translate(_translation) * _transform;
+		_transform = math::scale(_scale) * _transform;
+		_transform = math::quat_to_mat4(_rotation) * _transform;
+		_transform = math::translate(_translation) * _transform;
 		
 		on_transformed();
 
@@ -78,9 +78,13 @@ namespace night
 
 	void NodeSpatial::update_tsr()
 	{
-		glm::vec3 skew;
-		glm::vec4 perspective;
-		glm::decompose(_transform, _scale, _rotation, _translation, skew, perspective);
+		//vec3 skew;
+		//vec4 perspective;
+		DecomposedTransform<> dt = math::decompose(_transform);
+		_translation = dt.translation;
+		_scale = dt.scale;
+		_rotation = dt.rotation;
+		//math::decompose(_transform, _scale, _rotation, _translation, skew, perspective);
 
 		on_transformed();
 
@@ -112,42 +116,48 @@ namespace night
 	{
 		mat4 gt = global_transform(); // TODO: cache everything on EventNodeGlobalTransformUpdated
 
-		vec3 scale;
-		quat rotation;
-		vec3 translation;
-		glm::vec3 skew;
-		glm::vec4 perspective;
-		glm::decompose(gt, scale, rotation, translation, skew, perspective);
+		return math::decompose(gt).translation;
 
-		return translation;
+		//vec3 scale;
+		//quat rotation;
+		//vec3 translation;
+		//math::vec3 skew;
+		//math::vec4 perspective;
+		//math::decompose(gt, scale, rotation, translation, skew, perspective);
+
+		//return translation;
 	}
 
 	vec3 NodeSpatial::global_scale() const
 	{
 		mat4 gt = global_transform();
 
-		vec3 scale;
-		quat rotation;
-		vec3 translation;
-		glm::vec3 skew;
-		glm::vec4 perspective;
-		glm::decompose(gt, scale, rotation, translation, skew, perspective);
+		return math::decompose(gt).scale;
 
-		return scale;
+		//vec3 scale;
+		//quat rotation;
+		//vec3 translation;
+		//math::vec3 skew;
+		//math::vec4 perspective;
+		//math::decompose(gt, scale, rotation, translation, skew, perspective);
+
+		//return scale;
 	}
 
 	quat NodeSpatial::global_rotation() const
 	{
 		mat4 gt = global_transform();
 
-		vec3 scale;
-		quat rotation;
-		vec3 translation;
-		glm::vec3 skew;
-		glm::vec4 perspective;
-		glm::decompose(gt, scale, rotation, translation, skew, perspective);
+		return math::decompose(gt).rotation;
 
-		return rotation;
+		//vec3 scale;
+		//quat rotation;
+		//vec3 translation;
+		//math::vec3 skew;
+		//math::vec4 perspective;
+		//math::decompose(gt, scale, rotation, translation, skew, perspective);
+
+		//return rotation;
 	}
 
 }

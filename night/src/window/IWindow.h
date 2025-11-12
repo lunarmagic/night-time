@@ -19,11 +19,12 @@ namespace night
 	struct IRenderer;
 	struct RendererParams;
 	struct IGui;
-	struct Quad;
 	struct Event;
 	struct WindowResizeEvent;
 	struct ITexture;
 	struct WindowParams;
+
+	using Seconds = real; // TODO: move to time file
 
 	struct NIGHT_API IWindow
 	{
@@ -50,6 +51,7 @@ namespace night
 		//void destroy_texture(const string& id);
 
 		virtual vec2 mouse() const = 0;
+		virtual u8 mouse_down(EMouse mouse) const = 0;
 		virtual u8 key_down(EKey const& key) const = 0;
 
 		string const& title() const { return _title; }

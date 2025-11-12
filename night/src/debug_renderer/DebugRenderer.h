@@ -3,6 +3,8 @@
 #include "handle/handle.h"
 #include "renderer/RenderGraph.h"
 #include "aabb/AABB.h"
+#include "utility.h"
+//#include <utility>
 
 #define DB_RENDERER_ARROW_COLOR ORANGE
 #define DB_RENDERER_SPHERE_COLOR LIGHT_BLUE.darken(0.75f)
@@ -14,74 +16,31 @@
 #ifdef NIGHT_ENABLE_DEBUG_RENDERER
 #define DB_RENDERER_INIT() ::night::DebugRenderer::init()
 
-#ifdef NIGHT_DB_RENDERER_ENABLE_ALGO_RENDER // disable for accurate profiling.
-#define NIGHT_DBAR
-#define DB_ALGO_INVOLVE_NODES(...) ::night::DebugRenderer::algo_involve_nodes(##__VA_ARGS__)
-#define DB_ALGO_UNINVOLVE_NODES() ::night::DebugRenderer::algo_uninvolve_nodes()
-#define DB_ALGO_PUSH(name) { ::night::DebugRenderer::algo_push(name); if(::night::DebugRenderer::algo_should_break()) { ASSERT(false) } }
-#define DB_ALGO_INCREMENT_STEP() { ::night::DebugRenderer::algo_increment_step(); if(::night::DebugRenderer::algo_should_break()) { ASSERT(false) } }
-#define DB_ALGO_POP() ::night::DebugRenderer::algo_pop()
-#define DB_ALGO_DRAW_STEP(render_function) //{::night::DebugRenderer::algo_draw_step(render_function); if(::night::DebugRenderer::algo_should_break()) { ASSERT(false) }}
-//#define DB_ALGO_STEP_SHOW_ONION_SKINS(count) //::night::DebugRenderer::algo_show_onion_skins(count)
-//#define DB_ALGO_IS_ON_VIEWED_STEP() ::night::DebugRenderer::is_on_viewed_step()
-
-#define DB_ALGO_DRAW_FN(fn) ::night::DebugRenderer::push_draw_function(fn, true)
-#define DB_ALGO_DRAW_OBJECT(obj) ::night::DebugRenderer::draw_object(obj, true)
-#define DB_ALGO_DRAW_POINT(point, color) ::night::DebugRenderer::draw_point(point, color, true)
-#define DB_ALGO_DRAW_LINE(p1, p2, color) ::night::DebugRenderer::draw_line(p1, p2, color, true)
-#define DB_ALGO_DRAW_QUAD(quad) ::night::DebugRenderer::draw_quad(quad, true)
-#define DB_ALGO_DRAW_TEXT(text) ::night::DebugRenderer::draw_text(text, true)
-#define DB_ALGO_DRAW_ARROW(orgn, dir, col) ::night::DebugRenderer::draw_arrow({ .origin = orgn, .direction = dir, .color = col }, true)
-#define DB_ALGO_DRAW_CIRCLE(orgn, nrmal, rdius, clor) ::night::DebugRenderer::draw_ellipse({.origin = orgn, .normal = nrmal, .radii = vec2(rdius), .color = clor}, true)
-#define DB_ALGO_DRAW_ELLIPSE(orgn, nrmal, mjor_axis, rdii, clor) ::night::DebugRenderer::draw_ellipse({.origin = orgn, .normal = nrmal, .major_axis = mjor_axis, .radii = rdii, .color = clor}, true)
-#define DB_ALGO_DRAW_PLANE(orgn, nrmal, clor) ::night::DebugRenderer::draw_plane({.origin = orgn, .normal = nrmal, .color = clor}, true)
-
-#define DB_ALGO_LAMBDA_CAPTURE =
-#else
-#define DB_ALGO_INVOLVE_NODES(...)
-#define DB_ALGO_UNINVOLVE_NODES()
-#define DB_ALGO_PUSH(name)
-#define DB_ALGO_INCREMENT_STEP()
-#define DB_ALGO_POP()
-#define DB_ALGO_DRAW_STEP(render_function)
-#define DB_ALGO_STEP_SHOW_ONION_SKINS(count)
-#define DB_ALGO_RENDER()
-#define DB_ALGO_LAMBDA_CAPTURE &
-
-#define DB_ALGO_DRAW_FN(fn)
-#define DB_ALGO_DRAW_POINT(point, color)
-#define DB_ALGO_DRAW_LINE(p1, p2, color)
-#define DB_ALGO_DRAW_QUAD(quad)
-#define DB_ALGO_DRAW_TEXT(text)
-#define DB_ALGO_DRAW_ARROW(orgn, dir, col)
-#define DB_ALGO_DRAW_CIRCLE(orgn, nrmal, rdius, clor)
-#define DB_ALGO_DRAW_ELLIPSE(orgn, nrmal, mjor_axis, rdii, clor)
-#define DB_ALGO_DRAW_PLANE(orgn, nrmal, clor)
-#endif
-
 #define DB_RENDERER_DRAW_OBJECT(obj) ::night::DebugRenderer::draw_object(obj, false)
 #define DB_RENDERER_DRAW_POINT(point, color) ::night::DebugRenderer::draw_point(point, color)
 #define DB_RENDERER_DRAW_LINE(p1, p2, color) ::night::DebugRenderer::draw_line(p1, p2, color)
 #define DB_RENDERER_DRAW_QUAD(quad) ::night::DebugRenderer::draw_quad(quad)
 #define DB_RENDERER_DRAW_TEXT(text) ::night::DebugRenderer::draw_text(text)
 #define DB_RENDERER_DRAW_HOVER_TEXT(params) //::night::DebugRenderer::draw_hover_text(params)
-#define DB_RENDERER_DRAW_ARROW(params) //::night::DebugRenderer::draw_arrow(params)
-#define DB_RENDERER_DRAW_PLANE(params) //::night::DebugRenderer::draw_plane(params)
-#define DB_RENDERER_DRAW_ELLIPSE(params) //::night::DebugRenderer::draw_ellipse(params)
+//#define DB_RENDERER_DRAW_ARROW(params) //::night::DebugRenderer::draw_arrow(params)
+//#define DB_RENDERER_DRAW_PLANE(params) //::night::DebugRenderer::draw_plane(params)
+//#define DB_RENDERER_DRAW_ELLIPSE(params) //::night::DebugRenderer::draw_ellipse(params)
 
 #define DB_RENDERER_FLUSH() ::night::DebugRenderer::render()
 
-#define DB_RENDERER_SET_CAMERA(camera_) ::night::DebugRenderer::camera(camera_) // TODO: handle camera automatically
+//#define DB_RENDERER_SET_CAMERA(camera_) ::night::DebugRenderer::camera(camera_) // TODO: handle camera automatically
 #else
 #define DB_RENDERER_INIT()
 
-#define DB_ALGO_INVOLVE_NODES(...)
-#define DB_ALGO_UNINVOLVE_NODES()
-#define DB_ALGO_PUSH(name)
-#define DB_ALGO_INCREMENT_STEP()
-#define DB_ALGO_POP()
-#define DB_ALGO_DRAW_STEP(render_function)
-#define DB_ALGO_STEP_SHOW_ONION_SKINS(count)
+//#define DB_ALGO_INVOLVE_NODES(...)
+//#define DB_INVOLVE_NODES_SCOPED(...)
+//#define DB_ALGO_UNINVOLVE_NODES()
+//#define DB_ALGO_PUSH(name)
+//#define DB_ALGO_SCOPED(name)
+//#define DB_ALGO_INCREMENT_STEP()
+//#define DB_ALGO_POP()
+//#define DB_ALGO_DRAW_STEP(render_function)
+//#define DB_ALGO_STEP_SHOW_ONION_SKINS(count)
 
 #define DB_RENDERER_DRAW_OBJECT(obj)
 #define DB_RENDERER_DRAW_POINT(point, color)
@@ -93,7 +52,65 @@
 #define DB_RENDERER_DRAW_PLANE(params)
 #define DB_RENDERER_DRAW_ELLIPSE(params)
 
+//#define DB_ALGO_DRAW_FN(fn)
+//#define DB_ALGO_DRAW_OBJECT(obj)
+//#define DB_ALGO_DRAW_POINT(point, color)
+//#define DB_ALGO_DRAW_LINE(p1, p2, color)
+//#define DB_ALGO_DRAW_QUAD(quad)
+//#define DB_ALGO_DRAW_TEXT(text)
+//#define DB_ALGO_DRAW_ARROW(orgn, dir, col)
+//#define DB_ALGO_DRAW_CIRCLE(orgn, nrmal, rdius, clor)
+//#define DB_ALGO_DRAW_ELLIPSE(orgn, nrmal, mjor_axis, rdii, clor)
+//#define DB_ALGO_DRAW_SPHERE(orgn, rdius, clor)
+//#define DB_ALGO_DRAW_PLANE(orgn, nrmal, clor)
+
+#define DB_RENDERER_FLUSH()
+
+#define DB_RENDERER_SET_CAMERA(camera)
+#define DB_ALGO_LAMBDA_CAPTURE &
+#endif
+
+#if defined(NIGHT_ENABLE_DEBUG_RENDERER) && defined(NIGHT_DB_RENDERER_ENABLE_ALGO_RENDER)
+#define NIGHT_DBAR // shortcut for ifdef.
+
+#define DB_ALGO_INVOLVE_NODES(...) ::night::DebugRenderer::algo_involve_nodes(##__VA_ARGS__)
+#define DB_ALGO_UNINVOLVE_NODES() ::night::DebugRenderer::algo_uninvolve_nodes()
+
+#define DB_ALGO_PUSH(name) { ::night::DebugRenderer::algo_push(name); if(::night::DebugRenderer::algo_should_break()) { ASSERT(false) } }
+#define DB_ALGO_INCREMENT_STEP() { ::night::DebugRenderer::algo_increment_step(); if(::night::DebugRenderer::algo_should_break()) { ASSERT(false) } }
+#define DB_ALGO_POP() ::night::DebugRenderer::algo_pop()
+
+#define DB_ALGO_INVOLVE_NODES_SCOPED(...) ::night::DBAlgoInvolveNodesScoped UNIQUE_VARIABLE_NAME(involved_nodes_scoped)(##__VA_ARGS__)
+#define DB_ALGO_SCOPED(name) ::night::DBAlgoPushScoped UNIQUE_VARIABLE_NAME(algo_scoped)(name)
+
+#define DB_ALGO_DRAW_FN(fn) ::night::DebugRenderer::push_draw_function(fn, true)
+#define DB_ALGO_DRAW_OBJECT(obj) ::night::DebugRenderer::draw_object(obj, true)
+#define DB_ALGO_DRAW_POINT(point, color) ::night::DebugRenderer::draw_point(point, color, true)
+#define DB_ALGO_DRAW_LINE(p1, p2, color) ::night::DebugRenderer::draw_line(p1, p2, color, true)
+#define DB_ALGO_DRAW_QUAD(quad) ::night::DebugRenderer::draw_quad(quad, true)
+#define DB_ALGO_DRAW_TEXT(text) ::night::DebugRenderer::draw_text(text, true)
+#define DB_ALGO_DRAW_ARROW(orgn, dir, col) ::night::DebugRenderer::draw_arrow(DebugRenderer::DrawArrowParams{ .origin = orgn, .direction = dir, .color = col }, true)
+#define DB_ALGO_DRAW_CIRCLE(orgn, nrmal, rdius, clor) ::night::DebugRenderer::draw_ellipse({.origin = orgn, .normal = nrmal, .radii = vec2(rdius), .color = clor}, true)
+#define DB_ALGO_DRAW_ELLIPSE(orgn, nrmal, mjor_axis, rdii, clor) ::night::DebugRenderer::draw_ellipse({.origin = orgn, .normal = nrmal, .major_axis = mjor_axis, .radii = rdii, .color = clor}, true)
+#define DB_ALGO_DRAW_SPHERE(orgn, rdius, clor) ::night::DebugRenderer::draw_sphere({.origin = orgn, .radius = rdius, .color = clor}, true)
+#define DB_ALGO_DRAW_PLANE(orgn, nrmal, clor) ::night::DebugRenderer::draw_plane({.origin = orgn, .normal = nrmal, .color = clor}, true)
+
+#define DB_ALGO_LAMBDA_CAPTURE =
+#else
+#define DB_ALGO_INVOLVE_NODES(...)
+#define DB_ALGO_INVOLVE_NODES_SCOPED(...)
+#define DB_ALGO_UNINVOLVE_NODES()
+#define DB_ALGO_PUSH(name)
+#define DB_ALGO_SCOPED(name)
+#define DB_ALGO_INCREMENT_STEP()
+#define DB_ALGO_POP()
+#define DB_ALGO_DRAW_STEP(render_function)
+#define DB_ALGO_STEP_SHOW_ONION_SKINS(count)
+#define DB_ALGO_RENDER()
+#define DB_ALGO_LAMBDA_CAPTURE &
+
 #define DB_ALGO_DRAW_FN(fn)
+#define DB_ALGO_DRAW_OBJECT(obj)
 #define DB_ALGO_DRAW_POINT(point, color)
 #define DB_ALGO_DRAW_LINE(p1, p2, color)
 #define DB_ALGO_DRAW_QUAD(quad)
@@ -101,12 +118,8 @@
 #define DB_ALGO_DRAW_ARROW(orgn, dir, col)
 #define DB_ALGO_DRAW_CIRCLE(orgn, nrmal, rdius, clor)
 #define DB_ALGO_DRAW_ELLIPSE(orgn, nrmal, mjor_axis, rdii, clor)
+#define DB_ALGO_DRAW_SPHERE(orgn, rdius, clor)
 #define DB_ALGO_DRAW_PLANE(orgn, nrmal, clor)
-
-#define DB_RENDERER_FLUSH()
-
-#define DB_RENDERER_SET_CAMERA(camera)
-#define DB_ALGO_LAMBDA_CAPTURE &
 #endif
 
 #ifdef NIGHT_ENABLE_DEBUG_RENDERER
@@ -185,7 +198,7 @@ namespace night
 			draw_line(DrawLineParams{ .p1 = vec3(p1, 0), .p2 = vec3(p2, 0), .color = color }, is_algo);
 		}
 
-		static void draw_quad(Quad const& quad, u8 is_algo = false);
+		static void draw_quad(Quad<> const& quad, u8 is_algo = false);
 
 		static void draw_text(Text const& text, u8 is_algo = false);
 
@@ -264,7 +277,7 @@ namespace night
 
 		static u8 algo_should_break();
 
-
+		static u8 should_save_debug_textures() { return _assetsShouldSaveDebugTextures; }
 
 	protected:
 		DebugRenderer() = default;
@@ -299,7 +312,8 @@ namespace night
 			vector<RenderStep> render_steps;
 		};
 
-		static u8 _algoIsAutoUpdating;
+		//static u8 _algoIsAutoUpdating;
+		inline static u8 _algoIsActive = true;
 		static map<vector<handle<INode>>, map<string, Algorithm>> _algoInvolvedNodes;
 		//static vector<handle<INode>> _algoCurrentlyInvolvedNodes;
 
@@ -325,6 +339,8 @@ namespace night
 
 		static string _assetsSelectedTexture;
 		static u8 _assetsTextureShowDepthBuffer;
+
+		static u8 _assetsShouldSaveDebugTextures;
 
 		static void scene_render();
 		static void algo_render();
@@ -370,7 +386,8 @@ namespace night
 			};
 	}
 
-	template<> inline void DebugRenderer::draw_format<AABB>(AABB& v)
+	// TODO: handle daabbs
+	template<> inline void DebugRenderer::draw_format<AABB<real>>(AABB<real>& v)
 	{
 		auto& graph = DebugRenderer::render_graph();
 		graph.draw_line(vec2(v.left, v.top), vec2(v.right, v.top), BLUE);
@@ -379,7 +396,8 @@ namespace night
 		graph.draw_line(vec2(v.left, v.bottom), vec2(v.left, v.top), BLUE);
 	}
 
-	template<> inline void DebugRenderer::draw_format<Quad>(Quad& v)
+	// TODO: handle dquads
+	template<> inline void DebugRenderer::draw_format<Quad<>>(Quad<>& v)
 	{
 		auto& graph = DebugRenderer::render_graph();
 		graph.draw_line(v.vertices[0].point, v.vertices[1].point, BLUE);
@@ -387,6 +405,44 @@ namespace night
 		graph.draw_line(v.vertices[2].point, v.vertices[3].point, BLUE);
 		graph.draw_line(v.vertices[3].point, v.vertices[0].point, BLUE);
 	}
+
+	struct DBAlgoPushScoped
+	{
+		DBAlgoPushScoped(string const& name)
+		{
+			//DB_ALGO_PUSH(name);
+			DebugRenderer::algo_push(name);
+		}
+
+		~DBAlgoPushScoped()
+		{
+			//DB_ALGO_POP();
+			DebugRenderer::algo_pop();
+		}
+	};
+
+	struct DBAlgoInvolveNodesScoped
+	{
+		template<typename... Args>
+		DBAlgoInvolveNodesScoped(Args&&... nodes)
+		{
+			//DB_ALGO_INVOLVE_NODES(nodes...);
+			DebugRenderer::algo_involve_nodes(std::forward<Args>(nodes)...);
+		}
+
+		~DBAlgoInvolveNodesScoped()
+		{
+			//DB_ALGO_UNINVOLVE_NODES();
+			DebugRenderer::algo_uninvolve_nodes();
+		}
+	};
+
+	//template<typename... Args>
+	//DBAlgoInvolveNodesScoped __db_construct_DBAINS(Args... nodes)
+	//{
+	//	DB_ALGO_INVOLVE_NODES(nodes...);
+	//	return DBAlgoInvolveNodesScoped();
+	//}
 
 }
 #endif

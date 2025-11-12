@@ -38,6 +38,47 @@ namespace night
 	template<typename... T>
 	Exclude<T...> exclude;
 
+	//enum struct ESignalDirection : s32
+	//{
+	//	None = 0,
+	//	Global,
+	//	ParentsAndChildren,
+	//	Parents,
+	//	ImmediateParent,
+	//	ImmediateChildren,
+	//	Children
+	//};
+
+	struct SignalHash
+	{
+		handle<INode> node;
+		type_index params_type;
+	};
+
+	struct ISignalCallback
+	{
+		virtual ~ISignalCallback() = default;
+	};
+
+	template<typename P>
+	struct SignalCallback : public ISignalCallback
+	{
+		SignalCallback(function<void(P const&)> callback) : callback(callback) {}
+		function<void(P const&)> callback;
+	};
+
+	struct SignalEmptyParams
+	{
+
+	};
+
+	template<>
+	struct SignalCallback<SignalEmptyParams> : public ISignalCallback
+	{
+		SignalCallback(function<void()> callback) : callback(callback) {}
+		function<void()> callback;
+	};
+
 	struct NIGHT_API INode
 	{
 		template<typename T, typename... Args> handle<T> create(const string& name, const Args&... args);
@@ -48,6 +89,21 @@ namespace night
 		void destroy();
 
 		void move(handle<INode> new_parent);
+
+		template<typename P>
+		void emit_signal(string const& signal, P const& params/*, ESignalDirection direction = ESignalDirection::Global*/);
+
+		void emit_signal(string const& signal, SignalEmptyParams const& params = SignalEmptyParams{}/*, ESignalDirection direction = ESignalDirection::Global*/)
+		{
+			emit_signal<SignalEmptyParams>(signal, params/*, direction*/);
+		}
+
+		void listen_signal(string const& signal, auto fn)
+		{
+			listen_signal_impl(signal, function(fn));
+		}
+
+		void unlisten_signal(string const& signal);
 
 		template<typename... Stop>
 		void dispatch_system(auto fn, Exclude<Stop...> const& stop, u8 include_newly_created_children = false) const
@@ -69,7 +125,13 @@ namespace night
 		const string& name() const { return _name; }
 		const u64& unique_id() const { return _unique_id; }
 
+		const string name_and_id() const
+		{
+			return name() + "(" + to_string(unique_id()) + ")";
+		}
+
 		type_index const& type_id() const { return _type_id; }
+		//string const& type_name() const { return _typeName; }
 
 		r64 timestamp() const { return _timestamp; }
 		void reset_timestamp();
@@ -84,7 +146,7 @@ namespace night
 		INode();
 		virtual ~INode();
 
-		void on_event(Event& event);
+		virtual void on_event(Event& event, u8 pass_down_event = true);
 
 		s32 depth_from_root() const;
 
@@ -97,7 +159,7 @@ namespace night
 		}
 
 		handle<const ITexture> current_render_target() const;
-		
+
 	protected:
 
 		virtual handle<const ITexture> current_render_target_impl() const;
@@ -107,6 +169,7 @@ namespace night
 		static handle<INode> __parent;
 		static handle<INode> __handle_from_this;
 		static type_index __type_id;
+		//static string __typeName;
 
 		virtual void on_update(real delta) { return; }
 
@@ -157,14 +220,14 @@ namespace night
 		void block_event_type(EEventType type) { _blockedEventTypes.insert(type); }
 		void unblock_event_type(EEventType type) { _blockedEventTypes.erase(type); }
 
-		void block_event_category(EEventCategory category) { _blockedEventCategoryMask = _blockedEventCategoryMask | category; }
-		void unblock_event_category(EEventCategory category) { _blockedEventCategoryMask = _blockedEventCategoryMask | ~category; }
+		void block_event_category(EEventCategory category);
+		void unblock_event_category(EEventCategory category);
 
 		void pass_down_event_type(EEventType type) { _notPassedDownEventTypes.erase(type); }
 		void unpass_down_event_type(EEventType type) { _notPassedDownEventTypes.insert(type); }
 
-		void pass_down_event_category(EEventCategory category) { _passedDownEventCategoryMask = _blockedEventCategoryMask | category; }
-		void unpass_down_event_category(EEventCategory category) { _passedDownEventCategoryMask = _blockedEventCategoryMask | ~category; }
+		void pass_down_event_category(EEventCategory category);
+		void unpass_down_event_category(EEventCategory category);
 
 		void pass_down_event(Event& event, u8 include_newly_created_children = false);
 
@@ -179,6 +242,7 @@ namespace night
 		void cleanup_and_initialize_created_children();
 		void initialize_created_children_timestamps(real timestamp);
 		void cleanup_destroyed_children();
+		void shut_down();
 		void update(real delta);
 
 		u64 _unique_id{ 0 };
@@ -187,14 +251,30 @@ namespace night
 		vector<shandle<INode>> _created;
 		vector<shandle<INode>> _children;
 		r64 _timestamp{ -1.0f };
-		
-		u8 _isPendingDestruction{false};
+
+		u8 _isPendingDestruction{ false };
 
 		handle<INode> _handle_from_this{ nullptr };
-		type_index _type_id{typeid(INode)};
+		type_index _type_id{ typeid(INode) };
+		//string _typeName = {};
 
 		friend struct EventManager;
 		EventManager _eventManager;
+
+		template<typename P>
+		void listen_signal_impl(string const& signal, function<void(P const&)> fn);
+
+		void listen_signal_impl(string const& signal, function<void()> fn);
+
+#if 0
+		template<typename P>
+		void rec_emit_signal_parents(string const& signal, P const& params, ESignalDirection direction);
+
+		template<typename P>
+		void rec_emit_signal_children(string const& signal, P const& params, ESignalDirection direction);
+#endif
+
+		void cleanup_destroyed_signals();
 
 		template<typename Include, typename... Stop>
 		void dispatch_system_impl(function<void(Include&)> fn, Exclude<Stop...> const& stop, u8 include_newly_created_children) const;
@@ -204,6 +284,20 @@ namespace night
 
 		set<EEventType> _notPassedDownEventTypes{};
 		EEventCategory _passedDownEventCategoryMask{ EEventCategory::Max };
+
+		//static map<
+		//	string,
+		//	map<
+		//		type_index,
+		//		map<
+		//			handle<INode>,
+		//			sref<ISignalCallback>
+		//		>
+		//	>
+		//> _globalSignals;
+
+		static map<string, map<handle<INode>, sref<ISignalCallback>>> _globalSignals;
+		uset<string> _localSignals;
 	};
 
 	template<typename T, typename... Args>
@@ -212,6 +306,8 @@ namespace night
 		__name = name;
 		__parent = handle_from_this();
 		__type_id = typeid(T);
+		//string type_id_name = typeid(T).name();
+		//__typeName = type_id_name.substr(type_id_name.find_last_of(':') + 1);
 
 		void* data = malloc(sizeof(T));
 		ASSERT(data != nullptr);
@@ -237,6 +333,7 @@ namespace night
 		__name = "";
 		__handle_from_this = nullptr;
 		__type_id = typeid(INode);
+		//__typeName = {};
 
 #ifdef NIGHT_ENABLE_DEBUG_RENDERER
 		DebugRenderer::add_object_draw_function<T>();
@@ -245,21 +342,193 @@ namespace night
 		return handle<T>(shared);
 	}
 
-	template<typename T>
-	inline handle<T> INode::find_parent() const
+	template<typename P>
+	inline void INode::emit_signal(string const& signal, P const& params/*, ESignalDirection direction*/)
 	{
-		handle<INode> parent = _parent;
-		while (parent != nullptr)
+#if 0
+		if (direction == ESignalDirection::Global)
+#endif
 		{
-			if (parent->is_of_type<T>())
+			auto global_signal = _globalSignals.find(signal);
+			if (global_signal != _globalSignals.end())
 			{
-				return parent;
+				for (auto& i : (*global_signal).second)
+				{
+					auto& [node, callback] = i;
+					
+					if (node != nullptr)
+					{
+						SignalCallback<P>* dc = dynamic_cast<SignalCallback<P>*>(callback.get());
+						if (dc != nullptr)
+						{
+							if constexpr (std::is_same_v<P, SignalEmptyParams>)
+							{
+								(*dc).callback();
+							}
+							else
+							{
+								(*dc).callback(params);
+							}
+						}
+					}
+				}
 			}
+			//else
+			//{
+			//	WARNING("Signal not found, name: " + signal + ", node: " + name_and_id());
+			//}
+		}
+#if 0
+		else if(direction == ESignalDirection::Parents)
+		{
+			auto parent = this->parent();
+			ASSERT(parent != nullptr);
+			parent->rec_emit_signal_parents(signal, params, direction);
+		}
+		else if (direction == ESignalDirection::ImmediateParent)
+		{
+			auto parent = this->parent();
+			ASSERT(parent != nullptr);
+			parent->rec_emit_signal_parents(signal, params, ESignalDirection::None);
+		}
+		else if (direction == ESignalDirection::ImmediateChildren)
+		{
+			for (auto& i : _children)
+			{
+				ASSERT(i != nullptr);
+				i->rec_emit_signal_children(signal, params, ESignalDirection::None);
+			}
+		}
+		else if (direction == ESignalDirection::Children)
+		{
+			for (auto& i : _children)
+			{
+				ASSERT(i != nullptr);
+				i->rec_emit_signal_children(signal, params, direction);
+			}
+		}
+		else if (direction == ESignalDirection::ParentsAndChildren)
+		{
+			auto parent = this->parent();
+			ASSERT(parent != nullptr);
+			parent->rec_emit_signal_parents(signal, params, direction);
 
-			parent = parent->parent();
+			for (auto& i : _children)
+			{
+				ASSERT(i != nullptr);
+				i->rec_emit_signal_children(signal, params, direction);
+			}
+		}
+#endif
+	}
+
+#if 0
+	template<typename P>
+	inline void INode::rec_emit_signal_parents(string const& signal, P const& params, ESignalDirection direction)
+	{
+		auto s = _localSignals.find(signal);
+		if (s != _localSignals.end())
+		{
+			auto g = _globalSignals.find((*s));
+			if (g != _globalSignals.end())
+			{
+				auto n = (*g).second.find(handle_from_this());
+				if (n != (*g).second.end())
+				{
+					auto& [node, callback] = (*n);
+
+					if (node != nullptr)
+					{
+						SignalCallback<P>* dc = dynamic_cast<SignalCallback<P>*>(callback.get());
+						if (dc != nullptr)
+						{
+							//(*dc).callback(params);
+
+							if constexpr (std::is_same_v<P, SignalEmptyParams>)
+							{
+								(*dc).callback();
+							}
+							else
+							{
+								(*dc).callback(params);
+							}
+						}
+					}
+				}
+			}
 		}
 
-		return nullptr;
+		if (direction != ESignalDirection::None)
+		{
+			auto parent = this->parent();
+			if (parent != nullptr)
+			{
+				parent->rec_emit_signal_parents(signal, params, direction);
+			}
+		}
+	}
+
+	template<typename P>
+	inline void INode::rec_emit_signal_children(string const& signal, P const& params, ESignalDirection direction)
+	{
+		auto s = _localSignals.find(signal);
+		if (s != _localSignals.end())
+		{
+			auto g = _globalSignals.find((*s));
+			if (g != _globalSignals.end())
+			{
+				auto n = (*g).second.find(handle_from_this());
+				if (n != (*g).second.end())
+				{
+					auto& [node, callback] = (*n);
+
+					if (node != nullptr)
+					{
+						SignalCallback<P>* dc = dynamic_cast<SignalCallback<P>*>(callback.get());
+						if (dc != nullptr)
+						{
+							//(*dc).callback(params);
+							if constexpr (std::is_same_v<P, SignalEmptyParams>)
+							{
+								(*dc).callback();
+							}
+							else
+							{
+								(*dc).callback(params);
+							}
+						}
+					}
+				}
+			}
+		}
+
+		if (direction != ESignalDirection::None)
+		{
+			for (auto& i : _children)
+			{
+				ASSERT(i != nullptr);
+				i->rec_emit_signal_children(signal, params, direction);
+			}
+		}
+	}
+#endif
+
+	template<typename P>
+	inline void INode::listen_signal_impl(string const& signal, function<void(P const&)> fn)
+	{
+		auto& global_signal = _globalSignals[signal];
+		auto f = global_signal.find(handle_from_this());
+		if (f == global_signal.end())
+		{
+			global_signal.insert({ handle_from_this(), sref<ISignalCallback>(new SignalCallback<P>(fn)) });
+			_localSignals.insert(signal);
+		}
+		else
+		{
+			(*f).second = sref<ISignalCallback>(new SignalCallback<P>(fn));
+		}
+
+		TRACE("Node " + name_and_id() + " is listening for signal: " + signal);
 	}
 
 	template<typename Include, typename ...Stop>
@@ -310,6 +579,23 @@ namespace night
 		}
 	}
 
+	template<typename T>
+	inline handle<T> INode::find_parent() const
+	{
+		handle<INode> parent = _parent;
+		while (parent != nullptr)
+		{
+			if (parent->is_of_type<T>())
+			{
+				return parent;
+			}
+
+			parent = parent->parent();
+		}
+
+		return nullptr;
+	}
+
 	// TODO: make macro for defining print and debug render
 	namespace debug
 	{
@@ -336,3 +622,15 @@ namespace night
 	}
 
 }
+
+//namespace std
+//{
+//	template<>
+//	struct hash<night::SignalHash>
+//	{
+//		uint64_t operator()(const night::SignalHash& key) const
+//		{
+//			return hash<uint64_t>()((uint64_t)key.node.ptr().lock().get() ^ (uint64_t)key.params_type;
+//		}
+//	};
+//};

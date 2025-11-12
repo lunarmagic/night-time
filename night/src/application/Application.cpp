@@ -157,6 +157,15 @@ namespace night
 					test_thread.wait();
 
 					// threads should join here
+					while (!_mainThreadCallbacks.empty())
+					{
+						auto fn = _mainThreadCallbacks.back();
+						if (fn != nullptr)
+						{
+							fn();
+						}
+						_mainThreadCallbacks.pop_back();
+					}
 
 					NIGHT_PROFILER_PUSH("Renderer Update Resources");
 					utility::renderer().update_resources();
@@ -255,6 +264,9 @@ namespace night
 	void Application::close()
 	{
 		on_close();
+
+		_root->shut_down();
+		ASSERT(INode::_globalSignals.empty());
 
 		_root.reset();
 
@@ -359,6 +371,14 @@ namespace night
 		{
 			_root->on_event(event);
 		}
+	}
+
+	void Application::queue_for_main_thread(function<void()> callback)
+	{
+		static mutex m;
+		m.lock();
+		_mainThreadCallbacks.push_back(callback);
+		m.unlock();
 	}
 
 #ifdef false
