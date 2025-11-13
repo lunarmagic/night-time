@@ -13,10 +13,7 @@
 namespace night
 {
 
-	void ShapeRenderer::draw_box(DrawBoxParams const& params)
-	{
-		ASSERT(false); // TODO: implement
-	}
+
 
 	SphereBackfacePlane ShapeRenderer::sphere_backface_plane(vec3 const& origin, real const& radius, vec3 const& point)
 	{
@@ -410,7 +407,7 @@ namespace night
 				vec3 contact = rc.contact(tip_origin, camera_direction);
 				auto sbf = ShapeRenderer::sphere_backface_plane(base_origin, radius, contact);
 
-				if (sbf.radius == 0)
+				if (sbf.radius == 0 || std::isnan(sbf.radius))
 				{
 					return { .normal = vec3(0) };
 				}
@@ -835,6 +832,874 @@ namespace night
 
 		auto backface_plane = ShapeRenderer::cone_backface_plane(params.origin, params.direction, params.radius, params.height, camera);
 		_draw_tube(params, backface_plane, true);
+	}
+
+	void ShapeRenderer::draw_box(RenderTarget render_target, DrawBoxParams const& params)
+	{
+		ASSERT(render_target != nullptr);
+		DecomposedTransform<> decomp = math::decompose(params.transform);
+
+		constexpr s32 idx_front = 0;
+		constexpr s32 idx_back = 1;
+		constexpr s32 idx_left = 2;
+		constexpr s32 idx_right = 3;
+		constexpr s32 idx_top = 4;
+		constexpr s32 idx_bottom = 5;
+
+		Camera const& camera = render_target->camera();
+
+		constexpr array<vec3, 6> ufaces =
+		{
+			FORWARD,
+			BACKWARDS,
+			LEFT,
+			RIGHT,
+			UP,
+			DOWN
+		};
+
+		array<vec3, 6> faces;
+		faces[idx_front] = math::normalize(decomp.rotation * (ufaces[idx_front] * params.extents * decomp.scale));
+		faces[idx_back] = math::normalize(decomp.rotation * (ufaces[idx_back] * params.extents * decomp.scale));
+		faces[idx_left] = math::normalize(decomp.rotation * (ufaces[idx_left] * params.extents * decomp.scale));
+		faces[idx_right] = math::normalize(decomp.rotation * (ufaces[idx_right] * params.extents * decomp.scale));
+		faces[idx_top] = math::normalize(decomp.rotation * (ufaces[idx_top] * params.extents * decomp.scale));
+		faces[idx_bottom] = math::normalize(decomp.rotation * (ufaces[idx_bottom] * params.extents * decomp.scale));
+
+		if (params.on_draw_line != nullptr)
+		{
+			auto fn = [&](s32 f1, s32 f2)
+				{
+					DrawLineParams dlp;
+
+					// TODO: this can be computed in compile time
+					vec3 cross = math::normalize(math::cross(ufaces[f1], ufaces[f2]));
+
+					dlp.p1 = params.transform * vec4((ufaces[f1] + ufaces[f2] + cross) * params.extents, 1);
+					dlp.p2 = params.transform * vec4((ufaces[f1] + ufaces[f2] - cross) * params.extents, 1);
+					dlp.width = params.width;
+					dlp.color = params.color;
+
+					u8 x1 = camera.should_cull_plane(dlp.p1, faces[f2]);
+					u8 x2 = camera.should_cull_plane(dlp.p1, faces[f1]);
+
+					if (x1 == false && x2 == false)
+					{
+						dlp.color = dlp.color.opaqued(params.near_corner_opacity);
+					}
+					else if (x1 == true && x2 == true)
+					{
+						dlp.color = dlp.color.opaqued(params.far_corner_opacity);
+					}
+
+					params.on_draw_line({ .params = dlp });
+				};
+
+			fn(idx_front, idx_top);
+			fn(idx_front, idx_right);
+			fn(idx_front, idx_bottom);
+			fn(idx_front, idx_left);
+
+			fn(idx_back, idx_top);
+			fn(idx_back, idx_right);
+			fn(idx_back, idx_bottom);
+			fn(idx_back, idx_left);
+
+			fn(idx_top, idx_left);
+			fn(idx_top, idx_right);
+			fn(idx_bottom, idx_left);
+			fn(idx_bottom, idx_right);
+		}
+
+		if (params.on_draw_triangle != nullptr)
+		{
+			auto fn = [&](s32 face, s32 up, s32 right)
+				{
+					vec3 p1 = params.transform * vec4((ufaces[face] + ufaces[up] - ufaces[right]) * params.extents, 1);
+
+					if (camera.should_cull_plane(p1, faces[face]))
+					{
+						return;
+					}
+
+					vec3 p2 = params.transform * vec4((ufaces[face] + ufaces[up] + ufaces[right]) * params.extents, 1);
+					vec3 p3 = params.transform * vec4((ufaces[face] - ufaces[up] + ufaces[right]) * params.extents, 1);
+					vec3 p4 = params.transform * vec4((ufaces[face] - ufaces[up] - ufaces[right]) * params.extents, 1);
+
+					Triangle t1;
+					t1.vertices[0].point = vec4(p1, 1);
+					t1.vertices[1].point = vec4(p2, 1);
+					t1.vertices[2].point = vec4(p3, 1);
+					t1.vertices[0].color = params.color;
+					t1.vertices[1].color = params.color;
+					t1.vertices[2].color = params.color;
+
+					params.on_draw_triangle({.triangle = t1, .normal = faces[face] });
+
+					Triangle t2;
+					t2.vertices[0].point = vec4(p3, 1);
+					t2.vertices[1].point = vec4(p4, 1);
+					t2.vertices[2].point = vec4(p1, 1);
+					t2.vertices[0].color = params.color;
+					t2.vertices[1].color = params.color;
+					t2.vertices[2].color = params.color;
+
+					params.on_draw_triangle({ .triangle = t2, .normal = faces[face] });
+				};
+
+			fn(idx_front, idx_top, idx_right);
+			fn(idx_back, idx_top, idx_left);
+
+			fn(idx_top, idx_back, idx_right);
+			fn(idx_right, idx_back, idx_bottom);
+			fn(idx_bottom, idx_back, idx_left);
+			fn(idx_left, idx_back, idx_top);
+		};
+	}
+
+	void ShapeRenderer::draw_pyramid(RenderTarget render_target, DrawPyramidParams const& params)
+	{
+		ASSERT(render_target != nullptr);
+		DecomposedTransform<> decomp = math::decompose(params.transform);
+
+		constexpr s32 idx_back = 0;
+		constexpr s32 idx_left = 1;
+		constexpr s32 idx_right = 2;
+		constexpr s32 idx_top = 3;
+		constexpr s32 idx_bottom = 4;
+
+		Camera const& camera = render_target->camera();
+
+		constexpr array<vec3, 6> ufaces =
+		{
+			BACKWARDS,
+			LEFT,
+			RIGHT,
+			UP,
+			DOWN
+		};
+
+		array<vec3, 6> faces;
+		faces[idx_back] = math::normalize(decomp.rotation * (ufaces[idx_back] * params.extents * decomp.scale));
+		faces[idx_left] = math::normalize(decomp.rotation * (math::normalize(ufaces[idx_left] + FORWARD / 2.0f) * params.extents * decomp.scale));
+		faces[idx_right] = math::normalize(decomp.rotation * (math::normalize(ufaces[idx_right] + FORWARD / 2.0f) * params.extents * decomp.scale));
+		faces[idx_top] = math::normalize(decomp.rotation * (math::normalize(ufaces[idx_top] + FORWARD / 2.0f) * params.extents * decomp.scale));
+		faces[idx_bottom] = math::normalize(decomp.rotation * (math::normalize(ufaces[idx_bottom] + FORWARD / 2.0f) * params.extents * decomp.scale));
+
+		if (params.on_draw_line != nullptr)
+		{
+			auto fn = [&](s32 f1, s32 f2, u8 tip)
+				{
+					DrawLineParams dlp;
+
+					// TODO: this can be computed in compile time
+					vec3 cross = math::normalize(math::cross(ufaces[f1], ufaces[f2]));
+
+					dlp.p1 = params.transform * vec4((ufaces[f1] + ufaces[f2] + cross) * params.extents, 1);
+
+					if (!tip)
+					{
+						dlp.p2 = params.transform * vec4((ufaces[f1] + ufaces[f2] - cross) * params.extents, 1);
+					}
+					else
+					{
+						dlp.p2 = params.transform * vec4(FORWARD * params.extents, 1);
+					}
+
+					dlp.width = params.width;
+					dlp.color = params.color;
+
+					u8 x1 = camera.should_cull_plane(dlp.p1, faces[f2]);
+					u8 x2 = camera.should_cull_plane(dlp.p1, faces[f1]);
+
+					if (x1 == false && x2 == false)
+					{
+						dlp.color = dlp.color.opaqued(params.near_corner_opacity);
+					}
+					else if (x1 == true && x2 == true)
+					{
+						dlp.color = dlp.color.opaqued(params.far_corner_opacity);
+					}
+
+					params.on_draw_line({ .params = dlp });
+				};
+
+			fn(idx_back, idx_top, false);
+			fn(idx_back, idx_right, false);
+			fn(idx_back, idx_bottom, false);
+			fn(idx_back, idx_left, false);
+
+			fn(idx_left, idx_top, true);
+			fn(idx_top, idx_right, true);
+			fn(idx_bottom, idx_left, true);
+			fn(idx_right, idx_bottom, true);
+		}
+
+		if (params.on_draw_triangle)
+		{
+			{
+				// base:
+				vec3 p1 = params.transform * vec4((ufaces[idx_back] + ufaces[idx_top] - ufaces[idx_left]) * params.extents, 1);
+
+				if (!camera.should_cull_plane(p1, faces[idx_back]))
+				{
+					vec3 p2 = params.transform * vec4((ufaces[idx_back] + ufaces[idx_top] + ufaces[idx_left]) * params.extents, 1);
+					vec3 p3 = params.transform * vec4((ufaces[idx_back] - ufaces[idx_top] + ufaces[idx_left]) * params.extents, 1);
+					vec3 p4 = params.transform * vec4((ufaces[idx_back] - ufaces[idx_top] - ufaces[idx_left]) * params.extents, 1);
+
+					Triangle t1;
+					t1.vertices[0].point = vec4(p1, 1);
+					t1.vertices[1].point = vec4(p2, 1);
+					t1.vertices[2].point = vec4(p3, 1);
+					t1.vertices[0].color = params.color;
+					t1.vertices[1].color = params.color;
+					t1.vertices[2].color = params.color;
+
+					params.on_draw_triangle({ .triangle = t1, .normal = faces[idx_back] });
+
+					Triangle t2;
+					t2.vertices[0].point = vec4(p3, 1);
+					t2.vertices[1].point = vec4(p4, 1);
+					t2.vertices[2].point = vec4(p1, 1);
+					t2.vertices[0].color = params.color;
+					t2.vertices[1].color = params.color;
+					t2.vertices[2].color = params.color;
+
+					params.on_draw_triangle({ .triangle = t2, .normal = faces[idx_back] });
+				}
+			}
+
+			auto fn = [&](s32 face, vec3 const& bl, vec3 const& br)
+				{
+					vec3 p1 = params.transform * vec4(bl * params.extents, 1);
+
+					if (camera.should_cull_plane(p1, faces[face]))
+					{
+						return;
+					}
+
+					Triangle tri;
+					tri.vertices[0].point = vec4(p1, 1);
+					tri.vertices[1].point = params.transform * vec4(FORWARD * params.extents, 1);
+					tri.vertices[2].point = params.transform * vec4(br * params.extents, 1);
+					tri.vertices[0].color = params.color;
+					tri.vertices[1].color = params.color;
+					tri.vertices[2].color = params.color;
+
+					params.on_draw_triangle({ .triangle = tri, .normal = faces[face] });
+				};
+
+			fn(idx_left, vec3(-1.0f, 1.0f, -1.0f), vec3(-1.0f, -1.0f, -1.0f));
+			fn(idx_top, vec3(1.0f, 1.0f, -1.0f), vec3(-1.0f, 1.0f, -1.0f));
+			fn(idx_right, vec3(1.0f, -1.0f, -1.0f), vec3(1.0f, 1.0f, -1.0f));
+			fn(idx_bottom, vec3(-1.0f, -1.0f, -1.0f), vec3(1.0f, -1.0f, -1.0f));
+		}
+	}
+
+	static ConeBackfacePlane _cone_backface_plane2(vec3 const& origin, vec3 const& direction, real const& radius, real const& height, Camera const& camera)
+	{
+		ConeBackfacePlane result;
+
+		vec3 base_origin = origin - direction * height;
+		vec3 base_normal = -direction;
+
+		vec3 tip_origin = origin + direction * height;
+		vec3 tip_normal = direction;
+
+		if (camera.type == ECameraType::Orthographic)
+		{
+			// TODO: use this solution for all cases.
+			vec3 camera_direction = -camera.direction();
+
+			real d = math::dot(camera_direction, -direction);
+			if (abs(d) < BACKFACE_PLANE_EPSILON)
+			{
+				vec3 undesired_angle = -direction * math::dot(-camera.direction(), -direction);
+				vec3 desired_angle = math::normalize(-camera.direction() - undesired_angle);
+				vec3 normal_perp = math::normalize(math::cross(desired_angle, -direction));
+
+				result.edge_1_a = base_origin + normal_perp * radius;
+				result.edge_1_b = tip_origin;
+				result.edge_2_a = base_origin - normal_perp * radius;
+				result.edge_2_b = tip_origin;
+				result.normal = desired_angle;
+
+				return result;
+			}
+			else
+			{
+				auto rc = Raycast3D<>::plane(tip_origin, camera_direction, base_origin, -direction);
+
+				vec3 contact = rc.contact(tip_origin, camera_direction);
+				auto sbf = ShapeRenderer::sphere_backface_plane(base_origin, radius, contact);
+
+				if (sbf.radius == 0 || std::isnan(sbf.radius))
+				{
+					return { .normal = vec3(0) };
+				}
+
+				vec3 perp = math::normalize(math::cross(sbf.normal, camera_direction));
+
+				vec3 p1 = sbf.origin + perp * sbf.radius;
+				vec3 p2 = sbf.origin - perp * sbf.radius;
+
+				result.edge_1_a = p1;
+				result.edge_1_b = tip_origin;
+				result.edge_2_a = p2;
+				result.edge_2_b = tip_origin;
+				result.normal = math::normalize(math::cross(p2 - p1, p2 - tip_origin));
+
+				return result;
+			}
+		}
+		else if (camera.type == ECameraType::Orthographic)
+		{
+			ASSERT(false); // TODO: implement
+		}
+
+		return {};
+	}
+
+	inline static void _draw_tube2(RenderTarget render_target, vec3 const& origin, vec3 const& direction, DrawCylinderParams2 const& dcp, CylinderBackfacePlane const& backface_plane, u8 is_cone)
+	{
+		ASSERT(render_target != nullptr);
+		Camera const& camera = render_target->camera();
+		vec3 camera_direction = camera.direction();
+		s32 segments = s32(32.0f * dcp.resolution);
+
+		vec3 cap_a = origin - direction * dcp.height;
+		vec3 cap_b = origin + direction * dcp.height;
+
+		u8 cull_cap_a = camera.should_cull_plane(cap_a, -direction);
+		u8 cull_cap_b = camera.should_cull_plane(cap_b, direction);
+
+		//vec3 base = origin - direction * dcp.height;
+		//
+		//u8 cull_base = camera.should_cull_plane(base, -direction);
+
+		mat4 ftd;
+		ftd = math::rotate_about_vector(FORWARD, direction);
+
+		real d = math::dot(camera_direction, direction);
+		u8 x = abs(d) < 1.0f - NIGHT_MATH_EPSILON;
+
+		if (dcp.on_draw_triangle != nullptr)
+		{
+			real radius = is_cone ? 0 : dcp.radius;
+			for (s32 i = 0; i < segments; i++)
+			{
+				real t1 = ((real)i / (real)(segments)) * R_PI * 2;
+
+				real t2 = ((real)(i + 1) / (real)(segments)) * R_PI * 2;
+
+				vec3 p1;
+				p1.x = sin(t1);
+				p1.y = cos(t1);
+				p1.z = 0;
+
+				vec3 p2;
+				p2.x = sin(t2);
+				p2.y = cos(t2);
+				p2.z = 0;
+
+				p1 = ftd * vec4(p1, 1);
+				p2 = ftd * vec4(p2, 1);
+
+				vec3 ca1 = p1 * dcp.radius + origin - direction * dcp.height;
+				vec3 cb1 = p1 * radius + origin + direction * dcp.height;
+				vec3 ca2 = p2 * dcp.radius + origin - direction * dcp.height;
+				vec3 cb2 = p2 * radius + origin + direction * dcp.height;
+
+				vec3 n = math::normalize(-math::cross(ca2 - ca1, cb2 - ca2));
+				if (!camera.should_cull_plane(ca1, n))
+				{
+					Triangle tri1;
+					tri1.vertices[0].point = vec4(ca1, 1);
+					tri1.vertices[1].point = vec4(cb2, 1);
+					tri1.vertices[2].point = vec4(cb1, 1);
+					tri1.vertices[0].color = dcp.color;
+					tri1.vertices[1].color = dcp.color;
+					tri1.vertices[2].color = dcp.color;
+
+					Triangle tri2;
+					tri2.vertices[0].point = vec4(cb2, 1);
+					tri2.vertices[1].point = vec4(ca1, 1);
+					tri2.vertices[2].point = vec4(ca2, 1);
+					tri2.vertices[0].color = dcp.color;
+					tri2.vertices[1].color = dcp.color;
+					tri2.vertices[2].color = dcp.color;
+
+					dcp.on_draw_triangle({ .triangle = tri1, .normal = n });
+					dcp.on_draw_triangle({ .triangle = tri2, .normal = n });
+				}
+
+				if (!cull_cap_a)
+				{
+					Triangle cap_a_tri;
+					vec3 ca0 = origin - direction * dcp.height;
+					cap_a_tri.vertices[0].point = vec4(ca0, 1);
+					cap_a_tri.vertices[1].point = vec4(ca2, 1);
+					cap_a_tri.vertices[2].point = vec4(ca1, 1);
+					cap_a_tri.vertices[0].color = dcp.color;
+					cap_a_tri.vertices[1].color = dcp.color;
+					cap_a_tri.vertices[2].color = dcp.color;
+
+					dcp.on_draw_triangle({ .triangle = cap_a_tri, .normal = -direction });
+				}
+
+				if (!cull_cap_b)
+				{
+					Triangle cap_b_tri;
+					vec3 cb0 = origin + direction * dcp.height;
+					cap_b_tri.vertices[0].point = vec4(cb0, 1);
+					cap_b_tri.vertices[1].point = vec4(cb1, 1);
+					cap_b_tri.vertices[2].point = vec4(cb2, 1);
+					cap_b_tri.vertices[0].color = dcp.color;
+					cap_b_tri.vertices[1].color = dcp.color;
+					cap_b_tri.vertices[2].color = dcp.color;
+
+					dcp.on_draw_triangle({ .triangle = cap_b_tri, .normal = direction });
+				}
+
+			}
+		}
+
+		if (dcp.on_draw_line == nullptr)
+		{
+			return;
+		}
+
+		// draw outer edges:
+		if (x && backface_plane.normal != ORIGIN && dcp.on_draw_line != nullptr)
+		{
+			{
+				DrawLineParams dlp;
+				dlp.p1 = backface_plane.edge_1_a;
+				dlp.p2 = backface_plane.edge_1_b;
+				dlp.color = dcp.color;
+				dlp.width = dcp.width;
+
+				dcp.on_draw_line({ .params = dlp });
+			}
+
+			{
+				DrawLineParams dlp;
+				dlp.p1 = backface_plane.edge_2_a;
+				dlp.p2 = backface_plane.edge_2_b;
+				dlp.color = dcp.color;
+				dlp.width = dcp.width;
+
+				dcp.on_draw_line({ .params = dlp });
+			}
+		}
+
+		vec3 up_on_cap_plane = ftd * vec4(UP, 1);
+		mat4 inv_ftd = math::inverse(ftd);
+		vec3 inv_pn = inv_ftd * vec4(backface_plane.normal, 1);
+
+		// when the base encompasses the outer edges:
+		auto draw_cap_ff = [&](vec3 const& cap_origin, real const& cap_radius, vec3 const& cap_normal)
+			{
+				for (s32 i = 0; i < segments; i++)
+				{
+					real t1 = ((real)i / (real)(segments)) * R_PI * 2;
+					real t2 = ((real)(i + 1) / (real)(segments)) * R_PI * 2;
+
+					vec3 p1;
+					p1.x = sin(t1) * cap_radius;
+					p1.y = cos(t1) * cap_radius;
+					p1.z = 0;
+
+					vec3 p2;
+					p2.x = sin(t2) * cap_radius;
+					p2.y = cos(t2) * cap_radius;
+					p2.z = 0;
+
+					p1 = ftd * vec4(p1, 1);
+					p2 = ftd * vec4(p2, 1);
+					p1 += cap_origin;
+					p2 += cap_origin;
+
+					DrawLineParams dlp;
+					dlp.p1 = p1;
+					dlp.p2 = p2;
+					dlp.color = dcp.color;
+					dlp.width = dcp.width;
+
+					dcp.on_draw_line({ .params = dlp });
+				}
+			};
+
+		// when the base is not encompassing the outer edges
+		auto draw_cap_bf = [&](vec3 const& cap_origin, real const& cap_radius, vec3 const& cap_normal, u8 culled)
+			{
+				if (dcp.far_corner_opacity != 0)
+				{
+					// calculate range of theta we will be drawing the cap in:
+					auto ip = math::line_of_intersection_between_to_planes(cap_origin, -cap_normal, backface_plane.edge_1_a, backface_plane.normal);
+					auto sc = Raycast3D<>::sphere(ip.origin, ip.direction, cap_origin, cap_radius);
+
+					real bmin_theta;
+					real bmax_theta;
+
+					if (sc.result)
+					{
+						vec3 c1 = sc.contact<0>(ip.origin, ip.direction);
+						vec3 c2 = sc.contact<1>(ip.origin, ip.direction);
+						c1 -= cap_origin;
+						c2 -= cap_origin;
+
+						c1 = inv_ftd * vec4(c1, 1);
+						c2 = inv_ftd * vec4(c2, 1);
+
+						if (math::orientation(c1, c2, inv_pn) == EOrientation::CounterClockwise)
+						{
+							SWAP(c1, c2);
+						}
+
+						bmin_theta = math::angle_clockwise(c1, vec2(UP));
+						bmax_theta = bmin_theta + math::angle_clockwise(c2, c1);
+
+					}
+					else
+					{
+						bmin_theta = 0;
+						bmax_theta = R_PI * 2;
+					}
+
+					real fmin_theta = bmax_theta;
+					real fmax_theta = bmin_theta + R_PI * 2;
+
+					// draw the cap:
+					for (s32 i = 0; i < segments; i++)
+					{
+						// back side:
+						{
+							real t1 = (real)i / (real)(segments);
+							t1 = math::lerp(bmin_theta, bmax_theta, t1);
+
+							real t2 = (real)(i + 1) / (real)(segments);
+							t2 = math::lerp(bmin_theta, bmax_theta, t2);
+
+							vec3 p1;
+							p1.x = sin(t1) * cap_radius;
+							p1.y = cos(t1) * cap_radius;
+							p1.z = 0;
+
+							vec3 p2;
+							p2.x = sin(t2) * cap_radius;
+							p2.y = cos(t2) * cap_radius;
+							p2.z = 0;
+
+							p1 = ftd * vec4(p1, 1);
+							p2 = ftd * vec4(p2, 1);
+							p1 += cap_origin;
+							p2 += cap_origin;
+
+							DrawLineParams dlp;
+							dlp.p1 = p1;
+							dlp.p2 = p2;
+
+							if (culled)
+							{
+								dlp.color = dcp.color.opaqued(dcp.far_corner_opacity);
+							}
+							else
+							{
+								dlp.color = dcp.color;
+							}
+
+							dlp.width = dcp.width;
+
+							dcp.on_draw_line({ .params = dlp });
+						}
+
+						// front side:
+						{
+							real t1 = (real)i / (real)(segments);
+							t1 = math::lerp(fmin_theta, fmax_theta, t1);
+
+							real t2 = (real)(i + 1) / (real)(segments);
+							t2 = math::lerp(fmin_theta, fmax_theta, t2);
+
+							vec3 p1;
+							p1.x = sin(t1) * cap_radius;
+							p1.y = cos(t1) * cap_radius;
+							p1.z = 0;
+
+							vec3 p2;
+							p2.x = sin(t2) * cap_radius;
+							p2.y = cos(t2) * cap_radius;
+							p2.z = 0;
+
+							p1 = ftd * vec4(p1, 1);
+							p2 = ftd * vec4(p2, 1);
+							p1 += cap_origin;
+							p2 += cap_origin;
+
+							DrawLineParams dlp;
+							dlp.p1 = p1;
+							dlp.p2 = p2;
+
+							if (culled)
+							{
+								dlp.color = dcp.color;
+							}
+							else
+							{
+								dlp.color = dcp.color.opaqued(dcp.near_corner_opacity);
+							}
+
+							dlp.width = dcp.width;
+
+							dcp.on_draw_line({ .params = dlp });
+						}
+					}
+				}
+			};
+
+			if (backface_plane.normal == ORIGIN)
+			{
+				draw_cap_ff(cap_a, dcp.radius, direction);
+				if (!is_cone)
+				{
+					draw_cap_ff(cap_b, dcp.radius, direction); // TODO: may not want to do this.
+				}
+			}
+			else
+			{
+				if (cull_cap_a)
+				{
+					draw_cap_bf(cap_a, dcp.radius, direction, true);
+				}
+				else
+				{
+					draw_cap_ff(cap_a, dcp.radius, direction);
+				}
+
+				if (!is_cone)
+				{
+					if (cull_cap_b)
+					{
+						draw_cap_bf(cap_b, dcp.radius, direction, true);
+					}
+					else
+					{
+						draw_cap_ff(cap_b, dcp.radius, direction);
+					}
+				}
+			}
+
+		//if (backface_plane.normal == ORIGIN)
+		//{
+		//	draw_base_encompassing_edges(base, dcp.radius, direction);
+		//}
+		//else
+		//{
+		//	if (cull_base)
+		//	{
+		//		draw_cap(base, dcp.radius, direction, true);
+		//	}
+		//	else
+		//	{
+		//		draw_cap(base, dcp.radius, direction, false);
+		//	}
+		//}
+	}
+
+	void ShapeRenderer::draw_cylinder2(RenderTarget render_target, DrawCylinderParams2 const& dcp)
+	{
+		ASSERT(render_target != nullptr);
+		Camera const& camera = render_target->camera();
+		vec3 camera_direction = camera.direction();
+		DecomposedTransform<> decomp = math::decompose(dcp.transform);
+		vec3 const& origin = decomp.translation;
+		vec3 direction = math::normalize(decomp.rotation * (FORWARD * decomp.scale));
+		CylinderBackfacePlane backface_plane = cylinder_backface_plane(decomp.translation, direction, dcp.radius, dcp.height, camera);
+		_draw_tube2(render_target, origin, direction, dcp, backface_plane, false);
+	}
+
+	void ShapeRenderer::draw_cone2(RenderTarget render_target, DrawConeParams2 const& dcp)
+	{
+		ASSERT(render_target != nullptr);
+		Camera const& camera = render_target->camera();
+		vec3 camera_direction = camera.direction();
+		DecomposedTransform<> decomp = math::decompose(dcp.transform);
+		vec3 const& origin = decomp.translation;
+		vec3 direction = math::normalize(decomp.rotation * (FORWARD * decomp.scale));
+		ConeBackfacePlane backface_plane = _cone_backface_plane2(decomp.translation, direction, dcp.radius, dcp.height, camera);
+		_draw_tube2(render_target, origin, direction, dcp, backface_plane, true);
+	}
+
+	void ShapeRenderer::draw_sphere2(RenderTarget render_target, DrawSphereParams2 const& params)
+	{
+		ASSERT(render_target != nullptr);
+		Camera const& camera = render_target->camera();
+		//vec3 camera_direction = camera.direction();
+		DecomposedTransform<> decomp = math::decompose(params.transform);
+		vec3 const& origin = decomp.translation;
+		vec3 direction = math::normalize(decomp.rotation * (FORWARD * decomp.scale));
+		auto backface_plane = sphere_backface_plane(decomp.translation, params.radius, camera);
+		s32 segments = (s32)(24.0f * params.resolution);
+
+		auto fn = [&](real u, real v) -> Vertex<>
+			{
+				Vertex<> result;
+				real r = sin(R_PI * v);
+				result.point.x = (r * cos(2.0f * R_PI * u));
+				result.point.y = (r * sin(2.0f * R_PI * u));
+				result.point.z = (cos(R_PI * v));
+				result.point.w = 1.0f;
+
+				result.color = params.color;
+
+				result.texture_coord.x = u;
+				result.texture_coord.y = v;
+				return result;
+			};
+
+		// TODO: add sphere rendering capabilities to renderer, a quad that uses sqrt in fragment shader to calc depth.
+		
+		if (params.on_draw_triangle != nullptr)
+		{
+			for (s32 i = 0; i < segments; i++)
+			{
+				for (s32 j = 0; j < segments; j++)
+				{
+					real u0 = (real)i / (real)segments;
+					real u1 = (real)(i + 1) / (real)segments;
+					real v0 = (real)j / (real)segments;
+					real v1 = (real)(j + 1) / real(segments);
+
+					Triangle<> tri_1;
+					Triangle<> tri_2;
+
+					tri_1.vertices[0] = fn(u0, v0);
+					tri_1.vertices[1] = fn(u1, v0);
+
+					Vertex<> v = fn(u0, v1);
+					tri_1.vertices[2] = v;
+
+					//vec3 normal_1 = math::normalize((vec3)tri_1.vertices[0].point + (vec3)tri_1.vertices[1].point + (vec3)tri_1.vertices[2].point);
+					//vec3 normal_1 = normalize(-math::cross(vec3(tri_1.vertices[1].point) - vec3(tri_1.vertices[0].point), vec3(tri_1.vertices[2].point) - vec3(tri_1.vertices[1].point)));
+					
+					vec3 normal_1 = -math::cross(vec3(tri_1.vertices[1].point) - vec3(tri_1.vertices[0].point), vec3(tri_1.vertices[2].point) - vec3(tri_1.vertices[1].point));
+					real len_1 = math::length(normal_1);
+					normal_1 /= len_1;
+
+					tri_1.vertices[0].point.x = tri_1.vertices[0].point.x * params.radius + origin.x;
+					tri_1.vertices[0].point.y = tri_1.vertices[0].point.y * params.radius + origin.y;
+					tri_1.vertices[0].point.z = tri_1.vertices[0].point.z * params.radius + origin.z;
+					tri_1.vertices[1].point.x = tri_1.vertices[1].point.x * params.radius + origin.x;
+					tri_1.vertices[1].point.y = tri_1.vertices[1].point.y * params.radius + origin.y;
+					tri_1.vertices[1].point.z = tri_1.vertices[1].point.z * params.radius + origin.z;
+					tri_1.vertices[2].point.x = tri_1.vertices[2].point.x * params.radius + origin.x;
+					tri_1.vertices[2].point.y = tri_1.vertices[2].point.y * params.radius + origin.y;
+					tri_1.vertices[2].point.z = tri_1.vertices[2].point.z * params.radius + origin.z;
+
+					if (len_1 > NIGHT_MATH_EPSILON && !camera.should_cull_plane(vec3(tri_1.vertices[0].point), normal_1))
+					{
+						params.on_draw_triangle({ .triangle = tri_1, .normal = normal_1 });
+					}
+
+					tri_2.vertices[0] = v;
+					tri_2.vertices[1] = fn(u1, v0);
+					tri_2.vertices[2] = fn(u1, v1);
+
+					//vec3 normal_2 = math::normalize((vec3)tri_2.vertices[0].point + (vec3)tri_2.vertices[1].point + (vec3)tri_2.vertices[2].point);
+					// vec3 normal_2 = math::normalize(-math::cross(vec3(tri_2.vertices[1].point) - vec3(tri_2.vertices[0].point), vec3(tri_2.vertices[2].point) - vec3(tri_2.vertices[1].point)));
+
+					vec3 normal_2 = -math::cross(vec3(tri_2.vertices[1].point) - vec3(tri_2.vertices[0].point), vec3(tri_2.vertices[2].point) - vec3(tri_2.vertices[1].point));
+					real len_2 = math::length(normal_2);
+					normal_2 /= len_2;
+					
+					tri_2.vertices[0].point.x = tri_2.vertices[0].point.x * params.radius + origin.x;
+					tri_2.vertices[0].point.y = tri_2.vertices[0].point.y * params.radius + origin.y;
+					tri_2.vertices[0].point.z = tri_2.vertices[0].point.z * params.radius + origin.z;
+					tri_2.vertices[1].point.x = tri_2.vertices[1].point.x * params.radius + origin.x;
+					tri_2.vertices[1].point.y = tri_2.vertices[1].point.y * params.radius + origin.y;
+					tri_2.vertices[1].point.z = tri_2.vertices[1].point.z * params.radius + origin.z;
+					tri_2.vertices[2].point.x = tri_2.vertices[2].point.x * params.radius + origin.x;
+					tri_2.vertices[2].point.y = tri_2.vertices[2].point.y * params.radius + origin.y;
+					tri_2.vertices[2].point.z = tri_2.vertices[2].point.z * params.radius + origin.z;
+
+					if (len_2 > NIGHT_MATH_EPSILON && !camera.should_cull_plane(vec3(tri_2.vertices[0].point), normal_2))
+					{
+						params.on_draw_triangle({ .triangle = tri_2, .normal = normal_2 });
+					}
+
+					//vec3 n = -math::cross(vec3(tri_1.vertices[1].point) - vec3(tri_1.vertices[0].point), vec3(tri_1.vertices[2].point) - vec3(tri_1.vertices[1].point));
+					//real len = math::length(n);
+					//if (len < NIGHT_MATH_EPSILON)
+					//{
+					//	n = FORWARD;
+					//}
+					//else
+					//{
+					//	n /= len;
+					//}
+					
+					//if (camera.should_cull_plane(vec3(tri_1.vertices[0].point), n))
+					//{
+					//	continue;
+					//}
+					//
+					//tri_2.vertices[1] = fn(u1, v0);
+					//tri_2.vertices[2] = fn(u1, v1);
+					//
+					//params.on_draw_triangle({ .triangle = tri_1, .normal = n });
+					//params.on_draw_triangle({ .triangle = tri_2, .normal = n });
+
+					//if (!params.wireframe)
+					//{
+					//	out_graph.draw_triangle(tri_1);
+					//	out_graph.draw_triangle(tri_2);
+					//}
+					//else if (!params.outline_only)
+					//{
+					//	out_graph.draw_line(tri_1.vertices[0].point, tri_1.vertices[1].point, params.color, params.width);
+					//	out_graph.draw_line(tri_1.vertices[1].point, tri_1.vertices[2].point, params.color, params.width);
+					//	out_graph.draw_line(tri_1.vertices[2].point, tri_1.vertices[0].point, params.color, params.width);
+					//}
+				}
+			}
+		}
+
+		if (params.on_draw_line != nullptr)
+		{
+			vec3 const& eye_location = camera.translation;
+
+			auto [ellipse_origin, ellipse_normal, ellipse_radius] = ShapeRenderer::sphere_backface_plane(origin, params.radius, camera);
+
+			mat4 forward_to_ellipse_normal = math::rotate_about_vector(FORWARD, ellipse_normal);
+
+			DrawLineParams dlp;
+			dlp.color = params.color;
+			dlp.width = params.width;
+
+			for (s32 i = 0; i < segments; i++)
+			{
+				real t1 = (real)i / (real)(segments - 1) * R_PI * 2;
+				real t2 = (real)(i + 1) / (real)(segments - 1) * R_PI * 2;
+
+				dlp.p1.x = cos(t1);
+				dlp.p1.y = sin(t1);
+				dlp.p1.z = 0;
+
+				dlp.p2.x = cos(t2);
+				dlp.p2.y = sin(t2);
+				dlp.p2.z = 0;
+
+				dlp.p1 *= ellipse_radius;
+				dlp.p2 *= ellipse_radius;
+				dlp.p1 = forward_to_ellipse_normal * vec4(dlp.p1, 1);
+				dlp.p2 = forward_to_ellipse_normal * vec4(dlp.p2, 1);
+				dlp.p1 += ellipse_origin;
+				dlp.p2 += ellipse_origin;
+
+				params.on_draw_line({ .params = dlp });
+			}
+		}
 	}
 
 	void ShapeRenderer::draw_convex(DrawConvexParams const& params)

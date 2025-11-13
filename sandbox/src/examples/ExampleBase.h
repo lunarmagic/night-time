@@ -12,7 +12,9 @@ namespace night
 {
 	struct ExampleBase : public NodeRenderable
 	{
-		//ExampleBase();
+		ExampleBase(ECameraType initial_perspective_mode = ECameraType::Orthographic);
 		virtual void update_gui(handle<NodeGui> gui) = 0;
+
+		const ECameraType initial_perspective_mode = ECameraType::Orthographic;
 	};
 }

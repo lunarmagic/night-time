@@ -132,8 +132,8 @@ namespace night
 		template<typename _It>
 		static vec<3, T> support_polygon(vec<3, T> const& direction, mat<4, 4, T> const& transform, _It begin, _It end);
 		static vec<3, T> support_sphere(vec<3, T> const& direction, vec<3, T> const& origin, T radius);
-		static vec<3, T> support_cylinder(vec<3, T> const& direction, vec<3, T> const& cyl_origin, vec<3, T> const& cyl_direction, T cyl_radius, T cyl_height);
-		static vec<3, T> support_cone(vec<3, T> const& direction, vec<3, T> const& cone_origin, vec<3, T> const& cone_direction, T cone_radius, T cone_height);
+		static vec<3, T> support_cylinder(vec<3, T> const& direction, mat<4, 4, T> const& transform, T radius, T height);
+		static vec<3, T> support_cone(vec<3, T> const& direction, mat<4, 4, T> const& transform, T radius, T height);
 
 	private:
 
@@ -769,50 +769,82 @@ namespace night
 	
 #define NIGHT_CYLINDER_SUPPORT_EPSILON 0.0001
 	template<typename T>
-	inline vec<3, T> GJK3D<T>::support_cylinder(vec<3, T> const& sdir, vec<3, T> const& origin, vec<3, T> const& direction, T radius, T height)
+	inline vec<3, T> GJK3D<T>::support_cylinder(vec<3, T> const& sdir, mat<4, 4, T> const& transform, T radius, T height)
 	{
 		vec<3, T> sdir_normalized = Math<T>::normalize(sdir);
-		T d = Math<T>::dot(direction, sdir_normalized);
+
+		DecomposedTransform<T> decomp = Math<T>::decompose(transform);
+		vec<3, T> const& cyl_origin = decomp.translation;
+		vec<3, T> cyl_direction = Math<T>::normalize(decomp.rotation * ((vec<3, T>)FORWARD * decomp.scale));
+
+		T d = Math<T>::dot(cyl_direction, sdir_normalized);
 		if (abs(d) > 1.0 - NIGHT_CYLINDER_SUPPORT_EPSILON) // parallel
 		{
-			return (d > 0 ? direction : -direction) * height + origin;
+			return (d > 0 ? cyl_direction : -cyl_direction) * height + cyl_origin;
 		}
 
-		vec<3, T> cap = (d > 0 ? direction : -direction) * height;
+		vec<3, T> cap = (d > 0 ? cyl_direction : -cyl_direction) * height;
 
-		T d2 = -Math<T>::dot(direction, cap);
-		T distance = Math<T>::dot(direction, cap + sdir_normalized) + d2;
-		vec<3, T> proj = (cap + sdir_normalized) - direction * distance;
+		T d2 = -Math<T>::dot(cyl_direction, cap);
+		T distance = Math<T>::dot(cyl_direction, cap + sdir_normalized) + d2;
+		vec<3, T> proj = (cap + sdir_normalized) - cyl_direction * distance;
 
 		proj = cap + Math<T>::normalize(proj - cap) * radius;
-		return origin + proj;
+		return cyl_origin + proj;
 	}
 
 #define NIGHT_CONE_SUPPORT_EPSILON 0.0001
 	template<typename T>
-	inline vec<3, T> GJK3D<T>::support_cone(vec<3, T> const& dir, vec<3, T> const& origin, vec<3, T> const& cyl_direction, T radius, T height)
+	inline vec<3, T> GJK3D<T>::support_cone(vec<3, T> const& dir, mat<4, 4, T> const& transform, T radius, T height)
 	{
-		vec<3, T> direction = -cyl_direction;
+		// TODO: transform vertices
+		DecomposedTransform<T> decomp = Math<T>::decompose(transform);
+		vec<3, T> const& cone_origin = decomp.translation;
+		vec<3, T> cone_direction = Math<T>::normalize(decomp.rotation * ((vec<3, T>)FORWARD * decomp.scale));
+	
 		vec<3, T> dir_normalized = Math<T>::normalize(dir);
-		T d = Math<T>::dot(direction, dir_normalized);
+		T d = Math<T>::dot(cone_direction, dir_normalized);
 		if (abs(d) > 1.0 - NIGHT_CONE_SUPPORT_EPSILON) // parallel
 		{
-			return (d > 0.0 ? direction : -direction) * height + origin;
+			return (d > 0.0 ? cone_direction : -cone_direction) * height + cone_origin;
 		}
 
-		vec<3, T> tip = direction * height;
-		vec<3, T> base = -direction * height;
+		vec<3, T> tip = cone_direction * height;
+		vec<3, T> base = -cone_direction * height;
 
-		T d2 = -Math<T>::dot(direction, base);
-		T distance = Math<T>::dot(direction, base + dir_normalized) + d2;
-		vec<3, T> proj = (base + dir_normalized) - direction * distance;
-		//vec<3, T> proj = Math<T>::project_point_to_plane(base + dir_normalized, base, direction).point;
+		// TODO: there could be an epsilon error if dir_normalized is close to cyl_direction
+		vec<3, T> proj = Math<T>::project_point_to_plane(base + dir_normalized, base, cone_direction).point;
 		proj = base + Math<T>::normalize(proj - base) * radius;
 		T dp = Math<T>::dot(dir_normalized, proj);
 		T dt = Math<T>::dot(dir_normalized, tip);
 
-		return origin + (dp > dt ? proj : tip);
+		return cone_origin + (dp > dt ? proj : tip);
 	}
+	
+	
+	//template<typename T>
+	//inline vec<3, T> GJK3D<T>::support_cone(vec<3, T> const& dir, vec<3, T> const& origin, vec<3, T> const& direction, T radius, T height)
+	//{
+	//	vec<3, T> dir_normalized = Math<T>::normalize(dir);
+	//	T d = Math<T>::dot(direction, dir_normalized);
+	//	if (abs(d) > 1.0 - NIGHT_CONE_SUPPORT_EPSILON) // parallel
+	//	{
+	//		return (d > 0.0 ? direction : -direction) * height + origin;
+	//	}
+	//
+	//	vec<3, T> tip = direction * height;
+	//	vec<3, T> base = -direction * height;
+	//
+	//	T d2 = -Math<T>::dot(-direction, base);
+	//	T distance = Math<T>::dot(-direction, base + dir_normalized) + d2;
+	//	vec<3, T> proj = (base + dir_normalized) - direction * distance;
+	//	//vec<3, T> proj = Math<T>::project_point_to_plane(base + dir_normalized, base, direction).point;
+	//	proj = base + Math<T>::normalize(proj - base) * radius;
+	//	T dp = Math<T>::dot(dir_normalized, proj);
+	//	T dt = Math<T>::dot(dir_normalized, tip);
+	//
+	//	return origin + (dp > dt ? proj : tip);
+	//}
 }
 
 namespace std

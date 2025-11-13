@@ -10,7 +10,7 @@ namespace night
 	struct ExampleShapecast3D : public ExampleBase
 	{
 		// TODO: add capsule
-		enum EShape
+		enum struct EShape : s32
 		{
 			Point = 0,
 			Triangle,
@@ -28,21 +28,16 @@ namespace night
 			vec3 position = ORIGIN;
 			vec3 rotation = ORIGIN;
 			mat4 transform = mat4(1);
-			array<vec3, 9> points; // index 0-7 is box vertices, 4-9 is pyramid 
+			//array<vec3, 9> points; // index 0-7 is box vertices, 4-9 is pyramid 
 			real radius = 0.75f;
 			real height = 1.333f;
-			vec3 rotation_origin = FORWARD;
+			vec3 rotation_origin = ORIGIN;
 		};
 
 		ExampleShapecast3D()
+			: ExampleBase(ECameraType::Perspective)
 		{
-			_shape1.position = vec3(-2.0f, 0.0f, 0.0f);
-			//_shape1.rotation = vec3(0.46f, 1.52f, 5.6f);
-			_shape1.type = EShape::Cone;
-
-			_shape2.position = vec3(2.0f, 0.0f, 0.0f);
-			//_shape2.rotation = vec3(2.46f, 4.1222f, 3.6111f);
-			_shape2.type = EShape::Cone;
+			reset_shapes();
 
 			_triangleVertices[0] = vec3{
 				cos(math::lerp(0.0f, R_PI * 2, 1.0f / 3)),
@@ -59,6 +54,23 @@ namespace night
 				sin(R_PI * 2),
 				0.0f
 			};
+
+			_boxVertices[0] = vec3{ -1.0f, 1.0f, 1.0f };
+			_boxVertices[1] = vec3{ 1.0f, 1.0f, 1.0f };
+			_boxVertices[2] = vec3{ 1.0f, -1.0f, 1.0f };
+			_boxVertices[3] = vec3{ -1.0f, -1.0f, 1.0f };
+
+			_boxVertices[4] = vec3{ -1.0f, 1.0f, -1.0f };
+			_boxVertices[5] = vec3{ 1.0f, 1.0f, -1.0f };
+			_boxVertices[6] = vec3{ 1.0f, -1.0f, -1.0f };
+			_boxVertices[7] = vec3{ -1.0f, -1.0f, -1.0f };
+
+			_pyramidVertices[0] = vec3{ -1.0f, 1.0f, -1.0f };
+			_pyramidVertices[1] = vec3{ 1.0f, 1.0f, -1.0f };
+			_pyramidVertices[2] = vec3{ 1.0f, -1.0f, -1.0f };
+			_pyramidVertices[3] = vec3{ -1.0f, -1.0f, -1.0f };
+
+			_pyramidVertices[4] = vec3{ 0.0f, 0.0f, 1.0f };
 		}
 
 	protected:
@@ -67,17 +79,6 @@ namespace night
 		{
 			ASSERT(gui != nullptr);
 			
-			// TODO: make reset function.
-			auto reset_shapes = [&]()
-				{
-					_shape1 = {};
-					_shape2 = {};
-					_shape1.position = vec3(-2.0f, 0.0f, 0.0f);
-					_shape2.position = vec3(2.0f, 0.0f, 0.0f);
-					_shape1.type = EShape::Cone;
-					_shape2.type = EShape::Cone;
-				};
-
 			gui->seperator();
 
 			gui->text("shape 1:");
@@ -87,7 +88,7 @@ namespace night
 
 			if (gui->button("<"))
 			{
-				_shape1.type = EShape((s32(_shape1.type) + s32(EShape::Max - 1)) % (s32)EShape::Max);
+				_shape1.type = EShape((s32(_shape1.type) + (s32(EShape::Max) - 1)) % (s32)EShape::Max);
 			}
 			
 			gui->same_line();
@@ -111,7 +112,7 @@ namespace night
 
 			if (gui->button("<##xx"))
 			{
-				_shape2.type = EShape((s32(_shape2.type) + s32(EShape::Max - 1)) % (s32)EShape::Max);
+				_shape2.type = EShape((s32(_shape2.type) + (s32(EShape::Max) - 1)) % (s32)EShape::Max);
 			}
 
 			gui->same_line();
@@ -385,8 +386,18 @@ namespace night
 			{
 				DecomposedTransform<> dt = math::decompose(shape.transform);
 
-				vec3 direction = shape.rotation_origin * dt.rotation;
-				dt.rotation = quat(direction * R_PI * 0.5f);
+				vec3 direction;
+
+				if (shape.rotation_origin != ORIGIN)
+				{
+					direction = shape.rotation_origin * dt.rotation;
+					dt.rotation = quat(direction * R_PI * 0.5f);
+				}
+				else
+				{
+					direction = FORWARD * dt.rotation;
+				}
+
 				mat4 transform = math::compose(dt);
 
 				switch (shape.type)
@@ -413,7 +424,7 @@ namespace night
 				{
 					return [=](vec3 const& dir) -> vec3
 						{
-							return GJK3D<>::support_polygon(dir, shape.transform, shape.points.begin(), shape.points.end());
+							return GJK3D<>::support_polygon(dir, shape.transform, _boxVertices.begin(), _boxVertices.end());
 						};
 					break;
 				}
@@ -421,7 +432,7 @@ namespace night
 				{
 					return [=](vec3 const& dir) -> vec3
 						{
-							return GJK3D<>::support_polygon(dir, shape.transform, shape.points.begin(), shape.points.end());
+							return GJK3D<>::support_polygon(dir, shape.transform, _pyramidVertices.begin(), _pyramidVertices.end());
 						};
 					break;
 				}
@@ -437,7 +448,7 @@ namespace night
 				{
 					return [=](vec3 const& dir) -> vec3
 						{
-							return GJK3D<>::support_cylinder(dir, dt.translation, direction, shape.radius, shape.height);
+							return GJK3D<>::support_cylinder(dir, transform, shape.radius, shape.height);
 						};
 					break;
 				}
@@ -445,7 +456,7 @@ namespace night
 				{
 					return [=](vec3 const& dir) -> vec3
 						{
-							return GJK3D<>::support_cone(dir, dt.translation, direction, shape.radius, shape.height);
+							return GJK3D<>::support_cone(dir, transform, shape.radius, shape.height);
 						};
 					break;
 				}
@@ -472,13 +483,57 @@ namespace night
 
 		virtual void on_render(RenderGraph& out_graph) const override
 		{
+			function<void(DrawLineCallbackParams const&)> on_draw_line = nullptr;
+			//auto on_draw_line = [&](DrawLineCallbackParams const& params)
+			//	{
+			//		DrawLineParams dlp = params.params;
+			//		dlp.color.r = 0;
+			//		dlp.color.g = 0;
+			//		dlp.color.b = 0;
+			//		out_graph.draw_line(dlp);
+			//	};
+
+			//function<void(DrawTriangleCallbackParams const&)> on_draw_triangle = nullptr;
+			auto on_draw_triangle = [&](DrawTriangleCallbackParams const& params)
+				{
+					Triangle triangle = params.triangle;
+			
+					// TODO: get normal from params
+					real d = math::dot(params.normal, RIGHT);
+
+					//vec3 n = math::normalize(math::cross(
+					//	params.triangle.vertices[1].point - params.triangle.vertices[0].point,
+					//	params.triangle.vertices[2].point - params.triangle.vertices[1].point
+					//));
+					//real d = dot(RIGHT, n);
+
+					d += 1;
+					d /= 2;
+			
+					triangle.vertices[0].color = triangle.vertices[0].color.darken(math::lerp(0.2f, 1.0f, d));
+					triangle.vertices[1].color = triangle.vertices[1].color.darken(math::lerp(0.2f, 1.0f, d));
+					triangle.vertices[2].color = triangle.vertices[2].color.darken(math::lerp(0.2f, 1.0f, d));
+					
+					out_graph.draw_triangle(triangle);
+				};
+
 			auto draw_shape = [&](Shape const& shape, vec3 const& offset, Color const& color)
 				{
 					DecomposedTransform<> dt = math::decompose(shape.transform);
 					dt.translation += offset;
 
-					vec3 direction = shape.rotation_origin * dt.rotation;
-					dt.rotation = quat(direction * R_PI * 0.5f);
+					vec3 direction;
+
+					if (shape.rotation_origin != ORIGIN)
+					{
+						direction = shape.rotation_origin * dt.rotation;
+						dt.rotation = quat(direction * R_PI * 0.5f);
+					}
+					else
+					{
+						direction = FORWARD * dt.rotation;
+					}
+					
 					mat4 transform = math::compose(dt);
 					
 					switch (shape.type)
@@ -487,12 +542,6 @@ namespace night
 					{
 						// TODO: contact points
 						out_graph.draw_point(dt.translation, color);
-
-						//if (offset != ORIGIN)
-						//{
-						//	out_graph.draw_line(dt.translation - offset, dt.translation, color.opaqued(0.5f));
-						//}
-
 						break;
 					}
 
@@ -506,55 +555,69 @@ namespace night
 
 					case EShape::Box:
 					{
+						DrawBoxParams dbp;
+						dbp.transform = transform;
+						dbp.color = color;
+						dbp.on_draw_line = on_draw_line;
+						dbp.on_draw_triangle = on_draw_triangle;
+						ShapeRenderer::draw_box(out_graph.current_render_target(), dbp);
+
 						break;
 					}
 
 					case EShape::Pyramid:
 					{
+						DrawPyramidParams dpp;
+						dpp.transform = transform;
+						dpp.color = color;
+						dpp.on_draw_line = on_draw_line;
+						dpp.on_draw_triangle = on_draw_triangle;
+						ShapeRenderer::draw_pyramid(out_graph.current_render_target(), dpp);
+
 						break;
 					}
 
 					case EShape::Sphere:
 					{
-						DrawSphereParams dsp;
-						dsp.origin = dt.translation;
+						DrawSphereParams2 dsp;
+						dsp.transform = transform;
 						dsp.radius = shape.radius;
 						dsp.color = color;
-						dsp.outline_only = true;
-						dsp.out_graph = &out_graph;
-						ShapeRenderer::draw_sphere(dsp);
+						dsp.on_draw_line = on_draw_line;
+						dsp.on_draw_triangle = on_draw_triangle;
+						ShapeRenderer::draw_sphere2(out_graph.current_render_target(), dsp);
 						break;
 					}
 
 					case EShape::Cylinder :
 					{
-						DrawCylinderParams dcp;
-						dcp.origin = dt.translation;
-						dcp.direction = direction;
+						DrawCylinderParams2 dcp;
+						dcp.transform = transform;
 						dcp.radius = shape.radius;
 						dcp.height = shape.height;
 						dcp.color = color;
-						dcp.out_graph = &out_graph;
-						ShapeRenderer::draw_cylinder(dcp);
+						dcp.on_draw_line = on_draw_line;
+						dcp.on_draw_triangle = on_draw_triangle;
+						ShapeRenderer::draw_cylinder2(out_graph.current_render_target(), dcp);
 						break;
 					}
 
 					case EShape::Cone:
 					{
-						DrawConeParams dcp;
-						dcp.origin = dt.translation;
-						dcp.direction = direction;
+						DrawConeParams2 dcp;
+						dcp.transform = transform;
 						dcp.radius = shape.radius;
 						dcp.height = shape.height;
 						dcp.color = color;
-						dcp.out_graph = &out_graph;
-						ShapeRenderer::draw_cone(dcp);
+						dcp.on_draw_line = on_draw_line;
+						dcp.on_draw_triangle = on_draw_triangle;
+						ShapeRenderer::draw_cone2(out_graph.current_render_target(), dcp);
 						break;
 					}
 					}
 				};
 
-			draw_shape(_shape1, ORIGIN, BLACK.opaqued(0.75f));
+			draw_shape(_shape1, ORIGIN, GREY.opaqued(0.75f));
 
 			if (_shapeCastResult.result)
 			{
@@ -562,16 +625,28 @@ namespace night
 				draw_shape(_shape1, _motion * _shapeCastResult.t1, BLUE.opaqued(0.5f));
 			}
 			
-			draw_shape(_shape2, ORIGIN, BLACK.opaqued(0.75f));
+			draw_shape(_shape2, ORIGIN, GREY.opaqued(0.76f));
 		}
 
 	private:
+
+		void reset_shapes()
+		{
+			_shape1 = {};
+			_shape2 = {};
+			_shape1.position = vec3(-2.0f, 0.0f, 0.0f);
+			_shape2.position = vec3(2.0f, 0.0f, 0.0f);
+			_shape1.type = EShape::Box;
+			_shape2.type = EShape::Sphere;
+		}
 
 		Shape _shape1 = {};
 		Shape _shape2 = {};
 		vec3 _motion = RIGHT;
 		ShapeCastResult3D<> _shapeCastResult = { .result = false };
 		array<vec3, 3> _triangleVertices;
+		array<vec3, 8> _boxVertices;
+		array<vec3, 5> _pyramidVertices;
 	};
 
 }
