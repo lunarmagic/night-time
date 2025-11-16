@@ -205,7 +205,7 @@ namespace night
 
 		GLCall(glBindFramebuffer(GL_FRAMEBUFFER, 0));
 
-		TRACE("Texture created, id: ", _id, ", fbo: ", _fbo, ", dbo: ", _dbo);
+		TRACE("Texture created, id: {0}, fbo: {1}, dbo: {2}", _id, _fbo, _dbo);
 
 		return 1;
 #endif
@@ -217,7 +217,7 @@ namespace night
 		ASSERT(_dbo != 0);
 		ASSERT(_fbo != 0);
 
-		TRACE("Destroying Texture, id: ", _id);
+		TRACE("Destroying Texture, id: {0}", _id);
 
 #if 0
 		GLCall(glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0));

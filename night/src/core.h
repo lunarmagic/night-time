@@ -12,3 +12,10 @@
 #else
 	#error Light only supports Windows!
 #endif
+
+#undef ASSERT
+#ifndef NIGHT_DIST
+#define ASSERT(x) { if(!(x)) { __debugbreak(); } }
+#else
+#define ASSERT(x)
+#endif

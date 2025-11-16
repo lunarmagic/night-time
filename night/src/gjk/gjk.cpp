@@ -2,11 +2,11 @@
 #include "nightpch.h"
 #include "gjk.h"
 #if 0
-#include "math/math.h"
+#include "math/Math.h"
 //#include "profiler/Profiler.h"
 #include "debug_renderer/DebugRenderer.h"
 #include "color/Color.h"
-#include "raycast/raycast.h"
+#include "raycast/Raycast.h"
 
 #define GJK_SWEEP_MAX_ITERATIONS 32
 

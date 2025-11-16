@@ -131,7 +131,7 @@ namespace night
             //    " shader!" << std::endl;
             //std::cout << message << std::endl;
 
-            ERROR("ERROR: Failed to compile ", (type == GL_VERTEX_SHADER ? "vertex" : "fragment"), " shader!, message: ", message);
+            ERROR("ERROR: Failed to compile {0} shader!, message: {1}", (type == GL_VERTEX_SHADER ? "vertex" : "fragment"), message);
 
             GLCall(glDeleteShader(id));
 
@@ -209,9 +209,7 @@ namespace night
 
         if (location == -1)
         {
-            WARNING("Warning: uniform %s doesn't exist!", name.c_str());
-            TRACE("vertex path: ", _vsPath.c_str());
-            TRACE("fragment path: ", _fsPath.c_str());
+            WARNING("Warning: uniform {0} doesn't exist!, vs path: {1}, fs path: {2}", name, _vsPath, _fsPath);
             //return -1;
         }
 

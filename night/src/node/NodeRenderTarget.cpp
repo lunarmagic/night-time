@@ -4,7 +4,7 @@
 #include "utility.h"
 #include "event/ApplicationEvent.h"
 #include "event/NodeEvent.h"
-#include "raycast/raycast.h"
+#include "raycast/Raycast.h"
 #include "texture/Surface.h"
 #include "camera/Camera.h"
 #include "texture/ITexture.h"

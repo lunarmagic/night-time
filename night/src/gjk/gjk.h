@@ -1,11 +1,11 @@
 #pragma once
 
-//#include "log/log.h"
-#include "math/math.h"
-#include "raycast/raycast.h"
+#include "math/Math.h"
+#include "raycast/Raycast.h"
 #include "debug_renderer/DebugRenderer.h"
 
-#define NIGHT_GJK_DEFAULT_EPSILON 0.0001f
+#define NIGHT_GJK_DB_ALGO_RENDERER_SHOW_CSO
+#define NIGHT_GJK_DEFAULT_EPSILON NIGHT_EPSILON_MEDIUM
 #define NIGHT_GJK_DEFAULT_MAX_ITERATIONS 32
 
 namespace night
@@ -106,21 +106,13 @@ namespace night
 	struct GJK2D
 	{
 		// TODO: return simplex
-		static u8 intersects(ShapeCastParams2D<T> const& params);
+		static u8 intersects(IntersectsParams2D<T> const& params);
 		static ShapeCastResult2D<T> shape_cast(ShapeCastParams2D<T> const& params, u8 skip_t1 = false);
 		
 		template<typename _It>
-		static vec<2, T> support_polygon(vec<2, T> const& direction, _It begin, _It end);
-		static vec<2, T> support_circle(vec<2, T> const& direction, vec<2, T> origin, T radius);
-
-	private:
-
-		//static ShapeCastResult2D<T> shape_cast_impl(ShapeCastParams2D<T> const& params, u8 skip_t1);
+		static vec<2, T> support_polygon(vec<2, T> const& direction, mat4 const& transform, _It begin, _It end);
+		static vec<2, T> support_circle(vec<2, T> const& direction, mat4 const& transform, T radius);
 	};
-
-	//using gjk2d = GJK2D<real>;
-	//using dgjk2d = GJK2D<r64>;
-	//using fgjk2d = GJK2D<r32>;
 
 	template<typename T = real>
 	struct GJK3D
@@ -131,7 +123,7 @@ namespace night
 
 		template<typename _It>
 		static vec<3, T> support_polygon(vec<3, T> const& direction, mat<4, 4, T> const& transform, _It begin, _It end);
-		static vec<3, T> support_sphere(vec<3, T> const& direction, vec<3, T> const& origin, T radius);
+		static vec<3, T> support_sphere(vec<3, T> const& direction, mat4 const& transform, T radius);
 		static vec<3, T> support_cylinder(vec<3, T> const& direction, mat<4, 4, T> const& transform, T radius, T height);
 		static vec<3, T> support_cone(vec<3, T> const& direction, mat<4, 4, T> const& transform, T radius, T height);
 
@@ -140,64 +132,124 @@ namespace night
 		static ShapeCastResult3D<T> shape_cast_impl(ShapeCastParams3D<T> const& params, u8 skip_t1);
 	};
 
-	//using gjk3d = GJK3D<real>;
-	//using dgjk3d = GJK3D<r64>;
-	//using fgjk3d = GJK3D<r32>;
-
-#if 0
-	struct ShapeCastResult3D
-	{
-		u8 result;
-
-		union
-		{
-			array<r64, 2> thetas;
-			struct
-			{
-				r64 t0;
-				r64 t1;
-			};
-		};
-
-		union
-		{
-			array<dvec3, 2> normals;
-			struct
-			{
-				dvec3 n0;
-				dvec3 n1;
-			};
-		};
-	};
-
-	struct ShapeCastParams3D
-	{
-		dvec3 motion;
-		function<dvec3(dvec3 const&)> support_casted;
-		function<dvec3(dvec3)> support_against;
-		r64 epsilon = 0.0001f;
-		s32 max_iterations = 32;
-	};
-
-	// TODO: template this singleton
-	// TODO: add support functions for convex, sphere, cylinder, and cone
-	struct NIGHT_API gjk
-	{
-		static u8 intersects(function<dvec2(dvec2 const&)> const& support_a, function<dvec2(dvec2 const&)> const& support_b, r64 epsilon = NIGHT_GJK_DEFAULT_EPSILON, s32 max_iterations = NIGHT_GJK_DEFAULT_MAX_ITERATIONS);
-		static u8 intersects(function<dvec3(dvec3 const&)> const& support_a, function<dvec3(dvec3 const&)> const& support_b, r64 epsilon = NIGHT_GJK_DEFAULT_EPSILON, s32 max_iterations = NIGHT_GJK_DEFAULT_MAX_ITERATIONS);
-
-		static ShapeCastResult3D shape_cast(ShapeCastParams3D const& params, u8 skip_t1 = false);
-
-	private:
-
-		static ShapeCastResult3D shape_cast_impl(ShapeCastParams3D const& params, u8 skip_t1);
-	};
-#endif
 	template<typename T>
-	inline u8 GJK2D<T>::intersects(ShapeCastParams2D<T> const& params)
+	inline u8 GJK2D<T>::intersects(IntersectsParams2D<T> const& params)
 	{
-		ERROR("TODO: implement this function");
-		return u8();
+		DB_ALGO_SCOPED("GJK2D::intersects");
+
+		auto support_m = [&](const vec<2, T>& direction) -> vec<2, T>
+			{
+				vec<2, T> supa = params.support_a(direction);
+				vec<2, T> supb = params.support_b(-direction);
+				return supa - supb;
+			};
+
+		DB_ALGO_INCREMENT_STEP();
+
+#ifdef NIGHT_GJK_DB_ALGO_RENDERER_SHOW_CSO
+		for (s32 i = 0; i < 90; i++)
+		{
+			T t = ((T)i / (90)) * R_PI * 2;
+			vec<2, T> dir;
+			dir.x = cos(t);
+			dir.y = sin(t);
+			vec<2, T> point = support_m(dir);
+			DB_ALGO_DRAW_POINT((vec2)point, BLUE);
+		}
+#endif
+
+		DB_ALGO_SCOPED("iterate simplex");
+
+		vec<2, T> simplex[3];
+
+		vec<2, T> direction = LEFT;
+		vec<2, T> opposite_direction = -direction;
+
+		simplex[0] = support_m(direction);
+		simplex[1] = support_m(opposite_direction);
+
+		s32 simplex_count = 2;
+
+		vec<2, T> ab = simplex[1] - simplex[0];
+		vec<2, T> ao = (vec<2, T>)ORIGIN - simplex[0];
+		direction = Math<T>::triple_cross(ab, ao, ab);
+
+		for (s32 i = 0; i < params.max_iterations; i++)
+		{
+			DB_ALGO_INCREMENT_STEP();
+
+			switch (simplex_count)
+			{
+			case 2: // line case
+			{
+				DB_ALGO_DRAW_POINT(ORIGIN, RED);
+
+				simplex[2] = support_m(direction);
+
+				if (Math<T>::dot(simplex[2], direction) < NIGHT_EPSILON_MEDIUM) // TODO: epsilon
+				{
+					DB_ALGO_DRAW_LINE((vec2)simplex[0], (vec2)simplex[1], RED);
+					return false;
+				}
+
+				DB_ALGO_DRAW_LINE((vec2)simplex[0], (vec2)simplex[1], CYAN);
+
+				simplex_count = 3;
+
+				break;
+			}
+
+			case 3: // triangle case
+			{
+				vec<2, T>& c = simplex[0];
+				vec<2, T>& b = simplex[1];
+				vec<2, T>& a = simplex[2];
+
+				DB_ALGO_DRAW_POINT(ORIGIN, RED);
+
+				vec<2, T> ab = b - a;
+				vec<2, T> ac = c - a;
+				vec<2, T> ao = (vec<2, T>)ORIGIN - a;
+
+				vec<2, T> ab_perp = Math<T>::triple_cross(ac, ab, ab);
+				vec<2, T> ac_perp = Math<T>::triple_cross(ab, ac, ac);
+
+				T dot_ab = Math<T>::dot(ab_perp, ao);
+				T dot_ac = Math<T>::dot(ac_perp, ao);
+
+				if (dot_ab > dot_ac && dot_ab > 0.0)
+				{
+					DB_ALGO_DRAW_LINE((vec2)c, (vec2)b, ORANGE);
+					DB_ALGO_DRAW_LINE((vec2)b, (vec2)a, CYAN);
+					DB_ALGO_DRAW_LINE((vec2)a, (vec2)c, ORANGE);
+					c = b;
+					b = a;
+					simplex_count = 2;
+					direction = ab_perp;
+				}
+				else if (dot_ac > 0.0)
+				{
+					DB_ALGO_DRAW_LINE((vec2)c, (vec2)b, ORANGE);
+					DB_ALGO_DRAW_LINE((vec2)b, (vec2)a, ORANGE);
+					DB_ALGO_DRAW_LINE((vec2)a, (vec2)c, CYAN);
+					b = a;
+					simplex_count = 2;
+					direction = ac_perp;
+				}
+				else
+				{
+					DB_ALGO_DRAW_LINE((vec2)c, (vec2)b, GREEN);
+					DB_ALGO_DRAW_LINE((vec2)b, (vec2)a, GREEN);
+					DB_ALGO_DRAW_LINE((vec2)a, (vec2)c, GREEN);
+					return true;
+				}
+
+				break;
+			}
+			}
+		}
+
+		return false;
 	}
 
 	template<typename T>
@@ -208,19 +260,35 @@ namespace night
 	}
 
 	template<typename T>
-	inline vec<2, T> GJK2D<T>::support_circle(vec<2, T> const& direction, vec<2, T> origin, T radius)
+	inline vec<2, T> GJK2D<T>::support_circle(vec<2, T> const& direction, mat4 const& transform, T radius)
 	{
-		ERROR("TODO: implement this function");
-		return vec<2, T>();
+		DecomposedTransform<T> decomp = Math<T>::decompose(transform);
+		return (vec<2, T>)(vec<3, T>(Math<T>::normalize(direction) * radius, 0.0f) * decomp.scale + decomp.translation);
 	}
 
 	template<typename T>
 	template<typename _It>
-	inline vec<2, T> GJK2D<T>::support_polygon(vec<2, T> const& direction, _It begin, _It end)
+	inline vec<2, T> GJK2D<T>::support_polygon(vec<2, T> const& direction, mat4 const& transform, _It begin, _It end)
 	{
+		vec<2, T> dir_normalized = Math<T>::normalize(direction); // TODO: remove
+		vec<2, T> result = vec<2, T>(0);
+		T max_dot = -INFINITY;
 
-		ERROR("TODO: implement this function");
-		return vec<2, T>();
+		for (auto i = begin; i != end; i++)
+		{
+			vec<2, T> point = (vec<2, T> const&)(*i);
+
+			point = vec<2, T>(transform * vec<4, T>(point, 0, 1));
+
+			T new_d = Math<T>::dot(dir_normalized, point);
+			if (new_d > max_dot)
+			{
+				max_dot = new_d;
+				result = point;
+			};
+		}
+
+		return result;
 	}
 
 	template<typename T>
@@ -407,6 +475,9 @@ namespace night
 		vec<3, T> motion = -params.motion;
 		vec<3, T> origin = ORIGIN;
 
+		DB_ALGO_DRAW_POINT(ORIGIN, RED);
+		DB_ALGO_DRAW_LINE(ORIGIN, (vec3)-motion * 1000.0f, RED.opaqued(0.5f));
+#ifdef NIGHT_GJK_DB_ALGO_RENDERER_SHOW_CSO
 		auto db_fn = [=]()
 			{
 				// TODO: handle the problem of calling this many times
@@ -453,9 +524,8 @@ namespace night
 					DB_ALGO_DRAW_POINT((vec3)i, LIGHT_BLUE);
 				}
 			};
-		DB_ALGO_DRAW_POINT(ORIGIN, RED);
-		DB_ALGO_DRAW_LINE(ORIGIN, (vec3)-motion * 1000.0f, RED.opaqued(0.5f));
 		DB_ALGO_DRAW_FN(db_fn);
+#endif
 		DB_ALGO_SCOPED("Shapecast Iterations");
 
 		array<vec<3, T>, 4> simplex = {};
@@ -748,7 +818,7 @@ namespace night
 		{
 			vec<3, T> point = (vec<3, T> const&)(*i);
 
-			point = vec3(transform * vec4(point, 1));
+			point = vec<3, T>(transform * vec<4, T>(point, 1));
 
 			T new_d = Math<T>::dot(dir_normalized, point);
 			if (new_d > max_dot)
@@ -762,12 +832,13 @@ namespace night
 	}
 
 	template<typename T>
-	inline vec<3, T> GJK3D<T>::support_sphere(vec<3, T> const& direction, vec<3, T> const& origin, T radius)
+	inline vec<3, T> GJK3D<T>::support_sphere(vec<3, T> const& direction, mat4 const& transform, T radius)
 	{
-		return origin + Math<T>::normalize(direction) * radius;
+		DecomposedTransform<T> decomp = Math<T>::decompose(transform);
+		return Math<T>::normalize(direction) * radius * decomp.scale + decomp.translation;
 	}
 	
-#define NIGHT_CYLINDER_SUPPORT_EPSILON 0.0001
+#define NIGHT_CYLINDER_SUPPORT_EPSILON NIGHT_EPSILON_MEDIUM
 	template<typename T>
 	inline vec<3, T> GJK3D<T>::support_cylinder(vec<3, T> const& sdir, mat<4, 4, T> const& transform, T radius, T height)
 	{
@@ -793,7 +864,7 @@ namespace night
 		return cyl_origin + proj;
 	}
 
-#define NIGHT_CONE_SUPPORT_EPSILON 0.0001
+#define NIGHT_CONE_SUPPORT_EPSILON NIGHT_EPSILON_MEDIUM
 	template<typename T>
 	inline vec<3, T> GJK3D<T>::support_cone(vec<3, T> const& dir, mat<4, 4, T> const& transform, T radius, T height)
 	{

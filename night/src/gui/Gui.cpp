@@ -53,7 +53,7 @@ namespace night
 		}
 		else
 		{
-			TRACE("Window / Renderer backend not supported by imgui.");
+			WARNING("Window / Renderer backend not supported by imgui.");
 			return -1;
 		}
 

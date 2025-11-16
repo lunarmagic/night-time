@@ -1,7 +1,7 @@
 #pragma once
 
 #include "material/IComputeShader.h"
-#include "math/math.h"
+#include "math/Math.h"
 #include "ShaderStorageBufferOpenGL.h"
 
 namespace night

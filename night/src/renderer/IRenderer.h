@@ -2,7 +2,7 @@
 
 #include "core.h"
 #include "color/Color.h"
-#include "math/math.h"
+#include "math/Math.h"
 #include "ref/ref.h"
 #include "handle/handle.h"
 #include "camera/Camera.h"

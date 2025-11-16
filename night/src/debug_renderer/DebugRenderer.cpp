@@ -4,9 +4,9 @@
 #include "utility.h"
 #include "node/INode.h"
 #include "texture/ITexture.h"
-#include "math/math.h"
+#include "math/Math.h"
 #include "texture/Surface.h"
-#include "raycast/raycast.h"
+#include "raycast/Raycast.h"
 #include "camera/Camera.h"
 #include "profiler/Profiler.h"
 #include "application/Application.h"
@@ -1479,84 +1479,25 @@ namespace night
     {
         push_draw_function([=]()
             {
-                ::night::DrawSphereParams dsp;
-                dsp.origin = params.origin;
+                DrawSphereParams2 dsp;
+                dsp.transform = math::compose({.translation = params.origin});
                 dsp.radius = params.radius;
                 dsp.color = params.color;
-                //dsp.wireframe = false;
-                //dsp.outline_only = true;
-                dsp.width = RENDERER_LINE_DEFAULT_WIDTH;
-                dsp.out_graph = &_renderGraph;
+                dsp.on_draw_line = [&](DrawLineCallbackParams const& dlcp)
+                    {
+                        _renderGraph.draw_line(dlcp.params);
+                    };
 
-                ShapeRenderer::draw_sphere(dsp);
-#if 0
-                ASSERT(_renderTarget != nullptr);
-                Camera const& camera = _renderTarget->camera();
-                vec3 const& eye_location = camera.translation;
-
-                vec3 oe;
-
-                if (camera.type == ECameraType::Orthographic)
-                {
-                    oe = math::normalize(camera.look_at - camera.translation);
-                }
-                else
-                {
-                    oe = math::normalize(eye_location - params.origin);
-                }
-
-                mat4 forward_to_oe = rotate_about_vector(FORWARD, oe);
-
-                vec3 ellipse_origin;
-                real ellipse_radius;
-
-                if (camera.type == ECameraType::Orthographic) // TODO: optimize this
-                {
-                    ellipse_radius = params.radius;
-                    ellipse_origin = params.origin;
-                }
-                else
-                {
-                    real origin_distance = distance(eye_location, params.origin);
-                    real surface_distance = origin_distance - params.radius;
-                    vec3 oe_perp = math::normalize(math::cross(RIGHT, oe));
-                    vec3 perp_perp = math::normalize(math::cross(oe, oe_perp));
-
-                    vec3 back = params.origin - oe * params.radius;
-                    vec3 side = back + oe_perp / surface_distance + oe_perp * params.radius;
-                    vec3 frostrum_dir = math::cross(math::normalize(side - eye_location), perp_perp);
-                    vec3 frostrum = params.origin + frostrum_dir * params.radius;
-                    real ellipse_distance = distance(ellipse_origin, params.origin);
-
-                    ellipse_radius = sqrt(params.radius * params.radius - ellipse_distance * ellipse_distance);
-                    ellipse_origin = project_point_to_line(frostrum, eye_location, params.origin);
-                }
-
-                for (s32 i = 0; i < params.segments; i++)
-                {
-                    real t1 = (real)i / (real)(params.segments - 1) * R_PI * 2;
-                    real t2 = (real)(i + 1) / (real)(params.segments - 1) * R_PI * 2;
-
-                    vec3 p1;
-                    p1.x = cos(t1);
-                    p1.y = sin(t1);
-                    p1.z = 0;
-
-                    vec3 p2;
-                    p2.x = cos(t2);
-                    p2.y = sin(t2);
-                    p2.z = 0;
-
-                    p1 *= ellipse_radius;
-                    p2 *= ellipse_radius;
-                    p1 = forward_to_oe * vec4(p1, 1);
-                    p2 = forward_to_oe * vec4(p2, 1);
-                    p1 += ellipse_origin;
-                    p2 += ellipse_origin;
-
-                    _renderGraph.draw_line(p1, p2, params.color);
-                }
-#endif
+                //::night::DrawSphereParams dsp;
+                //dsp.origin = params.origin;
+                //dsp.radius = params.radius;
+                //dsp.color = params.color;
+                ////dsp.wireframe = false;
+                ////dsp.outline_only = true;
+                //dsp.width = RENDERER_LINE_DEFAULT_WIDTH;
+                //dsp.out_graph = &_renderGraph;
+                //
+                //ShapeRenderer3D::draw_sphere(dsp);
             }, is_algo);
     }
 

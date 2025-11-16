@@ -26,13 +26,13 @@ namespace night
 					string id = entry.path().stem().string();
 					utility::renderer().create_texture(id, params);
 
-					TRACE("loaded texture, filename/id: ", entry.path().stem().string());
+					TRACE("loaded texture, filename/id: {0}", entry.path().stem().string());
 				}
 				else
 				{
 					string path = entry.path().string();
 					string stem = entry.path().stem().string();
-					WARNING("unsupported file type is contained within the textures resource folder, path: ", path, ", stem: ", stem);
+					WARNING("unsupported file type is contained within the textures resource folder, path: {0}, stem: {1}", path, stem);
 				}
 			}
 		}
@@ -48,7 +48,7 @@ namespace night
 					string id = entry.path().stem().string();
 					utility::renderer().create_shader(id, params);
 
-					TRACE("loaded shader, filename/id: ", entry.path().stem().string());
+					TRACE("loaded shader, filename/id: {0}", entry.path().stem().string());
 				}
 				else if (entry.path().extension().string() == ".material")
 				{
@@ -61,7 +61,7 @@ namespace night
 					mparams.shader = shader;
 					utility::renderer().create_material(id, mparams);
 
-					TRACE("loaded material, filename/id: ", entry.path().stem().string());
+					TRACE("loaded material, filename/id: {0}", entry.path().stem().string());
 				}
 				else if (entry.path().extension().string() == ".compute_shader")
 				{
@@ -70,13 +70,13 @@ namespace night
 					string id = entry.path().stem().string();
 					utility::renderer().create_compute_shader(id, params);
 
-					TRACE("loaded compute shader, filename/id: ", entry.path().stem().string());
+					TRACE("loaded compute shader, filename/id: {0}", entry.path().stem().string());
 				}
 				else
 				{
 					string path = entry.path().string();
 					string stem = entry.path().stem().string();
-					WARNING("unsupported file type is contained within the shaders resource folder, path: ", path, ", stem: ", stem);
+					WARNING("unsupported file type is contained within the shaders resource folder, path: {0}, stem: {1}", path, stem);
 				}
 			}
 		}

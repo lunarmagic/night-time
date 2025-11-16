@@ -6,7 +6,7 @@
 #include <SDL3/SDL_opengl.h>
 #include <gl\glu.h>
 #include "window/backends/sdl/WindowSDL.h"
-#include "math/math.h"
+#include "math/Math.h"
 //#include <glm/gtc/matrix_transform.hpp>
 //#include "Renderer3D/Camera.h"
 //#include "node/INode.h"
@@ -20,7 +20,7 @@
 #include "ComputeShaderOpenGL.h"
 #include "MaterialOpenGL.h"
 #include "texture/Surface.h"
-#include "raycast/raycast.h"
+#include "raycast/Raycast.h"
 //#include "TextureOpenGL.h"
 
 //#define RENDERER_DEPTH_PEEL_COUNT 3 // TODO: figure out why performance drops after 3 depth peels
@@ -380,7 +380,7 @@ namespace night
 		_context = SDL_GL_CreateContext(_sdlWindow);
 		if (_context == NULL)
 		{
-			ERROR("OpenGL context could not be created! SDL Error: ", SDL_GetError());
+			ERROR("OpenGL context could not be created! SDL Error: {0}", SDL_GetError());
 			return -1;
 		}
 
@@ -391,7 +391,7 @@ namespace night
 
 		if (glewError != GLEW_OK)
 		{
-			ERROR("Failed initializing GLEW! ", glewGetErrorString(glewError));
+			ERROR("Failed initializing GLEW! {0}", (char const*)glewGetErrorString(glewError));
 		}
 
 		auto& dpvs = utility::settings()["Night"]["RendererOpenGL"]["Use VSync"];
@@ -401,11 +401,9 @@ namespace night
 			dpvs.set_s32(NIGHT_RENDERER_OPENGL_DEFAULT_VSYNC);
 		}
 
-
-		// TODO: make vsync setting
 		if (SDL_GL_SetSwapInterval(0) == (dpvs.get_s32() == 0 ? false : true))
 		{
-			WARNING("Unable to set VSync! SDL Error: ", SDL_GetError());
+			WARNING("Unable to set VSync! SDL Error: {0}", SDL_GetError());
 		}
 
 		_ibo.init(_getIndices(), OPEN_GL_MAX_INDEX_COUNT);
@@ -1370,7 +1368,7 @@ namespace night
 		ASSERT(_defaultRenderTarget != nullptr);
 		_defaultRenderTarget->resize(ivec2(width, height));
 
-		TRACE("Renderer resized, width: ", width, ", height: ", height);
+		TRACE("Renderer resized, width: {0}, height: {1}", width, height);
 	}
 
 	handle<IShader> RendererOpenGL::create_shader(const string& id, const ShaderParams& params)
@@ -1378,7 +1376,7 @@ namespace night
 		auto i = find_shader(id);
 		if (i != nullptr)
 		{
-			WARNING("shader already created!, id: ", id);
+			WARNING("shader already created!, id: \"{0}\"", id);
 			return i;
 		}
 
@@ -1392,7 +1390,7 @@ namespace night
 			shader->__tempInitHandle(); // TODO: remove
 		}
 
-		TRACE("created shader, id: ", id);
+		TRACE("created shader, id: \"{0}\"", id);
 
 		return shader;
 	}
@@ -1406,7 +1404,7 @@ namespace night
 		auto i = find_texture(id);
 		if (i != nullptr)
 		{
-			WARNING("Texture already created!, id: ", id);
+			WARNING("Texture already created!, id: \"{0}\"", id);
 			return i;
 		}
 
@@ -1422,7 +1420,7 @@ namespace night
 			texture->__tempInitHandle(); // TODO: remove
 		}
 
-		TRACE("created texture, id: ", id);
+		TRACE("created texture, id: \"{0}\"", id);
 
 		return texture;
 	}
@@ -1434,7 +1432,7 @@ namespace night
 		auto i = find_material(id);
 		if (i != nullptr)
 		{
-			WARNING("Material already created!, id: ", id);
+			WARNING("Material already created!, id: \"{0}\"", id);
 			return i;
 		}
 
@@ -1449,7 +1447,7 @@ namespace night
 			material->__tempInitHandle(); // TODO: remove
 		}
 
-		TRACE("created material, id: ", id);
+		TRACE("created material, id: \"{0}\"", id);
 
 		return material;
 
@@ -1485,7 +1483,7 @@ namespace night
 		auto i = find_compute_shader(id);
 		if (i != nullptr)
 		{
-			WARNING("compute shader already created!, id: ", id);
+			WARNING("compute shader already created!, id: \"{0}\"", id);
 			return i;
 		}
 
@@ -1500,7 +1498,7 @@ namespace night
 			compute_shader->__tempInitHandle(); // TODO: remove
 		}
 
-		TRACE("created compute shader, id: ", id);
+		TRACE("created compute shader, id: \"{0}\"", id);
 
 		return compute_shader;
 

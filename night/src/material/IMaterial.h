@@ -97,7 +97,7 @@ namespace night
 
 			if (uniform.index + sizeof(T) > _data.size())
 			{
-				WARNING("data out of bounds, did you forget to use the full uniform in the shader?, name: %s", name.c_str());
+				WARNING("data out of bounds, name: {0}", name);
 				return false;
 			}
 
@@ -106,7 +106,7 @@ namespace night
 			return true;
 		}
 
-		WARNING("uniform not found!, name: %s", name.c_str());
+		WARNING("uniform not found!, name: {0}", name);
 		return false;
 	}
 

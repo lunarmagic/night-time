@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core.h"
-#include "math/math.h"
+#include "math/Math.h"
 #include "aabb/AABB.h"
 
 #define NIGHT_CAMERA_DEFAULT_NEAR_CLIP 0.1f

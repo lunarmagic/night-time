@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core.h"
-#include "math/math.h"
+#include "math/Math.h"
 #include "input/InputKey.h"
 //#include "application/Application.h"
 //#include "texture/ITexture.h"

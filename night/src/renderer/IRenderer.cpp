@@ -8,7 +8,7 @@
 #include "material/IShader.h"
 #include "material/IMaterial.h"
 #include "material/IComputeShader.h"
-#include "raycast/raycast.h"
+#include "raycast/Raycast.h"
 #include "geometry/Quad.h"
 #include "text/Text.h"
 
@@ -89,7 +89,7 @@ namespace night
 			m.lock();
 			_shadersPendingDestruction.push_back(i);
 			m.unlock();
-			TRACE("destroying shader, id: ", id);
+			TRACE("destroying shader, id: \"{0}\"", id);
 		}
 
 		//auto i = _shaders.find(id);
@@ -125,7 +125,7 @@ namespace night
 			m.lock();
 			_texturesPendingDestruction.push_back(i);
 			m.unlock();
-			TRACE("destroying texture, id: ", id);
+			TRACE("destroying texture, id: \"{0}\"", id);
 		}
 	}
 
@@ -139,7 +139,7 @@ namespace night
 				m.lock();
 				_texturesPendingDestruction.push_back(i);
 				m.unlock();
-				TRACE("destroying texture via handle, id: ", (*i).first);
+				TRACE("destroying texture via handle, id: \"{0}\"", (*i).first);
 			}
 		}
 	}
@@ -169,7 +169,7 @@ namespace night
 			m.lock();
 			_materialsPendingDestruction.push_back(i);
 			m.unlock();
-			TRACE("destroying shader, id: ", id);
+			TRACE("destroying shader, id: \"{0}\"", id);
 		}
 		//auto i = _materials.find(id);
 		//if (i != _materials.end())
@@ -204,7 +204,7 @@ namespace night
 			m.lock();
 			_computeShadersPendingDestruction.push_back(i);
 			m.unlock();
-			TRACE("destroying shader, id: ", id);
+			TRACE("destroying shader, id: \"{0}\"", id);
 		}
 
 		//auto i = _computeShaders.find(id);
@@ -222,7 +222,7 @@ namespace night
 			ASSERT(i != _shaders.end());
 			if (i != _shaders.end())
 			{
-				TRACE("destroyed texture, id: ", (*i).first);
+				TRACE("destroyed texture, id: \"{0}\"", (*i).first);
 				_shaders.erase(i); // calls destructor
 			}
 		}
@@ -232,7 +232,7 @@ namespace night
 			ASSERT(i != _textures.end());
 			if (i != _textures.end())
 			{
-				TRACE("destroyed texture, id: ", (*i).first);
+				TRACE("destroyed texture, id: \"{0}\"", (*i).first);
 				_textures.erase(i); // calls destructor
 			}
 		}
@@ -242,7 +242,7 @@ namespace night
 			ASSERT(i != _materials.end());
 			if (i != _materials.end())
 			{
-				TRACE("destroyed texture, id: ", (*i).first);
+				TRACE("destroyed texture, id: \"{0}\"", (*i).first);
 				_materials.erase(i); // calls destructor
 			}
 		}
@@ -252,7 +252,7 @@ namespace night
 			ASSERT(i != _computeShaders.end());
 			if (i != _computeShaders.end())
 			{
-				TRACE("destroyed texture, id: ", (*i).first);
+				TRACE("destroyed texture, id: \"{0}\"", (*i).first);
 				_computeShaders.erase(i); // calls destructor
 			}
 		}

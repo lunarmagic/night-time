@@ -25,13 +25,13 @@ namespace night
 	{
 		if (_keyframes.empty())
 		{
-			WARNING("node animation ", name_and_id(), "'s keyframes are empty");
+			WARNING("node animation {0}'s keyframes are empty", name_and_id());
 			return false;
 		}
 
 		if (_state == ENodeAnimationState::Playing)
 		{
-			WARNING("node animation ", name_and_id(), " is already playing");
+			WARNING("node animation {0} is already playing", name_and_id());
 			return false;
 		}
 

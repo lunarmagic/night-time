@@ -115,10 +115,30 @@ namespace night
 	template<typename T>
 	using initializer_list = std::initializer_list<T>;
 
+	template<class T>
+	struct is_c_str
+		: std::integral_constant<
+		bool,
+		std::is_same<char const*, typename std::decay<T>::type>::value ||
+		std::is_same<char*, typename std::decay<T>::type>::value
+		> {
+	};
+
 	template<typename T>
 	inline string to_string(const T& t)
 	{
-		return std::to_string(t);
+		if constexpr (std::is_same_v<T, string>)
+		{
+			return t;
+		}
+		else if constexpr (is_c_str<T>::value)
+		{
+			return string(t);
+		}
+		else
+		{
+			return std::to_string(t);
+		}
 	}
 
 	using type_info = std::type_info;

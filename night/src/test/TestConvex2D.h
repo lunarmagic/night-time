@@ -2,7 +2,7 @@
 
 #if 0
 #include "node/NodeWindow.h"
-#include "math/math.h"
+#include "math/Math.h"
 #include "random/random.h"
 #include "geometry/Polygon.h"
 

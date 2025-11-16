@@ -4,7 +4,7 @@
 #include "log/log.h"
 #include "event/Event.h"
 #include "input/InputKey.h"
-#include "math/math.h"
+#include "math/Math.h"
 //#include "ref/ref.h"
 #include "handle/handle.h"
 //#include "stl/stl.h"
@@ -321,7 +321,7 @@ namespace night
 		if (shared)
 		{
 			_created.push_back(shandle<INode>(shared));
-			TRACE("Created child node: ", name);
+			TRACE("Created child node: {0}", name);
 			__uid++;
 		}
 		else
@@ -528,7 +528,7 @@ namespace night
 			(*f).second = sref<ISignalCallback>(new SignalCallback<P>(fn));
 		}
 
-		TRACE("Node " + name_and_id() + " is listening for signal: " + signal);
+		TRACE("Node {0} is listening for signal: {1}", name_and_id(), signal);
 	}
 
 	template<typename Include, typename ...Stop>
@@ -596,41 +596,19 @@ namespace night
 		return nullptr;
 	}
 
-	// TODO: make macro for defining print and debug render
-	namespace debug
+#ifdef NIGHT_ENABLE_LOGGING
+	template<> inline string Log::print_format<INode>(INode& v)
 	{
-		template<> inline string _Log::_print_format<INode>(INode& v)
-		{
-			sstream stream;
-			stream << "\n";
-			stream << "Name: " << v.name() << "\n";
-			stream << "Unique id: " << v.unique_id() << "\n";
-			//stream << "Parent: name: " << v.parent()->name() << ", unique_id: " << v.parent()->unique_id() << "\n";
-			stream << "Num children: " << v.children().size() << "\n";
-			stream << "Timestamp: " << v.timestamp() << "\n";
-			//stream << "Visibility: " << 
-			//	(v.visibility() == ENodeVisibility::Visible ? "Visible"
-			//	: v.visibility() == ENodeVisibility::Invisible ? "Invisible"
-			//	: "Invisible_Tree")
-			//	<< "\n";
+		sstream stream;
+		stream << "\n";
+		stream << "Name: " << v.name() << "\n";
+		stream << "Unique id: " << v.unique_id() << "\n";
+		stream << "Num children: " << v.children().size() << "\n";
+		stream << "Timestamp: " << v.timestamp() << "\n";
+		stream << "Is pending destruction?: " << (v.is_pending_destruction() ? "True" : "False") << "\n";
 
-			//stream << "Depth: " << v.depth() << "\n";
-			stream << "Is pending destruction?: " << (v.is_pending_destruction() ? "True" : "False") << "\n";
-
-			return stream.str();
-		}
+		return stream.str();
 	}
+#endif
 
 }
-
-//namespace std
-//{
-//	template<>
-//	struct hash<night::SignalHash>
-//	{
-//		uint64_t operator()(const night::SignalHash& key) const
-//		{
-//			return hash<uint64_t>()((uint64_t)key.node.ptr().lock().get() ^ (uint64_t)key.params_type;
-//		}
-//	};
-//};

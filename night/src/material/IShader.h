@@ -1,7 +1,7 @@
 #pragma once
 
 //#include "stl/stl.h"
-#include "math/math.h"
+#include "math/Math.h"
 #include "resource_manager/IResource.h"
 
 namespace night

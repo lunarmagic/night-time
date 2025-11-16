@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Event.h"
-#include "math/math.h"
+#include "math/Math.h"
 #include "input/EInput.h"
 
 namespace night

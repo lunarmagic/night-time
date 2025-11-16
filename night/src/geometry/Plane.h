@@ -1,6 +1,6 @@
 #pragma once
 
-#include "raycast/raycast.h"
+#include "raycast/Raycast.h"
 #include "debug_renderer/DebugRenderer.h"
 
 namespace night

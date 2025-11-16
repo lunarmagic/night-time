@@ -55,7 +55,7 @@ namespace night
 
 	INode::~INode()
 	{
-		TRACE("Destroying ", name_and_id());
+		TRACE("Destroying Node {0}", name_and_id());
 		_children.clear();
 		_created.clear();
 	}
@@ -191,13 +191,13 @@ namespace night
 				auto this_node = (*global_signal).second.find(handle_from_this());
 				if (this_node != (*global_signal).second.end())
 				{
-					TRACE("Node " + name_and_id() + " is removing signal: " + (*global_signal).first);
+					TRACE("Node {0} is removing signal: {1}", name_and_id(), (*global_signal).first);
 					(*global_signal).second.erase(this_node);
 				}
 
 				if ((*global_signal).second.empty())
 				{
-					TRACE("Erasing global signal: " + (*global_signal).first);
+					TRACE("Erasing global signal: {0}", (*global_signal).first);
 					_globalSignals.erase(global_signal);
 				}
 			}
@@ -386,12 +386,12 @@ namespace night
 			}
 
 			new_parent->_created.push_back(ref);
-			TRACE("moved created node ", name(), "from ", parent->name(), ", to ", new_parent->name());
+			TRACE("moved created node {0} from {1} to {2}", name(), parent->name(), new_parent->name());
 		}
 		else
 		{
 			new_parent->_children.push_back(ref);
-			TRACE("moved child node ", name(), "from ", parent->name(), ", to ", new_parent->name());
+			TRACE("moved child node {0} from {1} to {2}", name(), parent->name(), new_parent->name());
 		}
 		
 		NodeMovedEvent event(parent, new_parent);
@@ -412,7 +412,7 @@ namespace night
 			(*f).second = sref<ISignalCallback>(new SignalCallback<SignalEmptyParams>(fn));
 		}
 
-		TRACE("Node " + name_and_id() + " is listening for signal: " + signal);
+		TRACE("Node {0} is listening for signal: {1}", name_and_id(), signal);
 	}
 
 	void INode::unlisten_signal(string const& signal)
@@ -426,14 +426,14 @@ namespace night
 				auto n = (*g).second.find(handle_from_this());
 				if (n != (*g).second.end())
 				{
-					TRACE("Node " + name_and_id() + " is unlistening signal " + (*g).first);
+					TRACE("Node {0} is unlistening to signal: {1}", name_and_id(), (*g).first);
 					(*g).second.erase(n);
 				}
 			}
 
 			if ((*g).second.empty())
 			{
-				TRACE("Erasing global signal: " + (*g).first);
+				TRACE("Erasing global signal: {0}", (*g).first);
 				_globalSignals.erase(g);
 			}
 		}

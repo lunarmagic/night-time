@@ -8,9 +8,20 @@
 #undef WARNING
 #undef ERROR
 
-// TODO: add log_level and define SET_LOG_LEVEL
-// TODO: add PRINT and formatting to log
+#ifdef NIGHT_ENABLE_LOGGING
+#define PRINT(x) ::night::Log::print(x, #x)
+#define TRACE(str, ...) ::night::Log::trace(str, ##__VA_ARGS__)
+#define WARNING(str, ...) ::night::Log::warning(__FILE__, __LINE__, str, ##__VA_ARGS__)
+#define ERROR(str, ...) ::night::Log::error(__FILE__, __LINE__, str, ##__VA_ARGS__); __debugbreak();
+#else
+#define PRINT(x)
+#define TRACE(str, ...)
+#define WARNING(str, ...)
+#define ERROR(str, ...)
+#endif
 
+
+#ifdef NIGHT_ENABLE_LOGGING
 #define LOG_MAX_MESSAGES 5
 
 #define DEBUG_LOG_MASK_OFF 0
@@ -20,160 +31,185 @@
 #define DEBUG_LOG_MASK_TRACE BIT(4)
 #define DEBUG_LOG_MASK_EVERYTHING S32_MAX
 
-namespace night { namespace debug {
+namespace night
+{
 
-	struct NIGHT_API _Log
+	struct NIGHT_API Log
 	{
-		static u8 _is_prev_cout_a_log/*{ false }*/;
-		static map<string, u32> _logged_messages;
+		//static u8 is_prev_cout_a_log;
+		static map<string, u32> logged_messages;
 
-		//enum class EDebugLoggingMask : u32
-		//{
-		//	OFF = 0,
-		//	PRINT = BIT(1),
-		//	ERROR = BIT(2),
-		//	WARNING = BIT(3),
-		//	TRACE = BIT(4),
-		//	EVERYTHING = 0xFFFFFFFF,
-		//};
+		static s32 debug_logging_mask;
 
-		static s32 _debug_logging_mask;
-
-		static void _set_message_color(u16 id);
+		static void set_message_color(u16 id);
 
 		template<typename T>
-		static void _log(sstream& out_stream, T&& t)
+		static string print_format(T& t)
 		{
-			out_stream << t /*<< '\n'*/;
+			return to_string(t);
+		}
+
+		template<typename T>
+		static void log(vector<string>& out_vector, T&& t)
+		{
+			out_vector.push_back(print_format(t));
 		}
 
 		template<typename T, typename... Args>
-		static void _log(sstream& out_stream, T&& t, Args&&... args)
+		static void log(vector<string>& out_vector, T&& t, Args&&... args)
 		{
-			out_stream << t;
-			_log(out_stream, std::forward<Args&&>(args)...);
+			out_vector.push_back(print_format(t));
+			log(out_vector, std::forward<Args&&>(args)...);
 		}
 
 		template<typename... Args>
-		static void _log(Args&&... args)
+		static void log(string const& str, Args&&... args)
 		{
-			if (!_is_prev_cout_a_log)
+			//if (!is_prev_cout_a_log)
+			//{
+			//	std::cout << '\n';
+			//}
+
+			vector<string> arg_strings;
+			log(arg_strings, std::forward<Args&&>(args)...);
+
+			s32 curr = 0;
+
+			for (s32 i = 0; i < str.size();)
 			{
-				std::cout << '\n';
+				if (i < str.size() - 2)
+				{
+					char const& c = str[i];
+					char const& c2 = str[i + 2];
+					s32 index = s32(str[i + 1] - '0');
+
+					if (index < arg_strings.size() && c == '{' && c2 == '}')
+					{
+						std::cout << str.substr(curr, i - curr);
+						std::cout << arg_strings[index];
+						i += 3;
+						curr = i;
+						continue;
+					}
+				}
+
+				i++;
 			}
 
-			_set_message_color(7);
+			std::cout << str.substr(curr, str.size() - curr);
 
-			sstream stream;
-			//stream << "Log: ";
-			_log(stream, std::forward<Args&&>(args)...);
-			std::cout << stream.str();
-			_is_prev_cout_a_log = true;
+			//is_prev_cout_a_log = true;
 		}
 
 		template<typename... Args>
-		static void _message(const char* type, const char* file, s32 line, Args&&... args)
+		static void log(string const& str)
+		{
+			//if (!is_prev_cout_a_log)
+			//{
+			//	std::cout << '\n';
+			//}
+
+			std::cout << str;
+
+			//is_prev_cout_a_log = true;
+		}
+
+		template<typename... Args>
+		static void message(const char* type, const char* file, s32 line, string const& str, Args&&... args)
 		{
 			sstream stream;
 			string key = string(type) + string(file) + to_string(line);
-
-			auto i = _logged_messages.find(key);
-			if (i != _logged_messages.end())
+			
+			auto i = logged_messages.find(key);
+			if (i != logged_messages.end())
 			{
 				if ((*i).second >= LOG_MAX_MESSAGES)
 				{
 					return;
 				}
-
+			
 				(*i).second++;
 				stream << "(" << (*i).second << ") ";
 			}
 			else
 			{
-				_logged_messages.insert({ key, 1 });
+				logged_messages.insert({ key, 1 });
 			}
-
+			
 			stream << type << "\n  File: " << file << ",\n  Line: " << line << ",\n  Message: ";
-			_log(stream, std::forward<Args&&>(args)...);
 			std::cout << '\n' << stream.str();
+			log(str, std::forward<Args&&>(args)...);
+			std::cout << '\n';
 		}
 
 		template<typename... Args>
-		static void _trace(Args&&... args)
+		static void trace(string const& str, Args&&... args)
 		{
-			if (!(_debug_logging_mask & DEBUG_LOG_MASK_TRACE))
+			if (!(debug_logging_mask & DEBUG_LOG_MASK_TRACE))
 			{
 				return;
 			}
 
-			_log(args...);
-			_log("\n");
+			set_message_color(7);
+
+			log(str, args...);
+			log("\n");
 		}
 
-		template<typename T> 
-		static string _print_format(T& t);
+		template<typename... Args>
+		static void trace(string const& str)
+		{
+			if (!(debug_logging_mask & DEBUG_LOG_MASK_TRACE))
+			{
+				return;
+			}
+
+			set_message_color(7);
+
+			log(str);
+			log("\n");
+		}
 
 		template<typename T>
-		static void _print(T& t, const char* var_name)
+		static void print(T& t, const char* var_name)
 		{
-			if (!(_debug_logging_mask & DEBUG_LOG_MASK_PRINT))
+			if (!(debug_logging_mask & DEBUG_LOG_MASK_PRINT))
 			{
 				return;
 			}
 
-			_log("\n");
-			_log("Print ", var_name, ": ");
-			_log(_print_format(t));
-			_log("\n");
+			set_message_color(11);
+			
+			//log(typeid(T).name(), " ", var_name, ": ");
+			std::cout << typeid(T).name() << " " << var_name << ": ";
+			log("\n");
+			log(print_format(t));
+			log("\n");
 		}
 
 		template<typename... Args>
-		static void _warning(const char* file, s32 line, Args&&... args)
+		static void warning(const char* file, s32 line, string const& str, Args&&... args)
 		{
-			if (!(_debug_logging_mask & DEBUG_LOG_MASK_WARNING))
+			if (!(debug_logging_mask & DEBUG_LOG_MASK_WARNING))
 			{
 				return;
 			}
-
-			_set_message_color(14);
-			_message("Warning!", file, line, std::forward<Args&&>(args)...);
+			
+			set_message_color(14);
+			message("Warning!", file, line, str, std::forward<Args&&>(args)...);
 		}
 
 		template<typename... Args>
-		static void _error(const char* file, s32 line, Args&&... args)
+		static void error(const char* file, s32 line, string const& str, Args&&... args)
 		{
-			if (!(_debug_logging_mask & DEBUG_LOG_MASK_ERROR))
+			if (!(debug_logging_mask & DEBUG_LOG_MASK_ERROR))
 			{
 				return;
 			}
-
-			_set_message_color(12);
-			_message("Error!", file, line, std::forward<Args&&>(args)...);
+			
+			set_message_color(12);
+			message("Error!", file, line, str, std::forward<Args&&>(args)...);
 		}
-
-		};
-
-#undef ERROR
-#ifdef NIGHT_ENABLE_LOGGING
-#define PRINT(x) ::night::debug::_Log::_print(x, #x)
-#define TRACE(...) ::night::debug::_Log::_trace(##__VA_ARGS__)
-#define WARNING(...) ::night::debug::_Log::_warning(__FILE__, __LINE__, ##__VA_ARGS__)
-#define ERROR(...) ::night::debug::_Log::_error(__FILE__, __LINE__, ##__VA_ARGS__); __debugbreak();
-#else
-//#define DEBUG_LOG_MASK 0
-//#define DEBUG_LOG_SET_MASK(x)
-#define PRINT(x)
-#define TRACE(...)
-#define WARNING(...)
-#define ERROR(...)
-#endif
-
+	};
 }
-}
-
-#undef ASSERT
-#ifndef NIGHT_DIST
-#define ASSERT(x) { if(!(x)) { __debugbreak(); } }
-#else
-#define ASSERT(x)
 #endif

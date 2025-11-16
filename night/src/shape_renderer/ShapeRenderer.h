@@ -1,6 +1,6 @@
 #pragma once
 
-#include "math/math.h"
+#include "math/Math.h"
 #include "color/Color.h"
 #include "renderer/IRenderer.h"
 #include "geometry/Plane.h"
@@ -61,18 +61,18 @@ namespace night
 		function<void(DrawTriangleCallbackParams const&)> on_draw_triangle;
 	};
 
-	struct DrawSphereParams
-	{
-		vec3 origin;
-		real radius{ 1.0f };
-		RenderGraph* out_graph{ nullptr };
-		u8 wireframe{ true };
-		u8 outline_only{ true };
-		real width{ NIGHT_SHAPE_RENDERER_LINE_WIDTH };
-		real draw_through_opacity{ NIGHT_SHAPE_RENDERER_DRAW_THROUGH_OPACITY };
-		Color color{ NIGHT_SPHERE_COLOR };
-		real resolution{ 1.0f };
-	};
+	//struct DrawSphereParams
+	//{
+	//	vec3 origin;
+	//	real radius{ 1.0f };
+	//	RenderGraph* out_graph{ nullptr };
+	//	u8 wireframe{ true };
+	//	u8 outline_only{ true };
+	//	real width{ NIGHT_SHAPE_RENDERER_LINE_WIDTH };
+	//	real draw_through_opacity{ NIGHT_SHAPE_RENDERER_DRAW_THROUGH_OPACITY };
+	//	Color color{ NIGHT_SPHERE_COLOR };
+	//	real resolution{ 1.0f };
+	//};
 
 	struct SphereBackfacePlane
 	{
@@ -92,33 +92,33 @@ namespace night
 
 	using ConeBackfacePlane = CylinderBackfacePlane;
 
-	struct DrawCylinderParams
-	{
-		//mat4 transform{ mat4(1) };
-		vec3 origin;
-		vec3 direction;
-		real radius{ 1.0f };
-		real height{ 1.0f };
-		RenderGraph* out_graph{ nullptr };
-		u8 wireframe{ true };
-		real width{ NIGHT_SHAPE_RENDERER_LINE_WIDTH };
-		real draw_through_opacity{ NIGHT_SHAPE_RENDERER_DRAW_THROUGH_OPACITY };
-		Color color{ NIGHT_CYLINDER_COLOR };
-		real resolution{ 1.0f };
-	};
+	//struct DrawCylinderParams
+	//{
+	//	//mat4 transform{ mat4(1) };
+	//	vec3 origin;
+	//	vec3 direction;
+	//	real radius{ 1.0f };
+	//	real height{ 1.0f };
+	//	RenderGraph* out_graph{ nullptr };
+	//	u8 wireframe{ true };
+	//	real width{ NIGHT_SHAPE_RENDERER_LINE_WIDTH };
+	//	real draw_through_opacity{ NIGHT_SHAPE_RENDERER_DRAW_THROUGH_OPACITY };
+	//	Color color{ NIGHT_CYLINDER_COLOR };
+	//	real resolution{ 1.0f };
+	//};
 
-	using DrawConeParams = DrawCylinderParams;
+	//using DrawConeParams = DrawCylinderParams;
 
-	struct DrawConvexParams
-	{
-		vector<Plane<>> const* planes;
-		mat4 transform{ mat4(1) };
-		RenderGraph* out_graph{ nullptr };
-		u8 wireframe{ true };
-		real width{ NIGHT_SHAPE_RENDERER_LINE_WIDTH };
-		real draw_through_opacity{ NIGHT_SHAPE_RENDERER_DRAW_THROUGH_OPACITY };
-		Color color{ NIGHT_CONVEX_COLOR };
-	};
+	//struct DrawConvexParams
+	//{
+	//	vector<Plane<>> const* planes;
+	//	mat4 transform{ mat4(1) };
+	//	RenderGraph* out_graph{ nullptr };
+	//	u8 wireframe{ true };
+	//	real width{ NIGHT_SHAPE_RENDERER_LINE_WIDTH };
+	//	real draw_through_opacity{ NIGHT_SHAPE_RENDERER_DRAW_THROUGH_OPACITY };
+	//	Color color{ NIGHT_CONVEX_COLOR };
+	//};
 
 	struct DrawCylinderParams2
 	{
@@ -133,20 +133,6 @@ namespace night
 		function<void(DrawLineCallbackParams const&)> on_draw_line;
 		function<void(DrawTriangleCallbackParams const&)> on_draw_triangle;
 	};
-
-	//struct DrawConeParams2
-	//{
-	//	mat4 transform = mat4(1);
-	//	real radius = 1.0f;
-	//	real height = 1.0f;
-	//	Color color = NIGHT_SHAPE_RENDERER_DEFAULT_LINE_COLOR;
-	//	real near_corner_opacity = NIGHT_SHAPE_RENDERER_DEFAULT_NEAR_CORNER_OPACITY;
-	//	real far_corner_opacity = NIGHT_SHAPE_RENDERER_DEFAULT_FAR_CORNER_OPACITY;
-	//	real width = NIGHT_SHAPE_RENDERER_DEFAULT_LINE_WIDTH;
-	//	real resolution{ 1.0f };
-	//	function<void(DrawLineCallbackParams const&)> on_draw_line;
-	//	function<void(DrawTriangleCallbackParams const&)> on_draw_triangle;
-	//};
 
 	using DrawConeParams2 = DrawCylinderParams2;
 
@@ -164,7 +150,7 @@ namespace night
 	};
 	
 	// TODO: support texture coordinates
-	struct NIGHT_API ShapeRenderer
+	struct NIGHT_API ShapeRenderer3D
 	{
 		// TODO: add these functions directly in RenderGraph and IRenderer
 		static void draw_box(RenderTarget render_target, DrawBoxParams const& params);
@@ -175,15 +161,18 @@ namespace night
 
 		static SphereBackfacePlane sphere_backface_plane(vec3 const& origin, real const& radius, vec3 const& point);
 		static SphereBackfacePlane sphere_backface_plane(vec3 const& origin, real const& radius, Camera const& camera);
-		static void draw_sphere(DrawSphereParams const& params);
-
 		static CylinderBackfacePlane cylinder_backface_plane(vec3 const& origin, vec3 const& direction, real const& radius, real const& height, Camera const& camera);
-		static void draw_cylinder(DrawCylinderParams const& params);
-
 		static ConeBackfacePlane cone_backface_plane(vec3 const& origin, vec3 const& direction, real const& radius, real const& height, Camera const& camera);
-		static void draw_cone(DrawConeParams const& params);
-
-		static void draw_convex(DrawConvexParams const& params);
+		
+		//static void draw_sphere(DrawSphereParams const& params);
+		//
+		//
+		//static void draw_cylinder(DrawCylinderParams const& params);
+		//
+		//
+		//static void draw_cone(DrawConeParams const& params);
+		//
+		//static void draw_convex(DrawConvexParams const& params);
 	};
 
 }

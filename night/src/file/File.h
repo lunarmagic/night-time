@@ -416,38 +416,36 @@ namespace night
 		}
 	}
 
-	namespace debug
+#ifdef NIGHT_ENABLE_LOGGING
+	template<> inline string Log::print_format<File>(File& df)
 	{
-		template<> inline string _Log::_print_format<File>(File& df)
+		sstream stream;
+		stream << '\n';
+
+		function<void(const File&, s32)> rec = [&](const File& current_node, s32 indents)
 		{
-			sstream stream;
-			stream << '\n';
-
-			function<void(const File&, s32)> rec = [&](const File& current_node, s32 indents)
+			for (auto i = current_node.branches().begin(); i != current_node.branches().end(); i++)
 			{
-				for (auto i = current_node.branches().begin(); i != current_node.branches().end(); i++)
+				if ((*i).second.is_leaf())
 				{
-					if ((*i).second.is_leaf())
+					for (s32 j = 0; j < indents; j++)
 					{
-						for (s32 j = 0; j < indents; j++)
-						{
-							stream << '\t';
-						}
-						stream << (*i).first << ": " << (*i).second.data();
-						stream << '\n';
+						stream << '\t';
 					}
-					else
-					{
-						stream << (*i).first << ":\n";
-						rec((*i).second, indents + 1);
-					}
+					stream << (*i).first << ": " << (*i).second.data();
+					stream << '\n';
 				}
-			};
+				else
+				{
+					stream << (*i).first << ":\n";
+					rec((*i).second, indents + 1);
+				}
+			}
+		};
 
-			rec(df, 0);
+		rec(df, 0);
 
-			return stream.str();
-		}
+		return stream.str();
 	}
-
+#endif
 }

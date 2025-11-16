@@ -219,7 +219,7 @@ namespace night
 		if (_rendererID != 0)
 		{
 			GLCall(glDeleteProgram(_rendererID));
-			TRACE("destroyed compute shader, id: ", _rendererID);
+			TRACE("destroyed compute shader, id: {0}", _rendererID);
 		}
 
 		_rendererID = 0;
@@ -236,7 +236,7 @@ namespace night
 
 		if (location == -1)
 		{
-			WARNING("Warning: uniform ", name.c_str(), " doesn't exist!");
+			WARNING("Warning: uniform {0} doesn't exist!", name);
 		}
 
 		_uniformLocationCache[name] = location;

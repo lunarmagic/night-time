@@ -458,14 +458,14 @@ namespace night
 		{
 			if (!SDL_ShowCursor())
 			{
-				ERROR("SDL failed to show cursor, SDL_ERROR: ", SDL_GetError());
+				ERROR("SDL failed to show cursor, SDL_ERROR: {0}", SDL_GetError());
 			}
 		}
 		else if(cursor_visibility())
 		{
 			if (!SDL_HideCursor())
 			{
-				ERROR("SDL failed to show cursor, SDL_ERROR: ", SDL_GetError());
+				ERROR("SDL failed to show cursor, SDL_ERROR: {0}", SDL_GetError());
 			}
 		}
 	}
@@ -479,7 +479,7 @@ namespace night
 	{
 		if (!SDL_SetWindowFullscreen(_sdlWindow, (bool)make_fullscreen))
 		{
-			ERROR("SDL failed to set window fullscreen, SDL_ERROR: ", SDL_GetError());
+			ERROR("SDL failed to set window fullscreen, SDL_ERROR: {0}", SDL_GetError());
 		}
 
 		_isFullscreen = make_fullscreen;

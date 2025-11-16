@@ -15,7 +15,7 @@ namespace night
 
 
 
-	SphereBackfacePlane ShapeRenderer::sphere_backface_plane(vec3 const& origin, real const& radius, vec3 const& point)
+	SphereBackfacePlane ShapeRenderer3D::sphere_backface_plane(vec3 const& origin, real const& radius, vec3 const& point)
 	{
 		vec3 const& eye_location = point;
 		vec3 oe = math::normalize(eye_location - origin);
@@ -35,7 +35,7 @@ namespace night
 		return { .origin = ellipse_origin, .normal = oe, .radius = ellipse_radius };
 	}
 
-	SphereBackfacePlane ShapeRenderer::sphere_backface_plane(vec3 const& origin, real const& radius, Camera const& camera)
+	SphereBackfacePlane ShapeRenderer3D::sphere_backface_plane(vec3 const& origin, real const& radius, Camera const& camera)
 	{
 		if (camera.type == ECameraType::Orthographic)
 		{
@@ -45,9 +45,10 @@ namespace night
 		return sphere_backface_plane(origin, radius, camera.translation);
 	}
 
-	void ShapeRenderer::draw_sphere(DrawSphereParams const& params)
+#if 0
+	void ShapeRenderer3D::draw_sphere(DrawSphereParams const& params)
 	{
-		NIGHT_PROFILER_SCOPED("ShapeRenderer::draw_sphere");
+		NIGHT_PROFILER_SCOPED("ShapeRenderer3D::draw_sphere");
 		ASSERT(params.out_graph != nullptr);
 
 		RenderGraph& out_graph = *params.out_graph;
@@ -124,7 +125,7 @@ namespace night
 			vec3 const& eye_location = camera.translation;
 			vec3 const& origin = params.origin;
 
-			auto [ellipse_origin, ellipse_normal, ellipse_radius] = ShapeRenderer::sphere_backface_plane(origin, params.radius, camera);
+			auto [ellipse_origin, ellipse_normal, ellipse_radius] = ShapeRenderer3D::sphere_backface_plane(origin, params.radius, camera);
 
 			mat4 forward_to_ellipse_normal = math::rotate_about_vector(FORWARD, ellipse_normal);
 
@@ -154,10 +155,10 @@ namespace night
 			}
 		}
 	}
+#endif
+#define BACKFACE_PLANE_EPSILON NIGHT_EPSILON_MEDIUM
 
-#define BACKFACE_PLANE_EPSILON 0.00001
-
-#ifdef false
+#if 0
 	Tube::BackfacePlane Tube::backface_plane(vec3 const& origin, vec3 direction, vec2 radii, real height, Camera const& camera)
 	{
 		vec3 cap_a_origin = origin + direction * height;
@@ -307,70 +308,8 @@ namespace night
 	}
 #endif
 
-	CylinderBackfacePlane ShapeRenderer::cylinder_backface_plane(vec3 const& origin, vec3 const& direction, real const& radius, real const& height, Camera const& camera)
-	{
-		CylinderBackfacePlane result;
-		vec3 cap_a_origin = origin + direction * height;
-		vec3 cap_b_origin = origin - direction * height;
-		vec3 cap_a_normal = direction;
-		vec3 cap_b_normal = -direction;
-
-		if (camera.type == ECameraType::Orthographic)
-		{
-			vec3 undesired_angle = direction * math::dot(-camera.direction(), direction);
-			vec3 desired_angle = math::normalize(-camera.direction() - undesired_angle);
-			vec3 normal_perp = math::normalize(math::cross(desired_angle, direction));
-
-			result.edge_1_a = cap_a_origin + normal_perp * radius;
-			result.edge_1_b = cap_b_origin + normal_perp * radius;
-			result.edge_2_a = cap_a_origin - normal_perp * radius;
-			result.edge_2_b = cap_b_origin - normal_perp * radius;
-			result.normal = desired_angle;
-
-			return result;
-		}
-		else if (camera.type == ECameraType::Perspective)
-		{
-			//ASSERT(false); // TODO: implement
-#ifdef false
-			// TODO: fix this case
-			{
-				auto backface = Sphere::backface_plane(cap_a_origin, cap_a_radius, camera);
-				auto pi = Intersection::infinite_planes(cap_a_origin, direction, backface.origin, backface.normal);
-				auto rc = raycast::sphere(pi.origin, pi.direction, cap_a_origin, cap_a_radius);
-
-				if (!rc.result)
-				{
-					return { .normal = vec3(0) };
-				}
-
-				result.edge_1_a = pi.origin + pi.direction * rc.t0; // for some reason we need to subtract here.
-				result.edge_2_a = pi.origin + pi.direction * rc.t1;
-			}
-
-			{
-				auto backface = Sphere::backface_plane(cap_b_origin, cap_b_radius, camera);
-				auto pi = Intersection::infinite_planes(cap_b_origin, direction, backface.origin, backface.normal);
-				auto rc = raycast::sphere(pi.origin, pi.direction, cap_b_origin, cap_b_radius);
-
-				if (!rc.result)
-				{
-					return { .normal = vec3(0) };
-				}
-
-				result.edge_1_b = pi.origin + pi.direction * rc.t0;
-				result.edge_2_b = pi.origin + pi.direction * rc.t1;
-			}
-			result.normal = -math::cross(result.edge_1_b - result.edge_1_a, result.edge_2_a - result.edge_1_a); // TODO: make sure this faces the camera
-
-			return result;
-#endif
-		}
-
-		return {};
-	}
-
-	ConeBackfacePlane ShapeRenderer::cone_backface_plane(vec3 const& origin, vec3 const& direction, real const& radius, real const& height, Camera const& camera)
+#if 0
+	ConeBackfacePlane ShapeRenderer3D::cone_backface_plane(vec3 const& origin, vec3 const& direction, real const& radius, real const& height, Camera const& camera)
 	{
 		ConeBackfacePlane result;
 
@@ -405,7 +344,7 @@ namespace night
 				auto rc = Raycast3D<>::plane(tip_origin, camera_direction, base_origin, direction);
 
 				vec3 contact = rc.contact(tip_origin, camera_direction);
-				auto sbf = ShapeRenderer::sphere_backface_plane(base_origin, radius, contact);
+				auto sbf = ShapeRenderer3D::sphere_backface_plane(base_origin, radius, contact);
 
 				if (sbf.radius == 0 || std::isnan(sbf.radius))
 				{
@@ -475,7 +414,7 @@ namespace night
 
 	static void _draw_tube(DrawCylinderParams const& params, CylinderBackfacePlane const& backface_plane, u8 is_cone)
 	{
-		NIGHT_PROFILER_SCOPED("ShapeRenderer::_draw_tube");
+		NIGHT_PROFILER_SCOPED("ShapeRenderer3D::_draw_tube");
 		ASSERT(params.out_graph != nullptr);
 		RenderGraph& out_graph = *params.out_graph;
 		handle<const ITexture> const& crt = out_graph.current_render_target();
@@ -812,29 +751,30 @@ namespace night
 		}
 	}
 
-	void ShapeRenderer::draw_cylinder(DrawCylinderParams const& params)
+	void ShapeRenderer3D::draw_cylinder(DrawCylinderParams const& params)
 	{
 		ASSERT(params.out_graph != nullptr);
 		handle<const ITexture> const& crt = params.out_graph->current_render_target();
 		ASSERT(crt != nullptr);
 		Camera const& camera = crt->camera();
 
-		auto backface_plane = ShapeRenderer::cylinder_backface_plane(params.origin, params.direction, params.radius, params.height, camera);
+		auto backface_plane = ShapeRenderer3D::cylinder_backface_plane(params.origin, params.direction, params.radius, params.height, camera);
 		_draw_tube(params, backface_plane, false);
 	}
 
-	void ShapeRenderer::draw_cone(DrawConeParams const& params)
+	void ShapeRenderer3D::draw_cone(DrawConeParams const& params)
 	{
 		ASSERT(params.out_graph != nullptr);
 		handle<const ITexture> const& crt = params.out_graph->current_render_target();
 		ASSERT(crt != nullptr);
 		Camera const& camera = crt->camera();
 
-		auto backface_plane = ShapeRenderer::cone_backface_plane(params.origin, params.direction, params.radius, params.height, camera);
+		auto backface_plane = ShapeRenderer3D::cone_backface_plane(params.origin, params.direction, params.radius, params.height, camera);
 		_draw_tube(params, backface_plane, true);
 	}
+#endif
 
-	void ShapeRenderer::draw_box(RenderTarget render_target, DrawBoxParams const& params)
+	void ShapeRenderer3D::draw_box(RenderTarget render_target, DrawBoxParams const& params)
 	{
 		ASSERT(render_target != nullptr);
 		DecomposedTransform<> decomp = math::decompose(params.transform);
@@ -957,7 +897,7 @@ namespace night
 		};
 	}
 
-	void ShapeRenderer::draw_pyramid(RenderTarget render_target, DrawPyramidParams const& params)
+	void ShapeRenderer3D::draw_pyramid(RenderTarget render_target, DrawPyramidParams const& params)
 	{
 		ASSERT(render_target != nullptr);
 		DecomposedTransform<> decomp = math::decompose(params.transform);
@@ -1131,7 +1071,7 @@ namespace night
 				auto rc = Raycast3D<>::plane(tip_origin, camera_direction, base_origin, -direction);
 
 				vec3 contact = rc.contact(tip_origin, camera_direction);
-				auto sbf = ShapeRenderer::sphere_backface_plane(base_origin, radius, contact);
+				auto sbf = ShapeRenderer3D::sphere_backface_plane(base_origin, radius, contact);
 
 				if (sbf.radius == 0 || std::isnan(sbf.radius))
 				{
@@ -1181,7 +1121,7 @@ namespace night
 		ftd = math::rotate_about_vector(FORWARD, direction);
 
 		real d = math::dot(camera_direction, direction);
-		u8 x = abs(d) < 1.0f - NIGHT_MATH_EPSILON;
+		u8 x = abs(d) < 1.0f - NIGHT_EPSILON_MEDIUM;
 
 		if (dcp.on_draw_triangle != nullptr)
 		{
@@ -1507,7 +1447,70 @@ namespace night
 		//}
 	}
 
-	void ShapeRenderer::draw_cylinder2(RenderTarget render_target, DrawCylinderParams2 const& dcp)
+	CylinderBackfacePlane ShapeRenderer3D::cylinder_backface_plane(vec3 const& origin, vec3 const& direction, real const& radius, real const& height, Camera const& camera)
+	{
+		CylinderBackfacePlane result;
+		vec3 cap_a_origin = origin + direction * height;
+		vec3 cap_b_origin = origin - direction * height;
+		vec3 cap_a_normal = direction;
+		vec3 cap_b_normal = -direction;
+
+		if (camera.type == ECameraType::Orthographic)
+		{
+			vec3 undesired_angle = direction * math::dot(-camera.direction(), direction);
+			vec3 desired_angle = math::normalize(-camera.direction() - undesired_angle);
+			vec3 normal_perp = math::normalize(math::cross(desired_angle, direction));
+
+			result.edge_1_a = cap_a_origin + normal_perp * radius;
+			result.edge_1_b = cap_b_origin + normal_perp * radius;
+			result.edge_2_a = cap_a_origin - normal_perp * radius;
+			result.edge_2_b = cap_b_origin - normal_perp * radius;
+			result.normal = desired_angle;
+
+			return result;
+		}
+		else if (camera.type == ECameraType::Perspective)
+		{
+			//ASSERT(false); // TODO: implement
+#ifdef false
+			// TODO: fix this case
+			{
+				auto backface = Sphere::backface_plane(cap_a_origin, cap_a_radius, camera);
+				auto pi = Intersection::infinite_planes(cap_a_origin, direction, backface.origin, backface.normal);
+				auto rc = raycast::sphere(pi.origin, pi.direction, cap_a_origin, cap_a_radius);
+
+				if (!rc.result)
+				{
+					return { .normal = vec3(0) };
+				}
+
+				result.edge_1_a = pi.origin + pi.direction * rc.t0; // for some reason we need to subtract here.
+				result.edge_2_a = pi.origin + pi.direction * rc.t1;
+			}
+
+			{
+				auto backface = Sphere::backface_plane(cap_b_origin, cap_b_radius, camera);
+				auto pi = Intersection::infinite_planes(cap_b_origin, direction, backface.origin, backface.normal);
+				auto rc = raycast::sphere(pi.origin, pi.direction, cap_b_origin, cap_b_radius);
+
+				if (!rc.result)
+				{
+					return { .normal = vec3(0) };
+				}
+
+				result.edge_1_b = pi.origin + pi.direction * rc.t0;
+				result.edge_2_b = pi.origin + pi.direction * rc.t1;
+			}
+			result.normal = -math::cross(result.edge_1_b - result.edge_1_a, result.edge_2_a - result.edge_1_a); // TODO: make sure this faces the camera
+
+			return result;
+#endif
+		}
+
+		return {};
+	}
+
+	void ShapeRenderer3D::draw_cylinder2(RenderTarget render_target, DrawCylinderParams2 const& dcp)
 	{
 		ASSERT(render_target != nullptr);
 		Camera const& camera = render_target->camera();
@@ -1519,7 +1522,7 @@ namespace night
 		_draw_tube2(render_target, origin, direction, dcp, backface_plane, false);
 	}
 
-	void ShapeRenderer::draw_cone2(RenderTarget render_target, DrawConeParams2 const& dcp)
+	void ShapeRenderer3D::draw_cone2(RenderTarget render_target, DrawConeParams2 const& dcp)
 	{
 		ASSERT(render_target != nullptr);
 		Camera const& camera = render_target->camera();
@@ -1531,7 +1534,7 @@ namespace night
 		_draw_tube2(render_target, origin, direction, dcp, backface_plane, true);
 	}
 
-	void ShapeRenderer::draw_sphere2(RenderTarget render_target, DrawSphereParams2 const& params)
+	void ShapeRenderer3D::draw_sphere2(RenderTarget render_target, DrawSphereParams2 const& params)
 	{
 		ASSERT(render_target != nullptr);
 		Camera const& camera = render_target->camera();
@@ -1597,7 +1600,7 @@ namespace night
 					tri_1.vertices[2].point.y = tri_1.vertices[2].point.y * params.radius + origin.y;
 					tri_1.vertices[2].point.z = tri_1.vertices[2].point.z * params.radius + origin.z;
 
-					if (len_1 > NIGHT_MATH_EPSILON && !camera.should_cull_plane(vec3(tri_1.vertices[0].point), normal_1))
+					if (len_1 > NIGHT_EPSILON_MEDIUM && !camera.should_cull_plane(vec3(tri_1.vertices[0].point), normal_1))
 					{
 						params.on_draw_triangle({ .triangle = tri_1, .normal = normal_1 });
 					}
@@ -1623,7 +1626,7 @@ namespace night
 					tri_2.vertices[2].point.y = tri_2.vertices[2].point.y * params.radius + origin.y;
 					tri_2.vertices[2].point.z = tri_2.vertices[2].point.z * params.radius + origin.z;
 
-					if (len_2 > NIGHT_MATH_EPSILON && !camera.should_cull_plane(vec3(tri_2.vertices[0].point), normal_2))
+					if (len_2 > NIGHT_EPSILON_MEDIUM && !camera.should_cull_plane(vec3(tri_2.vertices[0].point), normal_2))
 					{
 						params.on_draw_triangle({ .triangle = tri_2, .normal = normal_2 });
 					}
@@ -1669,7 +1672,7 @@ namespace night
 		{
 			vec3 const& eye_location = camera.translation;
 
-			auto [ellipse_origin, ellipse_normal, ellipse_radius] = ShapeRenderer::sphere_backface_plane(origin, params.radius, camera);
+			auto [ellipse_origin, ellipse_normal, ellipse_radius] = ShapeRenderer3D::sphere_backface_plane(origin, params.radius, camera);
 
 			mat4 forward_to_ellipse_normal = math::rotate_about_vector(FORWARD, ellipse_normal);
 
@@ -1677,10 +1680,12 @@ namespace night
 			dlp.color = params.color;
 			dlp.width = params.width;
 
-			for (s32 i = 0; i < segments; i++)
+			s32 line_segments = segments * 2;
+
+			for (s32 i = 0; i < line_segments; i++)
 			{
-				real t1 = (real)i / (real)(segments - 1) * R_PI * 2;
-				real t2 = (real)(i + 1) / (real)(segments - 1) * R_PI * 2;
+				real t1 = (real)i / (real)(line_segments - 1) * R_PI * 2;
+				real t2 = (real)(i + 1) / (real)(line_segments - 1) * R_PI * 2;
 
 				dlp.p1.x = cos(t1);
 				dlp.p1.y = sin(t1);
@@ -1702,9 +1707,10 @@ namespace night
 		}
 	}
 
-	void ShapeRenderer::draw_convex(DrawConvexParams const& params)
+#if 0
+	void ShapeRenderer3D::draw_convex(DrawConvexParams const& params)
 	{
-		NIGHT_PROFILER_SCOPED("ShapeRenderer::draw_convex");
+		NIGHT_PROFILER_SCOPED("ShapeRenderer3D::draw_convex");
 		ASSERT(params.planes != nullptr);
 		vector<Plane<>> planes = *params.planes;
 
@@ -1797,5 +1803,6 @@ namespace night
 			}
 		}
 	}
+#endif
 
 }

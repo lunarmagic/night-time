@@ -2,9 +2,9 @@
 
 #include "core.h"
 #include "Vertex.h"
-#include "math/math.h"
+#include "math/Math.h"
 #include "aabb/aabb.h"
-#include "raycast/raycast.h"
+#include "raycast/Raycast.h"
 
 namespace night
 {

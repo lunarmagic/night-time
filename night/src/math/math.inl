@@ -5,6 +5,12 @@ namespace night
 {
 
 	template<typename T>
+	inline T Math<T>::cross(vec<2, T> const& a, vec<2, T> const& b)
+	{
+		return a.x * b.y - b.x * a.y;
+	}
+
+	template<typename T>
 	inline T Math<T>::lerp(T a, T b, T t)
 	{
 		return a + (b - a) * t;
@@ -299,7 +305,7 @@ namespace night
 		const vec<3, T> p3_normal = cross(normal_a, normal_b);
 		const float det = length(p3_normal) * length(p3_normal);
 
-		if (abs(det) > NIGHT_MATH_EPSILON)
+		if (abs(det) > NIGHT_EPSILON_MEDIUM)
 		{
 			T p1_d = distance_to_plane(vec<3, T>(0), origin_a, normal_a);
 			T p2_d = distance_to_plane(vec<3, T>(0), origin_b, normal_b);
@@ -602,7 +608,7 @@ namespace night
 		const vec3 p3_normal = math::cross(normal_a, normal_b);
 		const float det = math::length(p3_normal) * math::length(p3_normal);
 
-		if (abs(det) > NIGHT_MATH_EPSILON)
+		if (abs(det) > NIGHT_EPSILON_MEDIUM)
 		{
 			real p1_d = distance_to_plane(vec3(0), origin_a, normal_a);
 			real p2_d = distance_to_plane(vec3(0), origin_b, normal_b);

@@ -1,7 +1,7 @@
 
 #include "nightpch.h"
 #include "AABB.h"
-#include "math/math.h"
+#include "math/Math.h"
 #include "stl/stl.h"
 #include "geometry/Quad.h"
 

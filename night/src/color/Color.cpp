@@ -1,7 +1,7 @@
 
 #include "nightpch.h"
 #include "Color.h"
-#include "math/math.h"
+#include "math/Math.h"
 #include "random/random.h"
 
 namespace night

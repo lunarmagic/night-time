@@ -28,7 +28,6 @@ namespace night
 			vec3 position = ORIGIN;
 			vec3 rotation = ORIGIN;
 			mat4 transform = mat4(1);
-			//array<vec3, 9> points; // index 0-7 is box vertices, 4-9 is pyramid 
 			real radius = 0.75f;
 			real height = 1.333f;
 			vec3 rotation_origin = ORIGIN;
@@ -74,6 +73,28 @@ namespace night
 		}
 
 	protected:
+
+		template<EShape A, vec3 AD, EShape B, vec3 BD>
+		void edge_case()
+		{
+			reset_shapes();
+			_shape1.type = A;
+			_shape1.rotation_origin = AD;
+
+			_shape2.type = B;
+			_shape2.rotation_origin = BD;
+		}
+
+		void edge_case_triangle_epsilon()
+		{
+			reset_shapes();
+			_shape1.type = EShape::Point;
+
+			_shape2.type = EShape::Triangle;
+			_shape2.rotation.x = -1.059f;
+			_shape2.rotation.y = -0.002f;
+			_shape2.rotation.z = 0.000f;
+		}
 
 		virtual void update_gui(handle<NodeGui> gui) override
 		{
@@ -124,213 +145,66 @@ namespace night
 
 			gui->seperator();
 
-#pragma region EDGE_CASES
 			gui->text("edge cases:");
 			if (gui->button("reset"))
 			{
 				reset_shapes();
 			}
-			else if (gui->button("triangles orthogonal 1"))
-			{
-				reset_shapes();
-				_shape1.type = EShape::Triangle;
-				_shape1.rotation_origin = FORWARD;
 
-				_shape2.type = EShape::Triangle;
-				_shape2.rotation_origin = RIGHT;
+			// readability:
+			using es = EShape;
+			using es3d = ExampleShapecast3D;
+			typedef void (ExampleShapecast3D:: * FN)();
+
+			FN fns[] = {
+				& es3d::edge_case_triangle_epsilon,
+				& es3d::edge_case<es::Cylinder, RIGHT, es::Cylinder, RIGHT>,
+				& es3d::edge_case<es::Cylinder, UP, es::Cylinder, UP>,
+				& es3d::edge_case<es::Cylinder, UP, es::Cylinder, FORWARD>,
+				& es3d::edge_case<es::Cylinder, RIGHT, es::Cylinder, FORWARD>,
+				& es3d::edge_case<es::Cylinder, RIGHT, es::Cone, RIGHT>,
+				& es3d::edge_case<es::Cylinder, UP, es::Cone, UP>,
+				& es3d::edge_case<es::Cylinder, UP, es::Cone, FORWARD>,
+				& es3d::edge_case<es::Cylinder, FORWARD, es::Cone, RIGHT>,
+				& es3d::edge_case<es::Cone, UP, es::Cone, UP>,
+				& es3d::edge_case<es::Cone, LEFT, es::Cone, RIGHT>,
+				& es3d::edge_case<es::Cone, LEFT, es::Cone, LEFT>,
+				& es3d::edge_case<es::Cone, UP, es::Cone, LEFT>,
+				& es3d::edge_case<es::Cone, UP, es::Cone, DOWN>,
+				& es3d::edge_case<es::Cone, FORWARD, es::Cone, RIGHT>,
+				& es3d::edge_case<es::Cylinder, UP, es::Sphere, ORIGIN>,
+				& es3d::edge_case<es::Cylinder, RIGHT, es::Sphere, ORIGIN>,
+				& es3d::edge_case<es::Cone, UP, es::Sphere, ORIGIN>,
+				& es3d::edge_case<es::Cone, RIGHT, es::Sphere, ORIGIN>,
+				& es3d::edge_case<es::Cone, DOWN, es::Sphere, ORIGIN>,
+				& es3d::edge_case<es::Cylinder, UP, es::Triangle, FORWARD>,
+				& es3d::edge_case<es::Cylinder, RIGHT, es::Triangle, FORWARD>,
+				& es3d::edge_case<es::Cone, UP, es::Triangle, FORWARD>,
+				& es3d::edge_case<es::Cone, RIGHT, es::Triangle, FORWARD>,
+				& es3d::edge_case<es::Cone, FORWARD, es::Triangle, FORWARD>,
+				& es3d::edge_case<es::Cylinder, UP, es::Point, FORWARD>,
+				& es3d::edge_case<es::Cylinder, RIGHT, es::Point, FORWARD>,
+				& es3d::edge_case<es::Cone, UP, es::Point, FORWARD>,
+				& es3d::edge_case<es::Cone, RIGHT, es::Point, FORWARD>,
+				& es3d::edge_case<es::Cone, FORWARD, es::Point, FORWARD>,
+				& es3d::edge_case<es::Triangle, FORWARD, es::Triangle, RIGHT>,
+				& es3d::edge_case<es::Triangle, FORWARD, es::Triangle, UP>,
+				& es3d::edge_case<es::Triangle, UP, es::Triangle, UP>,
+				& es3d::edge_case<es::Triangle, FORWARD, es::Triangle, FORWARD>, // should fail
+				& es3d::edge_case<es::Triangle, RIGHT, es::Triangle, RIGHT>, // should fail
+			};
+
+			s32 prev = edge_case_index;
+			gui->drag_s32("edge case", &edge_case_index, 0.1f, -1, sizeof(fns) / sizeof(*fns) - 1);
+
+			if (edge_case_index > -1)
+			{
+				(this->*fns[edge_case_index])();
 			}
-			else if (gui->button("triangles orthogonal 2"))
+			else if (prev != -1)
 			{
 				reset_shapes();
-				_shape1.type = EShape::Triangle;
-				_shape1.rotation_origin = FORWARD;
-
-				_shape2.type = EShape::Triangle;
-				_shape2.rotation_origin = UP;
 			}
-			else if (gui->button("point-triangle epsilon"))
-			{
-				reset_shapes();
-				_shape1.type = EShape::Point;
-
-				_shape2.type = EShape::Triangle;
-				_shape2.rotation.x = 1.509f;
-				_shape2.rotation.y = 1.285f;
-				_shape2.rotation.z = 0.0f;
-			}
-			else if (gui->button("cylinders parallel"))
-			{
-				reset_shapes();
-				_shape1.type = EShape::Cylinder;
-				_shape1.rotation_origin = RIGHT;
-
-				_shape2.type = EShape::Cylinder;
-				_shape2.rotation_origin = RIGHT;
-			}
-			else if (gui->button("cylinders adjacent"))
-			{
-				reset_shapes();
-				_shape1.type = EShape::Cylinder;
-				_shape1.rotation_origin = UP;
-
-				_shape2.type = EShape::Cylinder;
-				_shape2.rotation_origin = UP;
-			}
-			else if (gui->button("cylinders orthogonal"))
-			{
-				reset_shapes();
-				_shape1.type = EShape::Cylinder;
-				_shape1.rotation_origin = UP;
-
-				_shape2.type = EShape::Cylinder;
-				_shape2.rotation_origin = FORWARD;
-			}
-			else if (gui->button("cone-cylinder parallel"))
-			{
-				reset_shapes();
-				_shape1.type = EShape::Cone;
-				_shape1.rotation_origin = LEFT;
-
-				_shape2.type = EShape::Cylinder;
-				_shape2.rotation_origin = RIGHT;
-			}
-			else if (gui->button("cone-cylinder adjacent"))
-			{
-				reset_shapes();
-				_shape1.type = EShape::Cone;
-				_shape1.rotation_origin = UP;
-
-				_shape2.type = EShape::Cylinder;
-				_shape2.rotation_origin = UP;
-			}
-			else if (gui->button("cone-cylinder orthogonal"))
-			{
-				reset_shapes();
-				_shape1.type = EShape::Cone;
-				_shape1.rotation_origin = UP;
-
-				_shape2.type = EShape::Cylinder;
-				_shape2.rotation_origin = FORWARD;
-			}
-			else if (gui->button("cones parallel"))
-			{
-				reset_shapes();
-				_shape1.type = EShape::Cone;
-				_shape1.rotation_origin = RIGHT;
-
-				_shape2.type = EShape::Cone;
-				_shape2.rotation_origin = RIGHT;
-			}
-			else if (gui->button("cones base-base"))
-			{
-				reset_shapes();
-				_shape1.type = EShape::Cone;
-				_shape1.rotation_origin = RIGHT;
-
-				_shape2.type = EShape::Cone;
-				_shape2.rotation_origin = LEFT;
-			}
-			else if (gui->button("cones tip-tip"))
-			{
-				reset_shapes();
-				_shape1.type = EShape::Cone;
-				_shape1.rotation_origin = LEFT;
-
-				_shape2.type = EShape::Cone;
-				_shape2.rotation_origin = RIGHT;
-			}
-			else if (gui->button("cones adjacent"))
-			{
-				reset_shapes();
-				_shape1.type = EShape::Cone;
-				_shape1.rotation_origin = UP;
-
-				_shape2.type = EShape::Cone;
-				_shape2.rotation_origin = UP;
-			}
-			else if (gui->button("cones opposite"))
-			{
-				reset_shapes();
-				_shape1.type = EShape::Cone;
-				_shape1.rotation_origin = UP;
-
-				_shape2.type = EShape::Cone;
-				_shape2.rotation_origin = DOWN;
-			}
-			else if (gui->button("cones orthogonal"))
-			{
-				reset_shapes();
-				_shape1.type = EShape::Cone;
-				_shape1.rotation_origin = UP;
-
-				_shape2.type = EShape::Cone;
-				_shape2.rotation_origin = FORWARD;
-			}
-			else if (gui->button("cylinder-sphere parallel"))
-			{
-				reset_shapes();
-				_shape1.type = EShape::Cylinder;
-				_shape1.rotation_origin = LEFT;
-
-				_shape2.type = EShape::Sphere;
-				_shape2.rotation_origin = FORWARD;
-				}
-			else if (gui->button("cylinder-sphere adjacent"))
-			{
-				reset_shapes();
-				_shape1.type = EShape::Cylinder;
-				_shape1.rotation_origin = UP;
-
-				_shape2.type = EShape::Sphere;
-				_shape2.rotation_origin = FORWARD;
-				}
-			else if (gui->button("cone-sphere parallel"))
-			{
-				reset_shapes();
-				_shape1.type = EShape::Cone;
-				_shape1.rotation_origin = LEFT;
-
-				_shape2.type = EShape::Sphere;
-				_shape2.rotation_origin = FORWARD;
-			}
-			else if (gui->button("cone-sphere adjacent"))
-			{
-				reset_shapes();
-				_shape1.type = EShape::Cone;
-				_shape1.rotation_origin = UP;
-
-				_shape2.type = EShape::Sphere;
-				_shape2.rotation_origin = FORWARD;
-			}
-			else if (gui->button("sphere-sphere parallel"))
-			{
-				reset_shapes();
-				_shape1.type = EShape::Sphere;
-				_shape1.rotation_origin = FORWARD;
-
-				_shape2.type = EShape::Sphere;
-				_shape2.rotation_origin = FORWARD;
-			}
-			else if (gui->button("triangles parallel (should fail)"))
-			{
-				reset_shapes();
-				_shape1.type = EShape::Triangle;
-				_shape1.rotation_origin = FORWARD;
-
-				_shape2.type = EShape::Triangle;
-				_shape2.rotation_origin = FORWARD;
-			}
-			else if (gui->button("point triangle parallel (should fail)"))
-			{
-				reset_shapes();
-				_shape1.type = EShape::Point;
-				_shape1.rotation_origin = FORWARD;
-
-				_shape2.type = EShape::Triangle;
-				_shape2.rotation_origin = FORWARD;
-			}
-
-#pragma endregion
 
 			real delta = utility::window().delta_time();
 
@@ -440,7 +314,7 @@ namespace night
 				{
 					return [=](vec3 const& dir) -> vec3
 						{
-							return GJK3D<>::support_sphere(dir, dt.translation, shape.radius);
+							return GJK3D<>::support_sphere(dir, transform, shape.radius);
 						};
 					break;
 				}
@@ -483,39 +357,48 @@ namespace night
 
 		virtual void on_render(RenderGraph& out_graph) const override
 		{
-			function<void(DrawLineCallbackParams const&)> on_draw_line = nullptr;
-			//auto on_draw_line = [&](DrawLineCallbackParams const& params)
-			//	{
-			//		DrawLineParams dlp = params.params;
-			//		dlp.color.r = 0;
-			//		dlp.color.g = 0;
-			//		dlp.color.b = 0;
-			//		out_graph.draw_line(dlp);
-			//	};
-
-			//function<void(DrawTriangleCallbackParams const&)> on_draw_triangle = nullptr;
-			auto on_draw_triangle = [&](DrawTriangleCallbackParams const& params)
-				{
-					Triangle triangle = params.triangle;
+			function<void(DrawLineCallbackParams const&)> on_draw_line;
+			function<void(DrawTriangleCallbackParams const&)> on_draw_triangle;
 			
-					// TODO: get normal from params
-					real d = math::dot(params.normal, RIGHT);
+			if (!_showOutline)
+			{
+				on_draw_line = nullptr;
+			}
+			else
+			{
+				on_draw_line = [&](DrawLineCallbackParams const& params)
+					{
+						DrawLineParams dlp = params.params;
+						dlp.color.r = 0;
+						dlp.color.g = 0;
+						dlp.color.b = 0;
+						out_graph.draw_line(dlp);
+					};
+			}
 
-					//vec3 n = math::normalize(math::cross(
-					//	params.triangle.vertices[1].point - params.triangle.vertices[0].point,
-					//	params.triangle.vertices[2].point - params.triangle.vertices[1].point
-					//));
-					//real d = dot(RIGHT, n);
+			if (!_showTriangleFill)
+			{
+				on_draw_triangle = nullptr;
+			}
+			else
+			{
+				on_draw_triangle = [&](DrawTriangleCallbackParams const& params)
+					{
+						Triangle triangle = params.triangle;
 
-					d += 1;
-					d /= 2;
-			
-					triangle.vertices[0].color = triangle.vertices[0].color.darken(math::lerp(0.2f, 1.0f, d));
-					triangle.vertices[1].color = triangle.vertices[1].color.darken(math::lerp(0.2f, 1.0f, d));
-					triangle.vertices[2].color = triangle.vertices[2].color.darken(math::lerp(0.2f, 1.0f, d));
-					
-					out_graph.draw_triangle(triangle);
-				};
+						real d = math::dot(params.normal, RIGHT);
+
+						d += 1;
+						d /= 2;
+
+						triangle.vertices[0].color = triangle.vertices[0].color.darken(math::lerp(0.2f, 1.0f, d));
+						triangle.vertices[1].color = triangle.vertices[1].color.darken(math::lerp(0.2f, 1.0f, d));
+						triangle.vertices[2].color = triangle.vertices[2].color.darken(math::lerp(0.2f, 1.0f, d));
+
+						out_graph.draw_triangle(triangle);
+					};
+			}
+
 
 			auto draw_shape = [&](Shape const& shape, vec3 const& offset, Color const& color)
 				{
@@ -550,6 +433,7 @@ namespace night
 						out_graph.draw_line(transform * vec4(_triangleVertices[0], 1), transform * vec4(_triangleVertices[1], 1), color);
 						out_graph.draw_line(transform * vec4(_triangleVertices[1], 1), transform * vec4(_triangleVertices[2], 1), color);
 						out_graph.draw_line(transform * vec4(_triangleVertices[2], 1), transform * vec4(_triangleVertices[0], 1), color);
+
 						break;
 					}
 
@@ -560,7 +444,7 @@ namespace night
 						dbp.color = color;
 						dbp.on_draw_line = on_draw_line;
 						dbp.on_draw_triangle = on_draw_triangle;
-						ShapeRenderer::draw_box(out_graph.current_render_target(), dbp);
+						ShapeRenderer3D::draw_box(out_graph.current_render_target(), dbp);
 
 						break;
 					}
@@ -572,7 +456,7 @@ namespace night
 						dpp.color = color;
 						dpp.on_draw_line = on_draw_line;
 						dpp.on_draw_triangle = on_draw_triangle;
-						ShapeRenderer::draw_pyramid(out_graph.current_render_target(), dpp);
+						ShapeRenderer3D::draw_pyramid(out_graph.current_render_target(), dpp);
 
 						break;
 					}
@@ -585,7 +469,7 @@ namespace night
 						dsp.color = color;
 						dsp.on_draw_line = on_draw_line;
 						dsp.on_draw_triangle = on_draw_triangle;
-						ShapeRenderer::draw_sphere2(out_graph.current_render_target(), dsp);
+						ShapeRenderer3D::draw_sphere2(out_graph.current_render_target(), dsp);
 						break;
 					}
 
@@ -598,7 +482,7 @@ namespace night
 						dcp.color = color;
 						dcp.on_draw_line = on_draw_line;
 						dcp.on_draw_triangle = on_draw_triangle;
-						ShapeRenderer::draw_cylinder2(out_graph.current_render_target(), dcp);
+						ShapeRenderer3D::draw_cylinder2(out_graph.current_render_target(), dcp);
 						break;
 					}
 
@@ -611,7 +495,7 @@ namespace night
 						dcp.color = color;
 						dcp.on_draw_line = on_draw_line;
 						dcp.on_draw_triangle = on_draw_triangle;
-						ShapeRenderer::draw_cone2(out_graph.current_render_target(), dcp);
+						ShapeRenderer3D::draw_cone2(out_graph.current_render_target(), dcp);
 						break;
 					}
 					}
@@ -647,6 +531,9 @@ namespace night
 		array<vec3, 3> _triangleVertices;
 		array<vec3, 8> _boxVertices;
 		array<vec3, 5> _pyramidVertices;
+		u8 _showOutline = true;
+		u8 _showTriangleFill = true;
+		s32 edge_case_index = -1;
 	};
 
 }

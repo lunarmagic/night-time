@@ -2,8 +2,8 @@
 
 #include "core.h"
 //#include "Surface.h"
-#include "math/math.h"
-//#include "raycast/raycast.h"
+#include "math/Math.h"
+//#include "raycast/Raycast.h"
 #include "camera/Camera.h"
 #include "log/log.h"
 #include "ref/ref.h"

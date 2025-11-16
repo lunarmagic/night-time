@@ -2,9 +2,9 @@
 #include "nightpch.h"
 #include "overlap.h"
 #if 0
-//#include "math/math.h"
+//#include "math/Math.h"
 //#include "debug_renderer/DebugRenderer.h"
-#include "raycast/raycast.h"
+#include "raycast/Raycast.h"
 
 
 namespace night

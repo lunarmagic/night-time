@@ -1,7 +1,7 @@
 
 #include "nightpch.h"
 #include "Curve.h"
-#include "math/math.h"
+#include "math/Math.h"
 
 namespace night
 {

@@ -212,7 +212,7 @@ namespace night
 				dbp.color = color;
 				dbp.on_draw_line = on_draw_line;
 				dbp.on_draw_triangle = on_draw_triangle;
-				ShapeRenderer::draw_box(out_graph.current_render_target(), dbp);
+				ShapeRenderer3D::draw_box(out_graph.current_render_target(), dbp);
 
 				break;
 			}
@@ -224,7 +224,7 @@ namespace night
 				dpp.color = color;
 				dpp.on_draw_line = on_draw_line;
 				dpp.on_draw_triangle = on_draw_triangle;
-				ShapeRenderer::draw_pyramid(out_graph.current_render_target(), dpp);
+				ShapeRenderer3D::draw_pyramid(out_graph.current_render_target(), dpp);
 
 				break;
 			}
@@ -237,7 +237,7 @@ namespace night
 				dsp.color = color;
 				dsp.on_draw_line = on_draw_line;
 				dsp.on_draw_triangle = on_draw_triangle;
-				ShapeRenderer::draw_sphere2(out_graph.current_render_target(), dsp);
+				ShapeRenderer3D::draw_sphere2(out_graph.current_render_target(), dsp);
 				break;
 			}
 
@@ -250,7 +250,7 @@ namespace night
 				dcp.color = color;
 				dcp.on_draw_line = on_draw_line;
 				dcp.on_draw_triangle = on_draw_triangle;
-				ShapeRenderer::draw_cylinder2(out_graph.current_render_target(), dcp);
+				ShapeRenderer3D::draw_cylinder2(out_graph.current_render_target(), dcp);
 				break;
 			}
 
@@ -263,7 +263,7 @@ namespace night
 				dcp.color = color;
 				dcp.on_draw_line = on_draw_line;
 				dcp.on_draw_triangle = on_draw_triangle;
-				ShapeRenderer::draw_cone2(out_graph.current_render_target(), dcp);
+				ShapeRenderer3D::draw_cone2(out_graph.current_render_target(), dcp);
 				break;
 			}
 			}

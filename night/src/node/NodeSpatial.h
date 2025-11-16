@@ -1,7 +1,7 @@
 #pragma once
 
 #include "INode.h"
-#include "math/math.h"
+#include "math/Math.h"
 
 namespace night
 {

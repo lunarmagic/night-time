@@ -6,7 +6,7 @@
 //#include "glm/glm.hpp"
 
 #include "material/IShader.h"
-#include "math/math.h"
+#include "math/Math.h"
 
 namespace night
 {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "math/math.h"
+#include "math/Math.h"
 #include "WorldSpaceRasterizer2D.h"
 #include "node/INode.h"
 #include "debug_renderer/DebugRenderer.h"

@@ -1,10 +1,10 @@
 #pragma once
 
-#include "math/math.h"
+#include "math/Math.h"
 #include "log/log.h"
 #include "convex_hull.h"
-#include "raycast/raycast.h"
-#include "gjk/gjk.h"
+#include "raycast/Raycast.h"
+#include "gjk/GJK.h"
 
 namespace night
 {
@@ -13,10 +13,13 @@ namespace night
 	struct NIGHT_API Convex2D
 	{
 		template<typename _It>
+		static vector<vec<2, T>> make_convex(_It begin, _It end);
+
+		template<typename _It>
 		static u8 is_clockwise(_It begin, _It end);
 
 		template<typename _It>
-		static void make_clockwise(_It begin, _It end);
+		static void wind_up(_It begin, _It end, EOrientation winding_order);
 
 		// TODO: template raycast
 		template<typename _It>
@@ -25,13 +28,26 @@ namespace night
 		template<typename _It>
 		static T area(_It begin, _It end);
 
-		// TODO: may remove
-		template<typename _It>
-		static T arc_length(_It begin, _It end);
+		//// TODO: may remove
+		//template<typename _It>
+		//static T arc_length(_It begin, _It end);
+
+		template<typename _Itc, typename _Its>
+		static vector<vec<2, T>> clip(_Itc begin_clip, _Itc end_clip, _Its begin_subject, _Its end_subject);
 
 		template<typename _It>
 		static u8 intersects(vec<2, T> const& point, _It begin, _It end, real epsilon = NIGHT_GJK_DEFAULT_EPSILON, s32 max_iterations = NIGHT_GJK_DEFAULT_MAX_ITERATIONS);
 	};
+
+	template<typename T>
+	template<typename _It>
+	static vector<vec<2, T>> Convex2D<T>::make_convex(_It begin, _It end)
+	{
+		vector<vec<2, T>> point_cloud;
+		for (auto i = begin; i != end; i++) point_cloud.push_back((vec<2, T> const&)(*i));
+		// TODO: this function is not templated, need to properly implement it.
+		return place_holder::quickHull(point_cloud);
+	}
 
 	template<typename T>
 	template<typename _It>
@@ -144,6 +160,7 @@ namespace night
 		return abs(area);
 	}
 
+#if 0
 	template<typename T>
 	template<typename _It>
 	inline T Convex2D<T>::arc_length(_It begin, _It end)
@@ -181,6 +198,139 @@ namespace night
 
 		return result;
 #endif
+	}
+#endif
+
+	//constexpr real _cross(vec2 a, vec2 b) { return a.x * b.y - b.x * a.y; }
+
+	//constexpr vec2 _intersection(vec2 a1, vec2 a2, vec2 b1, vec2 b2) {
+	//	return ((b1 - b2) * math::cross(a1, a2) - (a1 - a2) * math::cross(b1, b2)) *
+	//		(1.0f / math::cross(a1 - a2, b1 - b2));
+	//}
+
+	template<typename T>
+	template<typename _Itc, typename _Its>
+	inline vector<vec<2, T>> Convex2D<T>::clip(_Itc begin_clip, _Itc end_clip, _Its begin_subject, _Its end_subject)
+	{
+		//DB_ALGO_SCOPED("__area_of_intersection");
+		//constexpr real __db_mult = 6.0f;
+
+		if (begin_clip == end_clip || begin_subject == end_subject)
+		{
+			return {};
+		}
+
+		auto is_inside = [](vec2 point, vec2 a, vec2 b) -> u8
+			{
+				return (math::cross(a - b, point) + math::cross(b, a)) > 0.0f;
+			};
+
+		vector<vec2> clip_polygon;
+		vector<vec2> ring;
+		vector<vec2> input;
+
+		for (_Itc i = begin_clip; i != end_clip; i++)
+		{
+			clip_polygon.push_back((vec2 const&)(*i));
+		}
+
+		for (_Its i = begin_subject; i != end_subject; i++)
+		{
+			ring.push_back((vec2 const&)(*i));
+		}
+
+		vec2 p1 = clip_polygon[clip_polygon.size() - 1];
+
+		for (vec2 p2 : clip_polygon)
+		{
+			if (ring.empty())
+			{
+				return {};
+			}
+
+//			DB_ALGO_INCREMENT_STEP();
+//#ifdef NIGHT_DBAR
+//			for (s32 i = 0; i < ring.size(); i++)
+//			{
+//				vec2 const& p1 = ring[i];
+//				vec2 const& p2 = ring[(i + 1) % ring.size()];
+//				DB_ALGO_DRAW_LINE(p1 * __db_mult, p2 * __db_mult, PINK.opaqued(0.75f));
+//			}
+//#endif
+
+			//DB_ALGO_DRAW_LINE(p1 * __db_mult, p2 * __db_mult, RED);
+
+			input.clear();
+			input.insert(input.end(), ring.begin(), ring.end());
+			ring.clear();
+
+			{
+				//DB_ALGO_SCOPED("inner loop");
+
+				vec2 s = input[input.size() - 1];
+
+				for (vec2 e : input)
+				{
+					//DB_ALGO_INCREMENT_STEP();
+					//DB_ALGO_DRAW_LINE(s * __db_mult, e * __db_mult, BLUE);
+
+					if (is_inside(e, p1, p2))
+					{
+						if (!is_inside(s, p1, p2))
+						{
+							//DB_ALGO_DRAW_POINT(_intersection(p1, p2, s, e) * __db_mult, YELLOW.opaqued(0.5f));
+
+							auto rc = Raycast2D<>::plane(p1, p2 - p1, s, math::perp(e - s), NIGHT_EPSILON_MEDIUM);
+
+							if (rc.result)
+							{
+								ring.push_back(rc.contact(p1, p2 - p1));
+							}
+
+							//if (abs(_cross(p2 - p1, e - s)) > NIGHT_EPSILON_MEDIUM)
+							//{
+							//	ring.push_back(_intersection(p1, p2, s, e));
+							//}
+						}
+
+						//DB_ALGO_DRAW_POINT(e * __db_mult, CYAN);
+						ring.push_back(e);
+					}
+					else if (is_inside(s, p1, p2))
+					{
+						//DB_ALGO_DRAW_POINT(_intersection(p1, p2, s, e) * __db_mult, YELLOW);
+
+						//if (abs(_cross(p2 - p1, e - s)) > NIGHT_EPSILON_MEDIUM)
+						//{
+						//	ring.push_back(_intersection(p1, p2, s, e));
+						//}
+
+						auto rc = Raycast2D<>::plane(p1, p2 - p1, s, math::perp(e - s), NIGHT_EPSILON_MEDIUM);
+
+						if (rc.result)
+						{
+							ring.push_back(rc.contact(p1, p2 - p1));
+						}
+					}
+
+					s = e;
+				}
+			}
+
+			p1 = p2;
+		}
+
+//		DB_ALGO_INCREMENT_STEP();
+//#ifdef NIGHT_DBAR
+//		for (s32 i = 0; i < ring.size(); i++)
+//		{
+//			vec2 const& p1 = ring[i];
+//			vec2 const& p2 = ring[(i + 1) % ring.size()];
+//			DB_ALGO_DRAW_LINE(p1 * __db_mult, p2 * __db_mult, GREEN.opaqued(0.75f));
+//		}
+//#endif
+
+		return ring;
 	}
 
 	template<typename T>
@@ -234,7 +384,7 @@ namespace night
 
 	template<typename T>
 	template<typename _It>
-	inline void Convex2D<T>::make_clockwise(_It begin, _It end)
+	inline void Convex2D<T>::wind_up(_It begin, _It end, EOrientation winding_order)
 	{
 		if (begin == end)
 		{
@@ -273,7 +423,20 @@ namespace night
 			Angle angle;
 
 			angle.element = (*i);
-			angle.angle = Math<T>::angle_counter_clockwise(vec<2, T>(0, 1), Math<T>::normalize((vec<2, T> const&)angle.element - center));
+
+			if (winding_order == EOrientation::Clockwise)
+			{
+				angle.angle = Math<T>::angle_counter_clockwise(vec<2, T>(0, 1), Math<T>::normalize((vec<2, T> const&)angle.element - center));
+			}
+			else if (winding_order == EOrientation::CounterClockwise)
+			{
+				angle.angle = Math<T>::angle_clockwise(vec<2, T>(0, 1), Math<T>::normalize((vec<2, T> const&)angle.element - center));
+			}
+			else
+			{
+				ASSERT(false); // winding order is invalid
+			}
+			
 			angle.iterator = i;
 
 			angles.push_back(angle);

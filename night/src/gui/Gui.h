@@ -4,7 +4,7 @@
 #include "color/Color.h"
 #include "input/EInput.h"
 //#include "stl/stl.h"
-#include "math/math.h"
+#include "math/Math.h"
 
 struct SDL_Window;
 //struct SDL_Renderer;

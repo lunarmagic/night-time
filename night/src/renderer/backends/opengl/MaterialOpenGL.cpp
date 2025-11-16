@@ -3,7 +3,7 @@
 #include "MaterialOpenGL.h"
 #include "ShaderOpenGL.h"
 #include "GLCall.h"
-#include "math/math.h"
+#include "math/Math.h"
 #include "TextureOpenGL.h"
 #include <GL/glew.h>
 #include "RendererOpenGL.h"
@@ -91,7 +91,7 @@ namespace night
 
 			if (uniform.index + sizeof(TextureUniformData) > _data.size())
 			{
-				WARNING("data out of bounds, name: %s", name.c_str());
+				WARNING("data out of bounds, name: {0}", name);
 				return false;
 			}
 
@@ -100,7 +100,7 @@ namespace night
 			return true;
 		}
 
-		WARNING("uniform not found!, name: %s", name.c_str());
+		WARNING("uniform not found!, name: {0}", name);
 		return false;
 	}
 
@@ -173,7 +173,7 @@ namespace night
 				break;
 
 			default:
-				WARNING("uniform type not supported, name: %s, type: %d", buffer, type);
+				WARNING("uniform type not supported, name: {0}, type: {1}", buffer, type);
 				continue; // skip this uniform if not supported.
 			}
 
@@ -186,14 +186,14 @@ namespace night
 					string name(buffer + to_string(i) + ']');
 					u32 j = index + sizeof(GLuint) * i;
 					_uniforms[name] = { .type = type, .size = size / size, .index = j };
-					TRACE("uniform name: ", name, ", type: ", type, ", size: ", size);
+					TRACE("uniform name: {0}, type: {1}, size: {2}", name, type, size);
 				}
 			}
 			else
 			{
 				string name(buffer);
 				_uniforms[name] = { .type = type, .size = size, .index = index };
-				TRACE("uniform name: ", name, ", type: ", type, ", size: ", size);
+				TRACE("uniform name: {0}, type: {1}, size: {2}", name, type, size);
 			}
 
 			index = temp;
@@ -203,10 +203,7 @@ namespace night
 
 		// TODO: may need to manually set textures to nullptr.
 
-		TRACE("uniform cpu buffer size in bytes: ", _data.size());
-		TRACE("");
-		//LOG("uniform cpu buffer size in bytes: %d", _data.size());
-		//LOG("\n");
+		TRACE("uniform cpu buffer size in bytes: {0}", _data.size());
 	}
 
 	void MaterialOpenGL::query_storage()
@@ -253,7 +250,7 @@ namespace night
 			if (stride > 0)
 			{
 				_storage = stride;
-				TRACE("uniform buffer added, name: ", name.data(), ", stride:",  stride);
+				TRACE("uniform buffer added, name: {0}, stride: {1}", name.data(), stride);
 				return;
 			}
 		}

@@ -155,7 +155,7 @@ namespace night
 		template<typename T>
 		static void draw_format(T& t)
 		{
-			TRACE(typeid(T).name());
+			TRACE("draw_format missing, type: {0}", typeid(T).name());
 		}
 
 		static void push_draw_function(function<void()> fn, u8 is_algo = false);

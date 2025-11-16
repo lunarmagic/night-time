@@ -2,7 +2,7 @@
 #include "nightpch.h"
 #include "ITexture.h"
 //#include "renderer/IRenderer.h"
-#include "raycast/raycast.h"
+#include "raycast/Raycast.h"
 #include "color/Color.h"
 #include "Surface.h"
 #include "utility.h"

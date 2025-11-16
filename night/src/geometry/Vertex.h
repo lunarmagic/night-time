@@ -2,7 +2,7 @@
 
 #include "core.h"
 #include "color/Color.h"
-#include "math/math.h"
+#include "math/Math.h"
 
 namespace night
 {
