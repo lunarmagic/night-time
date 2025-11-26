@@ -27,7 +27,7 @@ struct InputKey
 	InputKey(EMouse const& input, EInputType const& type = EInputType::Pressed) : key(EKey::Invalid), mouse(input), button(EButton::Invalid), type(type) {};
 	InputKey(EButton const& input, EInputType const& type = EInputType::Pressed) : key(EKey::Invalid), mouse(EMouse::Invalid), button(input), type(type) {};
 
-	u8 operator==(const InputKey& rhs) const
+	b8 operator==(const InputKey& rhs) const
 	{
 		return key == rhs.key && mouse == rhs.mouse && button == rhs.button && type == rhs.type;
 	}

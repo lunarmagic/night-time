@@ -8,18 +8,18 @@ namespace night
 {
 	Color::Color(const Color8& color8)
 	{
-		r = (real)color8.r / 255.0f;
-		g = (real)color8.g / 255.0f;
-		b = (real)color8.b / 255.0f;
-		a = (real)color8.a / 255.0f;
+		r = (r32)color8.r / (r32)255;
+		g = (r32)color8.g / (r32)255;
+		b = (r32)color8.b / (r32)255;
+		a = (r32)color8.a / (r32)255;
 	}
 
 	Color Color::random()
 	{
-		return { ::night::random(1.0f), ::night::random(1.0f), ::night::random(1.0f), 1.0f };
+		return { (r32)::night::random((real)1), (r32)::night::random((real)1), (r32)::night::random((real)1), (r32)1 };
 	}
 
-	Color Color::rainbow(real t)
+	Color Color::rainbow(r32 t)
 	{
 		s32 normalized = s32(t * 256 * 6);
 		s32 region = normalized / 256;
@@ -45,7 +45,7 @@ namespace night
 
 	Color Color::lerp(const Color& a, const Color& b, real t)
 	{
-		return Color(math::lerp(a.r, b.r, t), math::lerp(a.g, b.g, t), math::lerp(a.b, b.b, t), math::lerp(a.a, b.a, t));
+		return Color(fmath::lerp(a.r, b.r, (r32)t), fmath::lerp(a.g, b.g, (r32)t), fmath::lerp(a.b, b.b, (r32)t), fmath::lerp(a.a, b.a, (r32)t));
 	}
 }
 

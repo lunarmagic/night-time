@@ -412,7 +412,7 @@ namespace night
 		return {};
 	}
 
-	static void _draw_tube(DrawCylinderParams const& params, CylinderBackfacePlane const& backface_plane, u8 is_cone)
+	static void _draw_tube(DrawCylinderParams const& params, CylinderBackfacePlane const& backface_plane, b8 is_cone)
 	{
 		NIGHT_PROFILER_SCOPED("ShapeRenderer3D::_draw_tube");
 		ASSERT(params.out_graph != nullptr);
@@ -428,8 +428,8 @@ namespace night
 		vec3 cap_a = params.origin + params.direction * params.height;
 		vec3 cap_b = params.origin - params.direction * params.height;
 
-		u8 cull_cap_a = camera.should_cull_plane(cap_a, params.direction);
-		u8 cull_cap_b = camera.should_cull_plane(cap_b, -params.direction);
+		b8 cull_cap_a = camera.should_cull_plane(cap_a, params.direction);
+		b8 cull_cap_b = camera.should_cull_plane(cap_b, -params.direction);
 
 		//auto backface_plane = cylinder_backface_plane(params.origin, params.direction, params.radius, params.height, camera);
 
@@ -438,7 +438,7 @@ namespace night
 
 		constexpr real epsilon = 0.000001f;
 		real d = math::dot(camera_direction, params.direction);
-		u8 x = abs(d) < 1.0f - epsilon;
+		b8 x = abs(d) < 1.0f - epsilon;
 
 		if (x)
 		{
@@ -820,8 +820,8 @@ namespace night
 					dlp.width = params.width;
 					dlp.color = params.color;
 
-					u8 x1 = camera.should_cull_plane(dlp.p1, faces[f2]);
-					u8 x2 = camera.should_cull_plane(dlp.p1, faces[f1]);
+					b8 x1 = camera.should_cull_plane(dlp.p1, faces[f2]);
+					b8 x2 = camera.should_cull_plane(dlp.p1, faces[f1]);
 
 					if (x1 == false && x2 == false)
 					{
@@ -921,14 +921,14 @@ namespace night
 
 		array<vec3, 6> faces;
 		faces[idx_back] = math::normalize(decomp.rotation * (ufaces[idx_back] * params.extents * decomp.scale));
-		faces[idx_left] = math::normalize(decomp.rotation * (math::normalize(ufaces[idx_left] + FORWARD / 2.0f) * params.extents * decomp.scale));
-		faces[idx_right] = math::normalize(decomp.rotation * (math::normalize(ufaces[idx_right] + FORWARD / 2.0f) * params.extents * decomp.scale));
-		faces[idx_top] = math::normalize(decomp.rotation * (math::normalize(ufaces[idx_top] + FORWARD / 2.0f) * params.extents * decomp.scale));
-		faces[idx_bottom] = math::normalize(decomp.rotation * (math::normalize(ufaces[idx_bottom] + FORWARD / 2.0f) * params.extents * decomp.scale));
+		faces[idx_left] = math::normalize(decomp.rotation * (math::normalize(ufaces[idx_left] + FORWARD / (real)2) * params.extents * decomp.scale));
+		faces[idx_right] = math::normalize(decomp.rotation * (math::normalize(ufaces[idx_right] + FORWARD / (real)2) * params.extents * decomp.scale));
+		faces[idx_top] = math::normalize(decomp.rotation * (math::normalize(ufaces[idx_top] + FORWARD / (real)2) * params.extents * decomp.scale));
+		faces[idx_bottom] = math::normalize(decomp.rotation * (math::normalize(ufaces[idx_bottom] + FORWARD / (real)2) * params.extents * decomp.scale));
 
 		if (params.on_draw_line != nullptr)
 		{
-			auto fn = [&](s32 f1, s32 f2, u8 tip)
+			auto fn = [&](s32 f1, s32 f2, b8 tip)
 				{
 					DrawLineParams dlp;
 
@@ -949,8 +949,8 @@ namespace night
 					dlp.width = params.width;
 					dlp.color = params.color;
 
-					u8 x1 = camera.should_cull_plane(dlp.p1, faces[f2]);
-					u8 x2 = camera.should_cull_plane(dlp.p1, faces[f1]);
+					b8 x1 = camera.should_cull_plane(dlp.p1, faces[f2]);
+					b8 x2 = camera.should_cull_plane(dlp.p1, faces[f1]);
 
 					if (x1 == false && x2 == false)
 					{
@@ -1100,7 +1100,7 @@ namespace night
 		return {};
 	}
 
-	inline static void _draw_tube2(RenderTarget render_target, vec3 const& origin, vec3 const& direction, DrawCylinderParams2 const& dcp, CylinderBackfacePlane const& backface_plane, u8 is_cone)
+	inline static void _draw_tube2(RenderTarget render_target, vec3 const& origin, vec3 const& direction, DrawCylinderParams2 const& dcp, CylinderBackfacePlane const& backface_plane, b8 is_cone)
 	{
 		ASSERT(render_target != nullptr);
 		Camera const& camera = render_target->camera();
@@ -1110,18 +1110,18 @@ namespace night
 		vec3 cap_a = origin - direction * dcp.height;
 		vec3 cap_b = origin + direction * dcp.height;
 
-		u8 cull_cap_a = camera.should_cull_plane(cap_a, -direction);
-		u8 cull_cap_b = camera.should_cull_plane(cap_b, direction);
+		b8 cull_cap_a = camera.should_cull_plane(cap_a, -direction);
+		b8 cull_cap_b = camera.should_cull_plane(cap_b, direction);
 
 		//vec3 base = origin - direction * dcp.height;
 		//
-		//u8 cull_base = camera.should_cull_plane(base, -direction);
+		//b8 cull_base = camera.should_cull_plane(base, -direction);
 
 		mat4 ftd;
 		ftd = math::rotate_about_vector(FORWARD, direction);
 
 		real d = math::dot(camera_direction, direction);
-		u8 x = abs(d) < 1.0f - NIGHT_EPSILON_MEDIUM;
+		b8 x = abs(d) < 1.0f - NIGHT_EPSILON_MEDIUM;
 
 		if (dcp.on_draw_triangle != nullptr)
 		{
@@ -1271,7 +1271,7 @@ namespace night
 			};
 
 		// when the base is not encompassing the outer edges
-		auto draw_cap_bf = [&](vec3 const& cap_origin, real const& cap_radius, vec3 const& cap_normal, u8 culled)
+		auto draw_cap_bf = [&](vec3 const& cap_origin, real const& cap_radius, vec3 const& cap_normal, b8 culled)
 			{
 				if (dcp.far_corner_opacity != 0)
 				{
@@ -1556,8 +1556,8 @@ namespace night
 
 				result.color = params.color;
 
-				result.texture_coord.x = u;
-				result.texture_coord.y = v;
+				result.texture_coord.x = (r32)u;
+				result.texture_coord.y = (r32)v;
 				return result;
 			};
 
@@ -1743,7 +1743,7 @@ namespace night
 			Color color = params.color;
 
 			// cull backface:
-			u8 should_cull = crt->camera().should_cull_plane(plane.vertices[0], plane.normal);
+			b8 should_cull = crt->camera().should_cull_plane(plane.vertices[0], plane.normal);
 			if (should_cull)
 			{
 				if (!params.wireframe || params.draw_through_opacity == 0)

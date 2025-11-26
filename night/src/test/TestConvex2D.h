@@ -42,7 +42,7 @@ namespace night
 			__super::on_update(delta);
 			IGui& gui = utility::gui();
 
-			u8 is_open = true;
+			b8 is_open = true;
 			gui.begin("Test Node Animation", &is_open);
 
 			if (!is_open)
@@ -95,7 +95,7 @@ namespace night
 		};
 
 		s32 _fillSize = 32;
-		u8 _shouldShowIndexColors = false;
+		b8 _shouldShowIndexColors = false;
 		vector<Point> _points;
 	};
 }

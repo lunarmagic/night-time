@@ -25,7 +25,7 @@ namespace std
 
 namespace night
 {
-	u8 gjk::intersects(function<dvec2(dvec2 const&)> const& support_a, function<dvec2(dvec2 const&)> const& support_b, r64 epsilon, s32 max_iterations)
+	b8 gjk::intersects(function<dvec2(dvec2 const&)> const& support_a, function<dvec2(dvec2 const&)> const& support_b, r64 epsilon, s32 max_iterations)
 	{
 		ASSERT(false); // TODO: fix this function
 		DB_ALGO_SCOPED("gjk::intersects");
@@ -144,7 +144,7 @@ namespace night
 	}
 
 	// TODO: optimize this function
-	u8 gjk::intersects(function<dvec3(dvec3 const&)> const& support_a, function<dvec3(dvec3 const&)> const& support_b, r64 epsilon, s32 max_iterations)
+	b8 gjk::intersects(function<dvec3(dvec3 const&)> const& support_a, function<dvec3(dvec3 const&)> const& support_b, r64 epsilon, s32 max_iterations)
 	{
 		auto support_m = [&](const dvec3& direction) -> dvec3
 		{
@@ -431,7 +431,7 @@ namespace night
 #define NIGHT_DB_DRAW_CSO_RESOLUTION 10
 #define NIGHT_GJK_SHAPECAST_ESPILON 0.000001 // TODO: may want to increase this epsilon
 
-	ShapeCastResult3D night::gjk::shape_cast_impl(ShapeCastParams3D const& params, u8 skip_t1)
+	ShapeCastResult3D night::gjk::shape_cast_impl(ShapeCastParams3D const& params, b8 skip_t1)
 	{
 		//DB_ALGO_PUSH("GJK Shapecast"); // TODO: make different aglorithm name for the inverse shapecast
 
@@ -520,7 +520,7 @@ namespace night
 		DB_ALGO_INCREMENT_STEP();
 		DB_ALGO_DRAW_LINE((vec3)a, (vec3)b, CYAN);
 
-		//u8 x = false;
+		//b8 x = false;
 		for (s32 i = 0; i < params.max_iterations; i++)
 		{
 			// line case:
@@ -556,7 +556,7 @@ namespace night
 						// double raycast:
 						r64 t0 = INFINITY;
 						dvec3 n0 = {};
-						u8 r = false;
+						b8 r = false;
 
 						{
 							r64 d2 = dmath::dot(motion, normal);
@@ -800,7 +800,7 @@ namespace night
 		return result;
 	}
 
-	ShapeCastResult3D gjk::shape_cast(ShapeCastParams3D const& params, u8 skip_t1)
+	ShapeCastResult3D gjk::shape_cast(ShapeCastParams3D const& params, b8 skip_t1)
 	{
 		ShapeCastResult3D forward;
 		ShapeCastResult3D inverse;

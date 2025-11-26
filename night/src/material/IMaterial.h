@@ -1,10 +1,10 @@
 #pragma once
 
 #include "IShader.h"
-//#include "texture/ITexture.h"
 #include "ref/ref.h"
 #include "handle/handle.h"
 #include "resource_manager/IResource.h"
+#include "texture/TextureUniformData.h"
 #include "log/log.h"
 
 namespace night
@@ -31,17 +31,13 @@ namespace night
 		Greater
 	};
 
-	struct TextureUniformData
-	{
-		shandle<const ITexture> texture{ nullptr };
-		u8 sample_depth_buffer{ false };
-
-		u8 operator<(TextureUniformData const& rhs) const
-		{
-			return (texture.get() < rhs.texture.get() || sample_depth_buffer < rhs.sample_depth_buffer);
-		}
-	};
-
+	/*
+		WARNING: if passing struct as uniform, the reals within the struct
+		are not automatically converted into gl_reals, you have to manually
+		keep track of the type within the shader and make sure
+		it matches that of night::real, double or float
+		depending on if NIGHT_USE_DOUBLE_PRECISION is defined.
+	*/
 	struct NIGHT_API IMaterial : public IResource
 	{
 		// TODO: load material file
@@ -54,14 +50,11 @@ namespace night
 		handle<IShader> shader() { return _shader; }
 
 		template<typename T>
-		u8 uniform(const string& name, const T& value);
+		b8 uniform(const string& name, const T& value);
 
-		//virtual u8 uniform(const string& name, handle<ITexture> texture) = 0;
-		//virtual u8 uniform(string const& name, DepthBuffer depth_buffer) = 0;
+		virtual b8 uniform(const string& name, TextureUniformData const& texture) = 0;
 
-		virtual u8 uniform(const string& name, TextureUniformData const& texture) = 0;
-
-		u8 has_uniform(string const& name) const
+		b8 has_uniform(string const& name) const
 		{
 			auto f = _uniforms.find(name);
 			return f != _uniforms.end();
@@ -69,24 +62,17 @@ namespace night
 
 		virtual void clear_uniforms() = 0;
 
-		//u8 should_use_depth_peeling{ true };
-		u8 should_use_depth_peeling() const;
-
-		static void update_materials();
+		b8 should_use_depth_peeling() const;
 
 	protected:
 
 		handle<IShader> _shader;
-		vector<u8> _data; // TODO: make some kind of material instance struct
+		vector<u8> _data;
 		umap<string, Uniform> _uniforms;
-
-	private:
-
-		static set<handle<IShader>> _toBeInitialized;
 	};
 
 	template<typename T>
-	u8 IMaterial::uniform(const string& name, const T& value)
+	b8 IMaterial::uniform(const string& name, const T& value)
 	{
 		auto i = _uniforms.find(name);
 		if (i != _uniforms.end())

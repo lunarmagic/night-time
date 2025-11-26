@@ -12,7 +12,7 @@ namespace night
 		string path;
 		string mem_vs;
 		string mem_fs;
-		//u8 load_from_memory{ false };
+		//b8 load_from_memory{ false };
 	};
 
 	struct NIGHT_API IShader : public IResource
@@ -32,16 +32,16 @@ namespace night
 		virtual void uniform4f(const string& name, real v0, real v1, real v2, real v3) = 0;
 		virtual void uniformMat4f(const string& name, const mat4& matrix) = 0;
 
-		static void update_shaders();
+		//static void update_shaders();
 
 	protected:
 
 		ShaderParams _params{};
 
-		static set<handle<IShader>> _toBeInitialized;
+		//static set<handle<IShader>> _toBeInitialized;
 
-		virtual u8 load_from_path(string const& path) = 0;
-		virtual u8 load_from_memory(const string& vs, const string& fs) = 0;
+		virtual b8 load_from_path(string const& path) = 0;
+		virtual b8 load_from_memory(const string& vs, const string& fs) = 0;
 	};
 
 }

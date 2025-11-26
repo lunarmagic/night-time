@@ -4,6 +4,8 @@
 #include "log/log.h"
 #include <GL/glew.h>
 
+#include "RendererOpenGLReal.h"
+
 namespace night
 {
 
@@ -21,7 +23,7 @@ namespace night
 	}
 
 	template<>
-	void VertexBufferLayoutOpenGL::push<real>(u32 count)
+	void VertexBufferLayoutOpenGL::push<gl_real>(u32 count)
 	{
 		_elements.push_back({ GL_FLOAT, count, GL_FALSE });
 		_stride += count * VertexBufferElementOpenGL::sizeOfType(GL_FLOAT);
@@ -35,7 +37,7 @@ namespace night
 	}
 
 	template<>
-	void VertexBufferLayoutOpenGL::push<u8>(u32 count)
+	void VertexBufferLayoutOpenGL::push<b8>(u32 count)
 	{
 		_elements.push_back({ GL_UNSIGNED_BYTE, count, GL_TRUE });
 		_stride += count * VertexBufferElementOpenGL::sizeOfType(GL_UNSIGNED_BYTE);

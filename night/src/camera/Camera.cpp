@@ -10,7 +10,7 @@ namespace night
 		return math::normalize(look_at - translation);
 	}
 
-	u8 Camera::should_cull_plane(vec3 const& point_on_plane, vec3 const& plane_normal) const
+	b8 Camera::should_cull_plane(vec3 const& point_on_plane, vec3 const& plane_normal) const
 	{
 		if (type == ECameraType::Perspective)
 		{

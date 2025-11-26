@@ -30,7 +30,7 @@ namespace night
 	template<typename T = real>
 	struct RaycastResult2D
 	{
-		u8 result;
+		b8 result;
 
 		union
 		{
@@ -71,7 +71,7 @@ namespace night
 	template<typename T = real>
 	struct RaycastResult3D
 	{
-		u8 result;
+		b8 result;
 
 		union
 		{
@@ -112,7 +112,7 @@ namespace night
 	template<typename T = real>
 	struct RaycastTriangleResult
 	{
-		u8 result()
+		b8 result()
 		{
 			return (coordinate.x >= 0.0f && coordinate.y >= 0.0f && coordinate.z >= 0.0f);
 		}
@@ -179,7 +179,7 @@ namespace night
 	{
 		struct Result2D
 		{
-			u8 result;
+			b8 result;
 
 			union
 			{
@@ -219,7 +219,7 @@ namespace night
 
 		struct Result3D
 		{
-			u8 result;
+			b8 result;
 
 			union
 			{
@@ -279,8 +279,8 @@ namespace night
 
 		struct TriangleResult3D
 		{
-			//u8 result;
-			u8 result()
+			//b8 result;
+			b8 result()
 			{
 				return (coordinate.x >= 0.0f && coordinate.y >= 0.0f && coordinate.z >= 0.0f);
 			}
@@ -549,8 +549,8 @@ namespace night
 		vec<3, T> contact1 = ray_origin + ray_dir * t1;
 		T c1a = Math<T>::distance_to_plane(contact1, cap_a, cyl_dir);
 		T c1b = Math<T>::distance_to_plane(contact1, cap_b, -cyl_dir);
-		u8 c1ax = (c1a < 0);
-		u8 c1bx = (c1b < 0);
+		b8 c1ax = (c1a < 0);
+		b8 c1bx = (c1b < 0);
 
 		T min_t = INFINITY;
 		if (c1ax && c1bx)
@@ -603,8 +603,8 @@ namespace night
 		vec<3, T> contact2 = ray_origin + ray_dir * t2;
 		T c2a = Math<T>::distance_to_plane(contact2, cap_a, cyl_dir);
 		T c2b = Math<T>::distance_to_plane(contact2, cap_b, -cyl_dir);
-		u8 c2ax = (c2a < 0);
-		u8 c2bx = (c2b < 0);
+		b8 c2ax = (c2a < 0);
+		b8 c2bx = (c2b < 0);
 		T max_t = -INFINITY;
 
 		if (c2ax && c2bx)

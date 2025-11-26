@@ -33,6 +33,21 @@ namespace night
 	{
 	}
 
+	void Application::dispatch_main_thread_callbacks()
+	{
+		while (!_mainThreadCallbacks.empty())
+		{
+			auto fn = _mainThreadCallbacks.front();
+
+			if (fn != nullptr)
+			{
+				fn();
+			}
+
+			_mainThreadCallbacks.pop_front();
+		}
+	}
+
 	void Application::init()
 	{
 		init_settings();
@@ -48,13 +63,15 @@ namespace night
 		_resourceManager = create_resource_manager();
 		ASSERT(_resourceManager != nullptr);
 		_resourceManager->load_resources();
-		utility::renderer().update_resources();
+		dispatch_main_thread_callbacks();
+		//utility::renderer().update_resources();
 
 		create_root();
 
 		on_initialized();
 
-		utility::renderer().update_resources();
+		dispatch_main_thread_callbacks();
+		//utility::renderer().update_resources();
 		utility::renderer().cleanup_destroyed_resources();
 	}
 
@@ -123,6 +140,18 @@ namespace night
 
 		while (!_isPendingTermination)
 		{
+			auto do_fixed_update = [&](real delta)
+				{
+					_fixedUpdateAccumulatedDeltaTime += delta;
+					_fixedUpdateAccumulatedDeltaTime = MIN(_fixedUpdateAccumulatedDeltaTime, _fixedUpdateStepSize * 5.0f);
+
+					while (_fixedUpdateAccumulatedDeltaTime > _fixedUpdateStepSize)
+					{
+						_root->fixed_update(_fixedUpdateStepSize);
+						_fixedUpdateAccumulatedDeltaTime -= _fixedUpdateStepSize;
+					}
+				};
+
 			if (!low_input_latency_mode) // mutlithreaded mode
 			{
 				NIGHT_PROFILER_PUSH("Application Run-Time");
@@ -140,7 +169,22 @@ namespace night
 						{
 							// TODO: there is 1 frame of input delay if we call update before dispatch events.
 							NIGHT_PROFILER_PUSH("Application Update");
-							_root->update(_window->delta_time());
+							if (!_isPaused)
+							{
+								_root->update(_window->delta_time());
+								do_fixed_update(_window->delta_time());
+							}
+							else if (_isPendingFrameAdvance)
+							{
+								_root->update(_window->fixed_delta_time());
+								do_fixed_update(_window->delta_time());
+								_isPendingFrameAdvance = false;
+							}
+							else
+							{
+								_root->update(0.0f);
+								_root->fixed_update(0.0f);
+							}
 							NIGHT_PROFILER_POP();
 
 							NIGHT_PROFILER_PUSH("Application Dispatch Events and Cleanup");
@@ -156,25 +200,15 @@ namespace night
 						});
 					test_thread.wait();
 
-					// threads should join here
-					while (!_mainThreadCallbacks.empty())
-					{
-						auto fn = _mainThreadCallbacks.back();
-						if (fn != nullptr)
-						{
-							fn();
-						}
-						_mainThreadCallbacks.pop_back();
-					}
-
-					NIGHT_PROFILER_PUSH("Renderer Update Resources");
-					utility::renderer().update_resources();
+					NIGHT_PROFILER_PUSH("Application Main Thread Callbacks");
+					dispatch_main_thread_callbacks();
 					utility::renderer().cleanup_destroyed_resources();
 					NIGHT_PROFILER_POP();
 
 					// TODO: this needs to be fast, because it is done between window poll events
 					NIGHT_PROFILER_PUSH("Renderer Flush Node Render Graph");
 					SWAP(front_graph, back_graph);
+					dispatch_main_thread_callbacks();
 					utility::renderer().flush_render_graph(*front_graph);
 					front_graph->clear();
 					NIGHT_PROFILER_POP();
@@ -209,7 +243,22 @@ namespace night
 					NIGHT_PROFILER_POP();
 
 					NIGHT_PROFILER_PUSH("Application Update");
-					_root->update(_window->delta_time());
+					if (!_isPaused)
+					{
+						_root->update(_window->delta_time());
+						do_fixed_update(_window->delta_time());
+					}
+					else if (_isPendingFrameAdvance)
+					{
+						_root->update(_window->fixed_delta_time());
+						do_fixed_update(_window->delta_time());
+						_isPendingFrameAdvance = false;
+					}
+					else
+					{
+						_root->update(0.0f);
+						_root->fixed_update(0.0f);
+					}
 					NIGHT_PROFILER_POP();
 
 					NIGHT_PROFILER_PUSH("Application Dispatch Events and Cleanup 2");
@@ -224,14 +273,16 @@ namespace night
 					NIGHT_PROFILER_POP();
 				}
 
-				NIGHT_PROFILER_PUSH("Renderer Update Resources");
-				utility::renderer().update_resources();
+				NIGHT_PROFILER_PUSH("Application Main Thread Callbacks");
+				//utility::renderer().update_resources();
+				dispatch_main_thread_callbacks();
 				utility::renderer().cleanup_destroyed_resources();
 				NIGHT_PROFILER_POP();
 
 				//if (!graph.empty())
 				//{
 					NIGHT_PROFILER_PUSH("Renderer Flush Node Render Graph");
+					dispatch_main_thread_callbacks();
 					utility::renderer().flush_render_graph(graph);
 					NIGHT_PROFILER_POP();
 
@@ -416,7 +467,7 @@ namespace night
 	}
 
 	template<typename T>
-	inline u8 Application::callback_bound_events(T& event)
+	inline b8 Application::callback_bound_events(T& event)
 	{
 		auto r = _eventBindings.equal_range(T::get_static_type());
 
@@ -428,75 +479,75 @@ namespace night
 		return true;
 	}
 
-	u8 Application::on_key_pressed(KeyPressedEvent& event)
+	b8 Application::on_key_pressed(KeyPressedEvent& event)
 	{
 		callback_bound_inputs(InputKey( (EKey)event.keycode(), event.isRepeat() ? EInputType::REPEAT : EInputType::PRESSED));
 		return callback_bound_events(event);
 	}
 
-	u8 Application::on_key_released(KeyReleasedEvent& event)
+	b8 Application::on_key_released(KeyReleasedEvent& event)
 	{
 		callback_bound_inputs(InputKey((EKey)event.keycode(), EInputType::RELEASED ));
 		return callback_bound_events(event);
 	}
 
-	u8 Application::on_mouse_button_pressed(MouseButtonPressedEvent& event)
+	b8 Application::on_mouse_button_pressed(MouseButtonPressedEvent& event)
 	{
 		callback_bound_inputs(InputKey( (EMouse)event.button(), EInputType::PRESSED ));
 		return callback_bound_events(event);
 	}
 
-	u8 Application::on_mouse_button_released(MouseButtonReleasedEvent& event)
+	b8 Application::on_mouse_button_released(MouseButtonReleasedEvent& event)
 	{
 		callback_bound_inputs(InputKey( (EMouse)event.button(), EInputType::RELEASED ));
 		return callback_bound_events(event);
 	}
 
-	u8 Application::on_mouse_wheel(MouseWheelEvent& event)
+	b8 Application::on_mouse_wheel(MouseWheelEvent& event)
 	{
 		return callback_bound_events(event);
 	}
 
-	u8 Application::on_pen_pressure(PenPressureEvent& event)
+	b8 Application::on_pen_pressure(PenPressureEvent& event)
 	{
 		return callback_bound_events(event);
 	}
 
-	u8 Application::on_pen_down(PenDownEvent& event)
+	b8 Application::on_pen_down(PenDownEvent& event)
 	{
 		return callback_bound_events(event);
 	}
 
-	u8 Application::on_pen_up(PenUpEvent& event)
+	b8 Application::on_pen_up(PenUpEvent& event)
 	{
 		return callback_bound_events(event);
 	}
 
-	u8 Application::on_pen_motion(PenMotionEvent& event)
+	b8 Application::on_pen_motion(PenMotionEvent& event)
 	{
 		return callback_bound_events(event);
 	}
 
-	u8 Application::on_mouse_motion(MouseMotionEvent& event)
+	b8 Application::on_mouse_motion(MouseMotionEvent& event)
 	{
 		return callback_bound_events(event);
 	}
 
-	u8 Application::on_window_close(WindowCloseEvent& event)
+	b8 Application::on_window_close(WindowCloseEvent& event)
 	{
-		u8 result = callback_bound_events(event);
+		b8 result = callback_bound_events(event);
 
 		terminate();
 
 		return result;
 	}
 
-	u8 Application::on_window_resize(WindowResizeEvent& event)
+	b8 Application::on_window_resize(WindowResizeEvent& event)
 	{
 		return callback_bound_events(event);
 	}
 
-	u8 Application::on_renderer_presented(RendererPresentedEvent& event)
+	b8 Application::on_renderer_presented(RendererPresentedEvent& event)
 	{
 		return callback_bound_events(event);
 	}

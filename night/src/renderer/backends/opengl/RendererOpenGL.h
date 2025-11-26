@@ -10,6 +10,7 @@
 #include "ShaderStorageBufferOpenGL.h"
 //#include "MaterialOpenGL.h"
 #include "TextureOpenGL.h"
+#include "RendererOpenGLReal.h"
 
 #define OPEN_GL_MAX_QUAD_COUNT 30000
 #define OPEN_GL_MAX_VERTEX_COUNT OPEN_GL_MAX_QUAD_COUNT * 4
@@ -34,7 +35,7 @@ namespace night
 
 	struct VertexOpenGL
 	{
-		Vertex<> vertex;
+		Vertex<gl_real> vertex;
 		s32 uniform_index;
 		s32 transform_index;
 	};
@@ -43,14 +44,11 @@ namespace night
 	{
 		vector<VertexOpenGL> vertices;
 		vector<u8> storage;
-		//vector<mat4> transforms;
 	};
 
 	struct NIGHT_API RendererOpenGL : public IRenderer
 	{
 		virtual s32 init(const RendererParams& params) override;
-
-		virtual void update_resources() override;
 
 		virtual void close() override;
 		virtual void draw_pixel(ivec2 const& internal_coord, Color const& color) override;
@@ -97,18 +95,19 @@ namespace night
 		handle<ShaderOpenGL> _depthPeelShader;
 		handle<MaterialOpenGL> _depthPeelMaterial;
 
-		std::multimap< // TODO: fix night::map template.
+		multimap<
 			shandle<const ITexture>, // render targets
-				map<
+			umap<
 				shandle<MaterialOpenGL>, // materials
-					map<
-						vector<TextureUniformData>, // textures
-						DrawCallOpenGL>
-			>, CompareITextureSHandleByRenderFlushPriority
+				map<
+					vector<TextureUniformData>, // textures
+					DrawCallOpenGL>
+			>,
+			CompareITextureSHandleByRenderFlushPriority
 		> _drawCalls;
 		// TODO: store a prev dc iterator so we don't have to traverse the map every draw call
 
-		vector<mat4> _transformStorage;
+		vector<mat<4, 4, gl_real>> _transformStorage;
 
 		s32 _depthPeelCount = NIGHT_RENDERER_OPENGL_DEFAULT_DEPTH_PEEL_COUNT;
 		ivec2 _depthPeelResolution = NIGHT_RENDERER_OPENGL_DEFAULT_DEPTH_PEEL_RESOLUTION;
@@ -117,3 +116,18 @@ namespace night
 	};
 
 }
+
+//namespace std
+//{
+//	// TODO: figure out hash collisions
+//
+//	template<>
+//	struct hash<night::vector<night::TextureUniformData> const&>
+//	{
+//		uint64_t operator()(night::vector<night::TextureUniformData> const& key) const
+//		{
+//			return hash<uint64_t>()(0);
+//		}
+//	};
+//
+//};

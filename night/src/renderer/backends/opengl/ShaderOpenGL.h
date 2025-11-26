@@ -18,8 +18,8 @@ namespace night
 
 		virtual void init() override;
 
-		virtual u8 load_from_path(string const& path) override;
-		virtual u8 load_from_memory(const string& vs, const string& fs) override;
+		virtual b8 load_from_path(string const& path) override;
+		virtual b8 load_from_memory(const string& vs, const string& fs) override;
 
 		// TODO: use destructor
 		virtual void clean() override;

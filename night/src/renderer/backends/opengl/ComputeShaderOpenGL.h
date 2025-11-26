@@ -38,8 +38,8 @@ namespace night
 
 	protected:
 
-		virtual u8 load_from_path(const string& path) override;
-		virtual u8 load_from_memory(const string& str) override;
+		virtual b8 load_from_path(const string& path) override;
+		virtual b8 load_from_memory(const string& str) override;
 
 	private:
 

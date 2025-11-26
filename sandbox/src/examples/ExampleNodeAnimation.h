@@ -73,8 +73,6 @@ namespace night
 			_animation = create<NodeAnimation>("Animation", nap);
 		}
 
-	protected:
-
 		virtual void update_gui(handle<NodeGui> gui)
 		{
 			ASSERT(gui != nullptr);
@@ -127,7 +125,7 @@ namespace night
 
 			gui->checkbox("Should Loop", &_animation->should_loop);
 			gui->checkbox("Should Render When Paused", &_animation->should_render_when_paused);
-			gui->drag_r32("Playback Speed", &_animation->playback_speed, 0.025f, 0.0f, 1000.0f);
+			gui->drag_real("Playback Speed", &_animation->playback_speed, 0.025f, 0.0f, 1000.0f);
 
 			gui->begin_canvas("Animation Time", 0.2f, BLACK);
 			real animation_time = _animation->animation_time();

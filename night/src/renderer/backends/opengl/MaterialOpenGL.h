@@ -14,12 +14,12 @@ namespace night
 		virtual void init() override;
 		virtual void clean() override;
 
-		//virtual u8 uniform(const string& name, handle<ITexture> texture) override;
-		//virtual u8 uniform(string const& name, DepthBuffer depth_buffer) override;
+		//virtual b8 uniform(const string& name, handle<ITexture> texture) override;
+		//virtual b8 uniform(string const& name, DepthBuffer depth_buffer) override;
 
-		virtual u8 uniform(const string& name, TextureUniformData const& texture) override;
+		virtual b8 uniform(const string& name, TextureUniformData const& texture) override;
 
-		u8 bind();
+		b8 bind();
 
 		u32 storage() const { return _storage; }
 

@@ -5,6 +5,7 @@
 #include "log/log.h"
 #include "GLCall.h"
 #include "texture/Surface.h"
+#include "application/Application.h"
 
 // TODO: for some reason if depth buffer is less than 513 in width and height, writing to the depth buffer leaks into unrelated depth buffers
 #define NIGHT_OPENGL_TEXTURE_DEPTH_BUFFER_MIN_SIZE 513
@@ -250,45 +251,78 @@ namespace night
 	//}
 
 	// TODO: clear color is not working properly
-	void TextureOpenGL::on_clear()
+	void TextureOpenGL::on_clear(Color const& clear_color)
 	{
-		ASSERT(_pendingClear != Color(-1, -1, -1, -1));
+		Application::get().queue_for_main_thread([clear_color, self = (handle<TextureOpenGL>)handle_from_this()]()
+			{
+				ASSERT(self != nullptr);
+				ASSERT(self->_fbo != 0);
+				//Color8 color8(clear_color);
+				GLCall(glBindFramebuffer(GL_FRAMEBUFFER, self->_fbo));
+				GLCall(glClearColor(clear_color.r, clear_color.g, clear_color.b, clear_color.a));
+				GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+				GLCall(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+			});
 
-		if (_pendingClear != Color(-1, -1, -1, -1))
-		{
-			ASSERT(_fbo != 0);
-			//Color8 color8(clear_color);
-			GLCall(glBindFramebuffer(GL_FRAMEBUFFER, _fbo));
-			GLCall(glClearColor(_pendingClear.r, _pendingClear.g, _pendingClear.b, _pendingClear.a));
-			GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
-			GLCall(glBindFramebuffer(GL_FRAMEBUFFER, 0));
-		}
+		//ASSERT(_pendingClear != Color(-1, -1, -1, -1));
+		//
+		//if (_pendingClear != Color(-1, -1, -1, -1))
+		//{
+		//	ASSERT(_fbo != 0);
+		//	//Color8 color8(clear_color);
+		//	GLCall(glBindFramebuffer(GL_FRAMEBUFFER, _fbo));
+		//	GLCall(glClearColor(_pendingClear.r, _pendingClear.g, _pendingClear.b, _pendingClear.a));
+		//	GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+		//	GLCall(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+		//}
 	}
 
-	void TextureOpenGL::on_resize()
+	void TextureOpenGL::on_resize(ivec2 const& new_size)
 	{
-		ASSERT(_pendingResize != ivec2(0));
-		if (_pendingResize != ivec2(0))
-		{
-			ASSERT(_id != 0);
-			ASSERT(_dbo != 0);
+		Application::get().queue_for_main_thread([new_size, self = (handle<TextureOpenGL>)handle_from_this()]()
+			{
+				ASSERT(self->_id != 0);
+				ASSERT(self->_dbo != 0);
 
-			GLCall(glBindTexture(GL_TEXTURE_2D, _id));
-			GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _pendingResize.x, _pendingResize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr));
+				GLCall(glBindTexture(GL_TEXTURE_2D, self->_id));
+				GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, new_size.x, new_size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr));
 
-			s32 dwidth = MAX(_pendingResize.x, NIGHT_OPENGL_TEXTURE_DEPTH_BUFFER_MIN_SIZE);
-			s32 dheight = MAX(_pendingResize.y, NIGHT_OPENGL_TEXTURE_DEPTH_BUFFER_MIN_SIZE);
-			GLCall(glBindTexture(GL_TEXTURE_2D, _dbo));
-			GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32, dwidth, dheight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0));
+				s32 dwidth = MAX(new_size.x, NIGHT_OPENGL_TEXTURE_DEPTH_BUFFER_MIN_SIZE);
+				s32 dheight = MAX(new_size.y, NIGHT_OPENGL_TEXTURE_DEPTH_BUFFER_MIN_SIZE);
+				GLCall(glBindTexture(GL_TEXTURE_2D, self->_dbo));
+				GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32, dwidth, dheight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0));
 
-			// have to clear depth buffer for some reason
-			ASSERT(_fbo != 0);
-			//Color8 color8(clear_color);
-			GLCall(glBindFramebuffer(GL_FRAMEBUFFER, _fbo));
-			GLCall(glClearColor(0, 0, 0, 0));
-			GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
-			GLCall(glBindFramebuffer(GL_FRAMEBUFFER, 0));
-		}
+				// have to clear depth buffer for some reason
+				ASSERT(self->_fbo != 0);
+				//Color8 color8(clear_color);
+				GLCall(glBindFramebuffer(GL_FRAMEBUFFER, self->_fbo));
+				GLCall(glClearColor(0, 0, 0, 0));
+				GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+				GLCall(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+			});
+
+		//ASSERT(_pendingResize != ivec2(0));
+		//if (_pendingResize != ivec2(0))
+		//{
+		//	ASSERT(_id != 0);
+		//	ASSERT(_dbo != 0);
+		//
+		//	GLCall(glBindTexture(GL_TEXTURE_2D, _id));
+		//	GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _pendingResize.x, _pendingResize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr));
+		//
+		//	s32 dwidth = MAX(_pendingResize.x, NIGHT_OPENGL_TEXTURE_DEPTH_BUFFER_MIN_SIZE);
+		//	s32 dheight = MAX(_pendingResize.y, NIGHT_OPENGL_TEXTURE_DEPTH_BUFFER_MIN_SIZE);
+		//	GLCall(glBindTexture(GL_TEXTURE_2D, _dbo));
+		//	GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32, dwidth, dheight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0));
+		//
+		//	// have to clear depth buffer for some reason
+		//	ASSERT(_fbo != 0);
+		//	//Color8 color8(clear_color);
+		//	GLCall(glBindFramebuffer(GL_FRAMEBUFFER, _fbo));
+		//	GLCall(glClearColor(0, 0, 0, 0));
+		//	GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+		//	GLCall(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+		//}
 	}
 
 }

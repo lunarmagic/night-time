@@ -40,21 +40,21 @@ namespace night
 
 	struct PenInputEvent : public PenEvent
 	{
-		PenInputEvent(vec2 const& position, u8 is_eraser, u32 id = 0) : PenEvent(id), _position(position), _isEraser(is_eraser) {}
+		PenInputEvent(vec2 const& position, b8 is_eraser, u32 id = 0) : PenEvent(id), _position(position), _isEraser(is_eraser) {}
 
-		u8 const& is_eraser() const { return _isEraser; }
+		b8 const& is_eraser() const { return _isEraser; }
 
 		vec2 const& position() const { return _position; }
 
 	private:
 
 		vec2 _position{ vec2(0) };
-		u8 _isEraser{ false };
+		b8 _isEraser{ false };
 	};
 
 	struct PenDownEvent : public PenInputEvent
 	{
-		PenDownEvent(vec2 const& window_position, u8 is_eraser, u32 id = 0) : PenInputEvent(window_position, is_eraser, id) {}
+		PenDownEvent(vec2 const& window_position, b8 is_eraser, u32 id = 0) : PenInputEvent(window_position, is_eraser, id) {}
 
 		string to_string() const override
 		{
@@ -68,7 +68,7 @@ namespace night
 
 	struct PenUpEvent : public PenInputEvent
 	{
-		PenUpEvent(vec2 const& window_position, u8 is_eraser, u32 id = 0) : PenInputEvent(window_position, is_eraser, id) {}
+		PenUpEvent(vec2 const& window_position, b8 is_eraser, u32 id = 0) : PenInputEvent(window_position, is_eraser, id) {}
 
 		string to_string() const override
 		{

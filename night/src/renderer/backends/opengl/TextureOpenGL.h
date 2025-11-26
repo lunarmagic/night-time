@@ -20,9 +20,8 @@ namespace night
 		//void bind_fbo() const;
 		//void bind_fbo() const;
 
-		virtual void on_clear() override;
-
-		virtual void on_resize() override;
+		virtual void on_clear(Color const& clear_color) override;
+		virtual void on_resize(ivec2 const& new_size) override;
 
 	private:
 

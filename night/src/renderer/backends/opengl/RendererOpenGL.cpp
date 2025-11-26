@@ -408,9 +408,9 @@ namespace night
 
 		_ibo.init(_getIndices(), OPEN_GL_MAX_INDEX_COUNT);
 
-		_vblo.push<real>(4); // vertices
-		_vblo.push<real>(4); // color
-		_vblo.push<real>(2); // texture coords
+		_vblo.push<gl_real>(4); // vertices
+		_vblo.push<gl_real>(4); // color
+		_vblo.push<gl_real>(2); // texture coords
 		_vblo.push<u32>(1); // uniform index
 		_vblo.push<u32>(1); // transform index
 
@@ -471,14 +471,14 @@ namespace night
 			_defaultRenderTarget->render_flush_priority(INFINITY);
 
 			Camera camera;
-			camera.translation = FORWARD * 100.0f;
+			camera.translation = FORWARD * (real)100;
 			camera.look_at = ORIGIN;
 			camera.up = UP;
 			camera.near_clip = RENDERER_DEFAULT_RENDER_TARGET_NEAR_CLIP;
 			camera.far_clip = RENDERER_DEFAULT_RENDER_TARGET_FAR_CLIP;
 
 			camera.type = ECameraType::Orthographic;
-			camera.ortho_region = { .left = -1, .right = 1, .top = 1, .bottom = -1 };
+			camera.ortho_region = { .left = -1, .top = 1, .right = 1, .bottom = -1 };
 			_defaultRenderTarget->camera(camera);
 			//_defaultRenderTarget->should_use_depth_peeling = false;
 			//_defaultRenderTarget->should_use_depth_testing = true;
@@ -564,13 +564,13 @@ namespace night
 		NIGHT_PROFILER_POP();
 	}
 
-	void RendererOpenGL::update_resources()
-	{
-		IShader::update_shaders();
-		ITexture::update_textures();
-		IMaterial::update_materials();
-		IComputeShader::update_compute_shaders();
-	}
+	//void RendererOpenGL::update_resources()
+	//{
+	//	//IShader::update_shaders();
+	//	//ITexture::update_textures();
+	//	//IMaterial::update_materials();
+	//	//IComputeShader::update_compute_shaders();
+	//}
 
 	void RendererOpenGL::close()
 	{
@@ -645,12 +645,37 @@ namespace night
 			s32 transform_index = (u32)_transformStorage.size();
 			s32 uniform_index = mat->storage() == 0 ? 0 : (u32)(draw_call.storage.size() / mat->storage());
 
+#ifndef NIGHT_USE_DOUBLE_PRECISION
 			draw_call.vertices.push_back({ quad.vertices[0], uniform_index }); // TODO: optimize this
 			draw_call.vertices.push_back({ quad.vertices[1], uniform_index });
 			draw_call.vertices.push_back({ quad.vertices[2], uniform_index });
 			draw_call.vertices.push_back({ quad.vertices[2], uniform_index });
 			draw_call.vertices.push_back({ quad.vertices[3], uniform_index });
 			draw_call.vertices.push_back({ quad.vertices[0], uniform_index });
+#else
+			Quad<gl_real> q2;
+			q2.vertices[0].point = (vec<4, gl_real>)quad.vertices[0].point;
+			q2.vertices[1].point = (vec<4, gl_real>)quad.vertices[1].point;
+			q2.vertices[2].point = (vec<4, gl_real>)quad.vertices[2].point;
+			q2.vertices[3].point = (vec<4, gl_real>)quad.vertices[3].point;
+
+			q2.vertices[0].color = quad.vertices[0].color;
+			q2.vertices[1].color = quad.vertices[1].color;
+			q2.vertices[2].color = quad.vertices[2].color;
+			q2.vertices[3].color = quad.vertices[3].color;
+
+			q2.vertices[0].texture_coord = quad.vertices[0].texture_coord;
+			q2.vertices[1].texture_coord = quad.vertices[1].texture_coord;
+			q2.vertices[2].texture_coord = quad.vertices[2].texture_coord;
+			q2.vertices[3].texture_coord = quad.vertices[3].texture_coord;
+
+			draw_call.vertices.push_back({ q2.vertices[0], uniform_index }); // TODO: optimize this
+			draw_call.vertices.push_back({ q2.vertices[1], uniform_index });
+			draw_call.vertices.push_back({ q2.vertices[2], uniform_index });
+			draw_call.vertices.push_back({ q2.vertices[2], uniform_index });
+			draw_call.vertices.push_back({ q2.vertices[3], uniform_index });
+			draw_call.vertices.push_back({ q2.vertices[0], uniform_index });
+#endif
 
 			// deal with uniform buffer:
 			for (const auto& i : _activeUniformBuffer)
@@ -697,12 +722,12 @@ namespace night
 
 		struct ssbo_layout
 		{
-			vec3 p1;
-			vec3 p2;
+			vec<3, gl_real> p1;
+			vec<3, gl_real> p2;
 			Color c1;
 			Color c2;
-			real w1;
-			real w2;
+			gl_real w1;
+			gl_real w2;
 		};
 
 		ssbo_layout layout;
@@ -710,8 +735,8 @@ namespace night
 		layout.p2 = p2;
 		layout.c1 = transformed_params.color;
 		layout.c2 = transformed_params.color2.a == -1 ? transformed_params.color : transformed_params.color2;
-		layout.w1 = transformed_params.width;
-		layout.w2 = transformed_params.width2 == -1 ? transformed_params.width : transformed_params.width2;
+		layout.w1 = (gl_real)transformed_params.width;
+		layout.w2 = transformed_params.width2 == -1 ? (gl_real)transformed_params.width : (gl_real)transformed_params.width2;
 
 		ASSERT(_defaultLineMaterial != nullptr);
 		ASSERT(_defaultLineMaterial->storage() == sizeof(layout)); // size of struct and ssbo do not match
@@ -730,12 +755,37 @@ namespace night
 		//auto& draw_call = _drawCalls[_activeRenderTarget][_defaultLineMaterial][empty_textures];
 		s32 uniform_index = (u32)(draw_call.storage.size() / _defaultLineMaterial->storage()); // TODO: fix storage
 
+#ifndef NIGHT_USE_DOUBLE_PRECISION
 		draw_call.vertices.push_back({ area.vertices[0], uniform_index }); // TODO: optimize this
 		draw_call.vertices.push_back({ area.vertices[1], uniform_index });
 		draw_call.vertices.push_back({ area.vertices[2], uniform_index });
 		draw_call.vertices.push_back({ area.vertices[2], uniform_index });
 		draw_call.vertices.push_back({ area.vertices[3], uniform_index });
 		draw_call.vertices.push_back({ area.vertices[0], uniform_index });
+#else
+		Quad<gl_real> q2;
+		q2.vertices[0].point = (vec<4, gl_real>)area.vertices[0].point;
+		q2.vertices[1].point = (vec<4, gl_real>)area.vertices[1].point;
+		q2.vertices[2].point = (vec<4, gl_real>)area.vertices[2].point;
+		q2.vertices[3].point = (vec<4, gl_real>)area.vertices[3].point;
+
+		q2.vertices[0].color = area.vertices[0].color;
+		q2.vertices[1].color = area.vertices[1].color;
+		q2.vertices[2].color = area.vertices[2].color;
+		q2.vertices[3].color = area.vertices[3].color;
+
+		q2.vertices[0].texture_coord = area.vertices[0].texture_coord;
+		q2.vertices[1].texture_coord = area.vertices[1].texture_coord;
+		q2.vertices[2].texture_coord = area.vertices[2].texture_coord;
+		q2.vertices[3].texture_coord = area.vertices[3].texture_coord;
+
+		draw_call.vertices.push_back({ q2.vertices[0], uniform_index }); // TODO: optimize this
+		draw_call.vertices.push_back({ q2.vertices[1], uniform_index });
+		draw_call.vertices.push_back({ q2.vertices[2], uniform_index });
+		draw_call.vertices.push_back({ q2.vertices[2], uniform_index });
+		draw_call.vertices.push_back({ q2.vertices[3], uniform_index });
+		draw_call.vertices.push_back({ q2.vertices[0], uniform_index });
+#endif
 
 		for (s32 i = 0; i < sizeof(layout); i++)
 		{
@@ -835,13 +885,13 @@ namespace night
 		GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 		GLCall(glBindFramebuffer(GL_FRAMEBUFFER, 0));
 
-		using iterator = map <
+		using iterator = map<
 			shandle<const ITexture>, // render targets
-			map<
-			shandle<MaterialOpenGL>, // materials
-			map<
-			vector<TextureUniformData>, // textures
-			DrawCallOpenGL>
+			umap<
+				shandle<MaterialOpenGL>, // materials
+				map<
+					vector<TextureUniformData>, // textures
+					DrawCallOpenGL>
 			>
 		>::iterator;
 
@@ -884,7 +934,7 @@ namespace night
 				// for each material.
 				for (const auto& j : (*i).second)
 				{
-					auto& material = j.first; // TODO: add u8 to material _isFullyOpaque, if true, render to first depth peel only
+					auto& material = j.first; // TODO: add b8 to material _isFullyOpaque, if true, render to first depth peel only
 
 #ifdef false
 					// handle depth testing and blending:
@@ -1021,7 +1071,7 @@ namespace night
 					// for each material.
 					for (const auto& j : (*i).second)
 					{
-						auto& material = j.first; // TODO: add u8 to material _isFullyOpaque, if true, render to first depth peel only
+						auto& material = j.first; // TODO: add b8 to material _isFullyOpaque, if true, render to first depth peel only
 						
 						//// handle depth testing and blending:
 						//if (material->should_use_depth_testing || (material->should_use_depth_testing && material->should_use_depth_peeling))
@@ -1114,7 +1164,9 @@ namespace night
 							{
 								shandle<const ITexture> const& prev = _depthPeels[l - 1];
 
-								material->uniform("u_prev_depth", TextureUniformData{.texture = prev, .sample_depth_buffer = true});
+								/*material->uniform("u_prev_depth", TextureUniformData{.texture = prev, .sample_depth_buffer = true});*/
+
+								material->uniform("u_prev_depth", prev->depth_buffer());
 
 								//handle<ShaderOpenGL> shader = material->IMaterial::shader();
 								//s32 location = shader->uniformLocation("u_prev_depth");
@@ -1150,7 +1202,7 @@ namespace night
 				GLCall(glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA));
 
 				ratio = vec2(w, h) / vec2(_depthPeelResolution);
-				Quad<> quad(QuadParams<>{ .position = {0, 0, 0}, .size = {1, 1} });
+				Quad<gl_real> quad(QuadParams<gl_real>{ .position = {0, 0, 0}, .size = {1, 1} });
 				quad.vertices[0].texture_coord = vec2(0, ratio.y);
 				quad.vertices[1].texture_coord = vec2(ratio.x, ratio.y);
 				quad.vertices[2].texture_coord = { ratio.x, 0 };
@@ -1166,7 +1218,9 @@ namespace night
 
 				for (s32 j = (s32)_depthPeels.size() - 1; j >= 0; j--)
 				{
-					_depthPeelMaterial->uniform("u_texture", TextureUniformData{ .texture = _depthPeels[j], .sample_depth_buffer = false });
+					//_depthPeelMaterial->uniform("u_texture", TextureUniformData{ .texture = _depthPeels[j], .sample_depth_buffer = false });
+					_depthPeelMaterial->uniform("u_texture", (handle<ITexture>)_depthPeels[j]);
+
 					_depthPeelMaterial->bind();
 					_vbo.data(&vertices, 6);
 					GLCall(glDrawElements(GL_TRIANGLES, _vbo.count(), GL_UNSIGNED_INT, nullptr));
@@ -1175,7 +1229,7 @@ namespace night
 
 		for (auto i = _drawCalls.begin(); i != _drawCalls.end(); i++)
 		{
-			if ((*i).first->should_use_depth_peeling)
+			if ((*i).first->should_use_depth_peeling && _depthPeelCount > 1)
 			{
 				render_depth_peels(i);
 			}
@@ -1193,7 +1247,7 @@ namespace night
 		GLCall(glEnable(GL_BLEND));
 		GLCall(glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA));
 
-		Quad<> quad(QuadParams<>{ .position = {0, 0, 0}, .size = { 1, 1 } });
+		Quad<gl_real> quad(QuadParams<gl_real>{ .position = {0, 0, 0}, .size = { 1, 1 } });
 		quad.vertices[0].texture_coord = vec2(0, 1);
 		quad.vertices[1].texture_coord = vec2(1, 1);
 		quad.vertices[2].texture_coord = { 1, 0 };
@@ -1207,7 +1261,9 @@ namespace night
 		vertices[4] = { quad.vertices[3], 0 };
 		vertices[5] = { quad.vertices[0], 0 };
 
-		_depthPeelMaterial->uniform("u_texture", TextureUniformData{ .texture = _defaultRenderTarget, .sample_depth_buffer = false });
+		//_depthPeelMaterial->uniform("u_texture", TextureUniformData{ .texture = _defaultRenderTarget, .sample_depth_buffer = false });
+		_depthPeelMaterial->uniform("u_texture", (handle<ITexture>)_defaultRenderTarget);
+		
 		_depthPeelMaterial->bind();
 		_vbo.data(&vertices, 6);
 
@@ -1226,7 +1282,7 @@ namespace night
 			return;
 		}
 
-		update_resources();
+		//update_resources();
 		auto& sorted_buffers = graph.sorted_buffers();
 
 		reset_state();
@@ -1287,8 +1343,27 @@ namespace night
 					
 					for (s32 i = 0; i < current_buffer.quads.size(); i++)
 					{
-						Quad<> quad(current_buffer.quads[i].quad);
-					
+#ifndef NIGHT_USE_DOUBLE_PRECISION
+						Quad<gl_real> const& quad(current_buffer.quads[i].quad);
+#else
+						Quad<> const& cbq = current_buffer.quads[i].quad;
+						Quad<gl_real> quad;//(current_buffer.quads[i].quad);
+
+						quad.vertices[0].point = (vec<4, gl_real>)cbq.vertices[0].point;
+						quad.vertices[1].point = (vec<4, gl_real>)cbq.vertices[1].point;
+						quad.vertices[2].point = (vec<4, gl_real>)cbq.vertices[2].point;
+						quad.vertices[3].point = (vec<4, gl_real>)cbq.vertices[3].point;
+
+						quad.vertices[0].color = cbq.vertices[0].color;
+						quad.vertices[1].color = cbq.vertices[1].color;
+						quad.vertices[2].color = cbq.vertices[2].color;
+						quad.vertices[3].color = cbq.vertices[3].color;
+
+						quad.vertices[0].texture_coord = cbq.vertices[0].texture_coord;
+						quad.vertices[1].texture_coord = cbq.vertices[1].texture_coord;
+						quad.vertices[2].texture_coord = cbq.vertices[2].texture_coord;
+						quad.vertices[3].texture_coord = cbq.vertices[3].texture_coord;
+#endif
 						vertices[i * 6].vertex = quad.vertices[0];
 						vertices[i * 6 + 1].vertex = quad.vertices[1];
 						vertices[i * 6 + 2].vertex = quad.vertices[2];
@@ -1313,19 +1388,35 @@ namespace night
 
 					for (s32 i = 0; i < current_buffer.triangles.size(); i++)
 					{
-						auto& triangle = current_buffer.triangles[i];
+						RenderGraph::TriangleToken const& cbt = current_buffer.triangles[i];
+#ifndef NIGHT_USE_DOUBLE_PRECISION
+						Triangle<gl_real> const& triangle = cbt.triangle;
+#else
+						Triangle<gl_real> triangle;
 
-						vertices[quads_vertices_size + i * 3].vertex = triangle.triangle.vertices[0];
-						vertices[quads_vertices_size + i * 3 + 1].vertex = triangle.triangle.vertices[1];
-						vertices[quads_vertices_size + i * 3 + 2].vertex = triangle.triangle.vertices[2];
+						triangle.vertices[0].point = (vec<4, gl_real>)cbt.triangle.vertices[0].point;
+						triangle.vertices[1].point = (vec<4, gl_real>)cbt.triangle.vertices[1].point;
+						triangle.vertices[2].point = (vec<4, gl_real>)cbt.triangle.vertices[2].point;
 
-						vertices[quads_vertices_size + i * 3].uniform_index = current_uniform_index + triangle.uniform_index;
-						vertices[quads_vertices_size + i * 3 + 1].uniform_index = current_uniform_index + triangle.uniform_index;
-						vertices[quads_vertices_size + i * 3 + 2].uniform_index = current_uniform_index + triangle.uniform_index;
+						triangle.vertices[0].color = cbt.triangle.vertices[0].color;
+						triangle.vertices[1].color = cbt.triangle.vertices[1].color;
+						triangle.vertices[2].color = cbt.triangle.vertices[2].color;
 
-						vertices[quads_vertices_size + i * 3].transform_index = current_transform_index + triangle.transform_index;
-						vertices[quads_vertices_size + i * 3 + 1].transform_index = current_transform_index + triangle.transform_index;
-						vertices[quads_vertices_size + i * 3 + 2].transform_index = current_transform_index + triangle.transform_index;
+						triangle.vertices[0].texture_coord = cbt.triangle.vertices[0].texture_coord;
+						triangle.vertices[1].texture_coord = cbt.triangle.vertices[1].texture_coord;
+						triangle.vertices[2].texture_coord = cbt.triangle.vertices[2].texture_coord;
+#endif
+						vertices[quads_vertices_size + i * 3].vertex = triangle.vertices[0];
+						vertices[quads_vertices_size + i * 3 + 1].vertex = triangle.vertices[1];
+						vertices[quads_vertices_size + i * 3 + 2].vertex = triangle.vertices[2];
+
+						vertices[quads_vertices_size + i * 3].uniform_index = current_uniform_index + cbt.uniform_index;
+						vertices[quads_vertices_size + i * 3 + 1].uniform_index = current_uniform_index + cbt.uniform_index;
+						vertices[quads_vertices_size + i * 3 + 2].uniform_index = current_uniform_index + cbt.uniform_index;
+
+						vertices[quads_vertices_size + i * 3].transform_index = current_transform_index + cbt.transform_index;
+						vertices[quads_vertices_size + i * 3 + 1].transform_index = current_transform_index + cbt.transform_index;
+						vertices[quads_vertices_size + i * 3 + 2].transform_index = current_transform_index + cbt.transform_index;
 					}
 					
 					// append our buffer onto the draw call buffer:

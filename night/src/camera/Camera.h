@@ -31,14 +31,14 @@ namespace night
 		vec3 up{ UP };
 		ECameraType type{ECameraType::Perspective};
 		real fov{ NIGHT_CAMERA_DEFAULT_FOV };
-		AABB<> ortho_region{ .left = -1, .right = 1, .top = 1, .bottom = -1 };
+		AABB<> ortho_region{ .left = -1, .top = 1, .right = 1, .bottom = -1 };
 		real near_clip{ NIGHT_CAMERA_DEFAULT_NEAR_CLIP };
 		real far_clip{ NIGHT_CAMERA_DEFAULT_FAR_CLIP };
 
 		Camera operator*(CameraTransform const& x) const;
 
 		vec3 direction() const;
-		u8 should_cull_plane(vec3 const& point_on_plane, vec3 const& plane_normal) const;
+		b8 should_cull_plane(vec3 const& point_on_plane, vec3 const& plane_normal) const;
 
 		static vec3 triangle_normal(vec3 const& p1, vec3 const& p2, vec3 const& p3);
 	};

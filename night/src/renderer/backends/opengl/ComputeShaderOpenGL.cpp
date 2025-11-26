@@ -3,6 +3,7 @@
 #include "ComputeShaderOpenGL.h"
 #include "GLCall.h"
 #include "log/log.h"
+#include "RendererOpenGLReal.h"
 
 namespace night
 {
@@ -19,7 +20,7 @@ namespace night
 		}
 	}
 
-    u8 ComputeShaderOpenGL::load_from_path(const string& path)
+    b8 ComputeShaderOpenGL::load_from_path(const string& path)
     {
         clean();
 
@@ -38,7 +39,7 @@ namespace night
         return _rendererID != 0;
     }
 
-    u8 ComputeShaderOpenGL::load_from_memory(const string& str)
+    b8 ComputeShaderOpenGL::load_from_memory(const string& str)
     {
         clean();
 
@@ -161,38 +162,37 @@ namespace night
 		GLCall(glUniform1i(uniform_location(name), value));
 	}
 
+	// TODO: make uniform1f take in r32s, unfiform1d for r64s
 	void ComputeShaderOpenGL::uniform1f(const string& name, real value)
 	{
-		
 		GLCall(glUseProgram(_rendererID));
-		GLCall(glUniform1f(uniform_location(name), value));
+		GLCall(glUniform1f(uniform_location(name), (gl_real)value));
 	}
 
 	void ComputeShaderOpenGL::uniform2f(const string& name, real v0, real v1)
 	{
 		
-		GLCall(glUniform2f(uniform_location(name), v0, v1));
+		GLCall(glUniform2f(uniform_location(name), (gl_real)v0, (gl_real)v1));
 	}
 
 	void ComputeShaderOpenGL::uniform3f(const string& name, real v0, real v1, real v2)
 	{
-		
 		GLCall(glUseProgram(_rendererID));
-		GLCall(glUniform3f(uniform_location(name), v0, v1, v2));
+		GLCall(glUniform3f(uniform_location(name), (gl_real)v0, (gl_real)v1, (gl_real)v2));
 	}
 
 	void ComputeShaderOpenGL::uniform4f(const string& name, real v0, real v1, real v2, real v3)
 	{
 		
 		GLCall(glUseProgram(_rendererID));
-		GLCall(glUniform4f(uniform_location(name), v0, v1, v2, v3));
+		GLCall(glUniform4f(uniform_location(name), (gl_real)v0, (gl_real)v1, (gl_real)v2, (gl_real)v3));
 	}
 
 	void ComputeShaderOpenGL::uniformMat4f(const string& name, const mat4& matrix)
 	{
-		
+		mat<4, 4, gl_real> fmatrix = matrix;
 		GLCall(glUseProgram(_rendererID));
-		GLCall(glUniformMatrix4fv(uniform_location(name), 1, GL_FALSE, &matrix[0][0]));
+		GLCall(glUniformMatrix4fv(uniform_location(name), 1, GL_FALSE, &fmatrix[0][0]));
 	}
 
 	void ComputeShaderOpenGL::compute() const

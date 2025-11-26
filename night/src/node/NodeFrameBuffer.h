@@ -7,9 +7,9 @@ namespace night
 
 	struct NodeFrameBufferParams
 	{
-		u8 should_use_depth_peeling{ true };
-		u8 should_use_depth_testing{ true };
-		u8 should_use_blending{ true };
+		b8 should_use_depth_peeling{ true };
+		b8 should_use_depth_testing{ true };
+		b8 should_use_blending{ true };
 	};
 
 	// like NodeRenderTarget, but it clears automatically and resizes with window.

@@ -59,6 +59,18 @@ namespace night
 		return _activeMaterial;
 	}
 
+	void IRenderer::activate_textures(TextureUniformData const& texture)
+	{
+		_activeTextures.clear();
+		_activeTextures.push_back(texture);
+	}
+
+	void IRenderer::activate_textures(initializer_list<TextureUniformData> const& textures)
+	{
+		_activeTextures.clear();
+		_activeTextures.insert(_activeTextures.begin(), textures.begin(), textures.end());
+	}
+
 	void IRenderer::activate_render_target(handle<const ITexture> target)
 	{
 		ASSERT(target != nullptr); _activeRenderTarget = target;
@@ -302,7 +314,7 @@ namespace night
 		return vec4(glm::project(point, mat4(1), _mvp, vec4(-1, -1, 2, 2)), 1);
 	}
 
-	u8 IRenderer::should_cull_triangle(vec3 const& p1, vec3 const& p2, vec3 const& p3)
+	b8 IRenderer::should_cull_triangle(vec3 const& p1, vec3 const& p2, vec3 const& p3)
 	{
 		vec2 pp1 = project_to_screen(p1);
 		vec2 pp2 = project_to_screen(p2);
@@ -314,6 +326,7 @@ namespace night
 
 	Quad<> IRenderer::generate_line_quad(DrawLineParams const& params, handle<const ITexture> target)
 	{
+		//return Quad<>(QuadParams<>{.size = vec2(2)});
 		// if p0 == p1, return square of size max width
 		Quad area;
 

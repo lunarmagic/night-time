@@ -76,8 +76,8 @@ namespace night
 
 	struct GuiPollEventResult
 	{
-		u8 wants_mouse_capture{ false };
-		u8 wants_keyboard_capture{ false };
+		b8 wants_mouse_capture{ false };
+		b8 wants_keyboard_capture{ false };
 	};
 
 	struct NIGHT_API IGui
@@ -87,44 +87,44 @@ namespace night
 		virtual void update() {}
 		virtual void close() {}
 
-		virtual u8 begin(string const& name, u8* p_open = nullptr, EGuiWindow flags = EGuiWindow::None) { return false; };
-		virtual u8 button(string const& name) { { return false; } };
-		virtual u8 checkbox(string const& name, u8 const* x) { { return false; } };
-		virtual u8 drag_r32(string const& name, r32 const* r, r32 speed = 0.1f, r32 min = 0.0f, r32 max = 0.0f) { { return false; } };
-		virtual u8 drag_s32(string const& name, s32 const* i, r32 speed = 0.1f, s32 min = 0, s32 max = 0) { { return false; } };
-		virtual u8 drag_vec2(string const& name, vec2 const* v, r32 speed = 0.1f, r32 min = 0, r32 max = 0) { return false; }
-		virtual u8 drag_vec3(string const& name, vec3 const* v, r32 speed = 0.1f, r32 min = 0, r32 max = 0) { return false; }
-		virtual u8 drag_vec4(string const& name, vec4 const* v, r32 speed = 0.1f, r32 min = 0, r32 max = 0) { return false; }
-		virtual u8 drag_ivec4(string const& name, ivec4 const* v, r32 speed = 0.1f, s32 min = 0, s32 max = 0) { { return false; } };
-		virtual u8 input_text(string const& name, string& out_buffer, string const& hint = "") { { return false; } };
-		virtual u8 tree_node(string const& name, u8 selected = false) { { return false; } };
+		virtual b8 begin(string const& name, b8* p_open = nullptr, EGuiWindow flags = EGuiWindow::None) { return false; };
+		virtual b8 button(string const& name) { { return false; } };
+		virtual b8 checkbox(string const& name, b8 const* x) { { return false; } };
+		virtual b8 drag_real(string const& name, real const* r, real speed = 0.1f, real min = 0.0f, real max = 0.0f) { { return false; } };
+		virtual b8 drag_s32(string const& name, s32 const* i, real speed = 0.1f, s32 min = 0, s32 max = 0) { { return false; } };
+		virtual b8 drag_vec2(string const& name, vec2 const* v, real speed = 0.1f, real min = 0, real max = 0) { return false; }
+		virtual b8 drag_vec3(string const& name, vec3 const* v, real speed = 0.1f, real min = 0, real max = 0) { return false; }
+		virtual b8 drag_vec4(string const& name, vec4 const* v, real speed = 0.1f, real min = 0, real max = 0) { return false; }
+		virtual b8 drag_ivec4(string const& name, ivec4 const* v, real speed = 0.1f, s32 min = 0, s32 max = 0) { { return false; } };
+		virtual b8 input_text(string const& name, string& out_buffer, string const& hint = "") { { return false; } };
+		virtual b8 tree_node(string const& name, b8 selected = false) { { return false; } };
 		virtual void tree_pop() {};
-		virtual u8 begin_menu_bar() { { return false; } };
+		virtual b8 begin_menu_bar() { { return false; } };
 		virtual void end_menu_bar() {};
-		virtual u8 begin_menu(string const& name) { { return false; } };
+		virtual b8 begin_menu(string const& name) { { return false; } };
 		virtual void end_menu() {};
-		virtual u8 menu_item(string const& name, u8 selected = false) { { return false; } };
-		virtual u8 begin_list_box(string const& name) { { return false; } };
+		virtual b8 menu_item(string const& name, b8 selected = false) { { return false; } };
+		virtual b8 begin_list_box(string const& name) { { return false; } };
 		virtual void end_list_box() {};
-		virtual u8 begin_canvas(string const& name, real height_ratio = 1.0f, Color const& fill = BLACK) { { return false; } };
-		virtual u8 canvas_line(vec2 const& p1, vec2 const& p2, Color const& color = WHITE, real thickness = 1.0f) { { return false; } };
-		virtual u8 canvas_circle(vec2 const& point, real const& radius, Color const& color = WHITE) { { return false; } };
-		virtual u8 canvas_circle_filled(vec2 const& point, real const& radius, Color const& color = WHITE) { { return false; } };
+		virtual b8 begin_canvas(string const& name, real height_ratio = 1.0f, Color const& fill = BLACK) { { return false; } };
+		virtual b8 canvas_line(vec2 const& p1, vec2 const& p2, Color const& color = WHITE, real thickness = 1.0f) { { return false; } };
+		virtual b8 canvas_circle(vec2 const& point, real const& radius, Color const& color = WHITE) { { return false; } };
+		virtual b8 canvas_circle_filled(vec2 const& point, real const& radius, Color const& color = WHITE) { { return false; } };
 		virtual vec2 canvas_mouse_position() { { return vec2(0); } };
 		virtual void end_canvas() {};
-		virtual u8 begin_child(string const& name, vec2 size) { { return false; } };
+		virtual b8 begin_child(string const& name, vec2 size) { { return false; } };
 		virtual void end_child() {};
 		virtual void begin_group()  {};
 		virtual void end_group()  {};
 		virtual void same_line()  {};
 		virtual void seperator()  {};
-		virtual u8 selectable(string const& label, u8 is_selected)  { { return false; } };
-		virtual u8 is_item_clicked(EMouse button = EMouse::Left)  { { return false; } };
-		virtual u8 is_mouse_down(EMouse button = EMouse::Left)  { { return false; } };
-		virtual u8 is_mouse_released(EMouse button = EMouse::Left)  { { return false; } };
+		virtual b8 selectable(string const& label, b8 is_selected)  { { return false; } };
+		virtual b8 is_item_clicked(EMouse button = EMouse::Left)  { { return false; } };
+		virtual b8 is_mouse_down(EMouse button = EMouse::Left)  { { return false; } };
+		virtual b8 is_mouse_released(EMouse button = EMouse::Left)  { { return false; } };
 		virtual real get_frame_height_with_spacing() { return 0; };
-		virtual u8 set_next_window_size(vec2 const& size)  { { return false; } };
-		virtual u8 set_next_window_position(vec2 const& position)  { { return false; } };
+		virtual b8 set_next_window_size(vec2 const& size)  { { return false; } };
+		virtual b8 set_next_window_position(vec2 const& position)  { { return false; } };
 		virtual void text(string const& text)  {};
 		virtual void text_colored(string const& text, Color const& color)  {};
 		virtual void end()  {};
@@ -141,44 +141,44 @@ namespace night
 		//void create_window(string id, GuiWindow const& window)  override;
 		//void close_window(string id)  override;
 
-		virtual u8 begin(string const& name, u8* p_open = nullptr, EGuiWindow flags = EGuiWindow::None)  override;
-		virtual u8 button(string const& name)  override;
-		virtual u8 checkbox(string const& name, u8 const* x)  override;
-		virtual u8 drag_r32(string const& name, r32 const* r, r32 speed = 0.1f, r32 min = 0.0f, r32 max = 0.0f)  override;
-		virtual u8 drag_s32(string const& name, s32 const* i, r32 speed = 0.1f, s32 min = 0, s32 max = 0)  override;
-		virtual u8 drag_vec2(string const& name, vec2 const* v, r32 speed = 0.1f, r32 min = 0, r32 max = 0) override;
-		virtual u8 drag_vec3(string const& name, vec3 const* v, r32 speed = 0.1f, r32 min = 0, r32 max = 0) override;
-		virtual u8 drag_vec4(string const& name, vec4 const* v, r32 speed = 0.1f, r32 min = 0, r32 max = 0) override;
-		virtual u8 drag_ivec4(string const& name, ivec4 const* v, r32 speed = 0.1f, s32 min = 0, s32 max = 0)  override;
-		virtual u8 input_text(string const& name, string& out_buffer, string const& hint = "")  override;
-		virtual u8 tree_node(string const& name, u8 selected = false)  override;
+		virtual b8 begin(string const& name, b8* p_open = nullptr, EGuiWindow flags = EGuiWindow::None)  override;
+		virtual b8 button(string const& name)  override;
+		virtual b8 checkbox(string const& name, b8 const* x)  override;
+		virtual b8 drag_real(string const& name, real const* r, real speed = 0.1f, real min = 0.0f, real max = 0.0f)  override;
+		virtual b8 drag_s32(string const& name, s32 const* i, real speed = 0.1f, s32 min = 0, s32 max = 0)  override;
+		virtual b8 drag_vec2(string const& name, vec2 const* v, real speed = 0.1f, real min = 0, real max = 0) override;
+		virtual b8 drag_vec3(string const& name, vec3 const* v, real speed = 0.1f, real min = 0, real max = 0) override;
+		virtual b8 drag_vec4(string const& name, vec4 const* v, real speed = 0.1f, real min = 0, real max = 0) override;
+		virtual b8 drag_ivec4(string const& name, ivec4 const* v, real speed = 0.1f, s32 min = 0, s32 max = 0)  override;
+		virtual b8 input_text(string const& name, string& out_buffer, string const& hint = "")  override;
+		virtual b8 tree_node(string const& name, b8 selected = false)  override;
 		virtual void tree_pop()  override;
-		virtual u8 begin_menu_bar()  override;
+		virtual b8 begin_menu_bar()  override;
 		virtual void end_menu_bar()  override;
-		virtual u8 begin_menu(string const& name)  override;
+		virtual b8 begin_menu(string const& name)  override;
 		virtual void end_menu()  override;
-		virtual u8 menu_item(string const& name, u8 selected = false)  override;
-		virtual u8 begin_list_box(string const& name)  override;
+		virtual b8 menu_item(string const& name, b8 selected = false)  override;
+		virtual b8 begin_list_box(string const& name)  override;
 		virtual void end_list_box()  override;
-		virtual u8 begin_canvas(string const& name, real height_ratio = 1.0f, Color const& fill = BLACK)  override;
-		virtual u8 canvas_line(vec2 const& p1, vec2 const& p2, Color const& color = WHITE, real thickness = 1.0f)  override;
-		virtual u8 canvas_circle(vec2 const& point, real const& radius, Color const& color = WHITE)  override;
-		virtual u8 canvas_circle_filled(vec2 const& point, real const& radius, Color const& color = WHITE)  override;
+		virtual b8 begin_canvas(string const& name, real height_ratio = 1.0f, Color const& fill = BLACK)  override;
+		virtual b8 canvas_line(vec2 const& p1, vec2 const& p2, Color const& color = WHITE, real thickness = 1.0f)  override;
+		virtual b8 canvas_circle(vec2 const& point, real const& radius, Color const& color = WHITE)  override;
+		virtual b8 canvas_circle_filled(vec2 const& point, real const& radius, Color const& color = WHITE)  override;
 		virtual vec2 canvas_mouse_position()  override;
 		virtual void end_canvas()  override;
-		virtual u8 begin_child(string const& name, vec2 size)  override;
+		virtual b8 begin_child(string const& name, vec2 size)  override;
 		virtual void end_child()  override;
 		virtual void begin_group()  override;
 		virtual void end_group()  override;
 		virtual void same_line()  override;
 		virtual void seperator()  override;
-		virtual u8 selectable(string const& label, u8 is_selected)  override;
-		virtual u8 is_item_clicked(EMouse button = EMouse::Left)  override;
-		virtual u8 is_mouse_down(EMouse button = EMouse::Left)  override;
-		virtual u8 is_mouse_released(EMouse button = EMouse::Left)  override;
+		virtual b8 selectable(string const& label, b8 is_selected)  override;
+		virtual b8 is_item_clicked(EMouse button = EMouse::Left)  override;
+		virtual b8 is_mouse_down(EMouse button = EMouse::Left)  override;
+		virtual b8 is_mouse_released(EMouse button = EMouse::Left)  override;
 		virtual real get_frame_height_with_spacing()  override;
-		virtual u8 set_next_window_size(vec2 const& size)  override;
-		virtual u8 set_next_window_position(vec2 const& position)  override;
+		virtual b8 set_next_window_size(vec2 const& size)  override;
+		virtual b8 set_next_window_position(vec2 const& position)  override;
 		virtual void text(string const& text)  override;
 		virtual void text_colored(string const& text, Color const& color)  override;
 		virtual void end()  override;

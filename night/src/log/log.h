@@ -36,7 +36,7 @@ namespace night
 
 	struct NIGHT_API Log
 	{
-		//static u8 is_prev_cout_a_log;
+		//static b8 is_prev_cout_a_log;
 		static map<string, u32> logged_messages;
 
 		static s32 debug_logging_mask;

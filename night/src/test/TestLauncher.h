@@ -19,7 +19,7 @@ namespace night
 			if (_activeTest == nullptr)
 			{
 				IGui& gui = utility::gui();
-				u8 is_open = true;
+				b8 is_open = true;
 				gui.begin("Select Test", &is_open);
 
 				if (!is_open)

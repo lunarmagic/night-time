@@ -66,8 +66,8 @@ namespace night
 	//	vec3 origin;
 	//	real radius{ 1.0f };
 	//	RenderGraph* out_graph{ nullptr };
-	//	u8 wireframe{ true };
-	//	u8 outline_only{ true };
+	//	b8 wireframe{ true };
+	//	b8 outline_only{ true };
 	//	real width{ NIGHT_SHAPE_RENDERER_LINE_WIDTH };
 	//	real draw_through_opacity{ NIGHT_SHAPE_RENDERER_DRAW_THROUGH_OPACITY };
 	//	Color color{ NIGHT_SPHERE_COLOR };
@@ -100,7 +100,7 @@ namespace night
 	//	real radius{ 1.0f };
 	//	real height{ 1.0f };
 	//	RenderGraph* out_graph{ nullptr };
-	//	u8 wireframe{ true };
+	//	b8 wireframe{ true };
 	//	real width{ NIGHT_SHAPE_RENDERER_LINE_WIDTH };
 	//	real draw_through_opacity{ NIGHT_SHAPE_RENDERER_DRAW_THROUGH_OPACITY };
 	//	Color color{ NIGHT_CYLINDER_COLOR };
@@ -114,7 +114,7 @@ namespace night
 	//	vector<Plane<>> const* planes;
 	//	mat4 transform{ mat4(1) };
 	//	RenderGraph* out_graph{ nullptr };
-	//	u8 wireframe{ true };
+	//	b8 wireframe{ true };
 	//	real width{ NIGHT_SHAPE_RENDERER_LINE_WIDTH };
 	//	real draw_through_opacity{ NIGHT_SHAPE_RENDERER_DRAW_THROUGH_OPACITY };
 	//	Color color{ NIGHT_CONVEX_COLOR };

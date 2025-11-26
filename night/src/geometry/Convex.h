@@ -16,7 +16,7 @@ namespace night
 		static vector<vec<2, T>> make_convex(_It begin, _It end);
 
 		template<typename _It>
-		static u8 is_clockwise(_It begin, _It end);
+		static b8 is_clockwise(_It begin, _It end);
 
 		template<typename _It>
 		static void wind_up(_It begin, _It end, EOrientation winding_order);
@@ -36,7 +36,7 @@ namespace night
 		static vector<vec<2, T>> clip(_Itc begin_clip, _Itc end_clip, _Its begin_subject, _Its end_subject);
 
 		template<typename _It>
-		static u8 intersects(vec<2, T> const& point, _It begin, _It end, real epsilon = NIGHT_GJK_DEFAULT_EPSILON, s32 max_iterations = NIGHT_GJK_DEFAULT_MAX_ITERATIONS);
+		static b8 intersects(vec<2, T> const& point, _It begin, _It end, real epsilon = NIGHT_GJK_DEFAULT_EPSILON, s32 max_iterations = NIGHT_GJK_DEFAULT_MAX_ITERATIONS);
 	};
 
 	template<typename T>
@@ -51,7 +51,7 @@ namespace night
 
 	template<typename T>
 	template<typename _It>
-	u8 Convex2D<T>::is_clockwise(_It begin, _It end)
+	b8 Convex2D<T>::is_clockwise(_It begin, _It end)
 	{
 		// TODO: this function seems to be broken.
 
@@ -220,7 +220,7 @@ namespace night
 			return {};
 		}
 
-		auto is_inside = [](vec2 point, vec2 a, vec2 b) -> u8
+		auto is_inside = [](vec2 point, vec2 a, vec2 b) -> b8
 			{
 				return (math::cross(a - b, point) + math::cross(b, a)) > 0.0f;
 			};
@@ -335,7 +335,7 @@ namespace night
 
 	template<typename T>
 	template<typename _It>
-	inline u8 Convex2D<T>::intersects(vec<2, T> const& point, _It begin, _It end, real epsilon, s32 max_iterations)
+	inline b8 Convex2D<T>::intersects(vec<2, T> const& point, _It begin, _It end, real epsilon, s32 max_iterations)
 	{
 #if 1 // TODO: use gjk
 		if (begin == end || std::next(begin) == end)
@@ -343,7 +343,7 @@ namespace night
 			return false;
 		}
 
-		u8 clockwise = Convex2D<T>::is_clockwise(begin, end);
+		b8 clockwise = Convex2D<T>::is_clockwise(begin, end);
 
 		_It i = std::prev(end);
 		for (_It j = begin; j != end; j++)
@@ -442,7 +442,7 @@ namespace night
 			angles.push_back(angle);
 		}
 
-		std::sort(angles.begin(), angles.end(), [](auto& a, auto& b) -> u8 {return a.angle < b.angle; });
+		std::sort(angles.begin(), angles.end(), [](auto& a, auto& b) -> b8 {return a.angle < b.angle; });
 
 		for (s32 i = 0; i < angles.size(); i++)
 		{

@@ -76,12 +76,12 @@ namespace night
 			return _ptr.lock().get();
 		}
 
-		u8 operator==(const std::nullptr_t& null) const
+		b8 operator==(const std::nullptr_t& null) const
 		{
 			return _ptr.expired();
 		}
 
-		u8 operator==(const ref<T>& other) const
+		b8 operator==(const ref<T>& other) const
 		{
 			if (_ptr.lock() == other._ptr.lock())
 			{
@@ -92,23 +92,23 @@ namespace night
 		}
 
 		template<typename O>
-		u8 operator==(const sref<O>& other) const
+		b8 operator==(const sref<O>& other) const
 		{
 			return _ptr.lock() == other;
 		}
 
-		u8 operator!=(const std::nullptr_t& null) const
+		b8 operator!=(const std::nullptr_t& null) const
 		{
 			return !_ptr.expired();
 		}
 
-		u8 operator!=(const ref<T>& other) const
+		b8 operator!=(const ref<T>& other) const
 		{
 			return _ptr.lock() != other._ptr.lock();
 		}
 
 		template<typename O>
-		u8 operator!=(const ref<O>& other) const
+		b8 operator!=(const ref<O>& other) const
 		{
 			return _ptr.lock() != other.ptr().lock();
 		}
@@ -118,12 +118,12 @@ namespace night
 			return *_ptr.lock();
 		}
 
-		u8 operator<(ref<T> other) const
+		b8 operator<(ref<T> other) const
 		{
 			return _ptr.lock().get() < other._ptr.lock().get();
 		}
 
-		inline operator u8 () { return !_ptr.expired(); }
+		inline operator b8 () { return !_ptr.expired(); }
 
 		const std::weak_ptr<T>& ptr() const { return _ptr; }
 

@@ -11,6 +11,14 @@
 
 #define UNIQUE_VARIABLE_NAME(base) CONCAT(base, __COUNTER__)
 
+constexpr size_t __hash_string(const char* str) {
+	size_t hash = 0;
+	while (*str) {
+		hash = hash * 31 + *str++;
+	}
+	return hash;
+}
+
 namespace night
 {
 
@@ -35,8 +43,8 @@ namespace night
 
 		static umultimap<string, InputKey> const& action_map();
 
-		static u8 key_down(EKey const& key);
-		static u8 mouse_down(EMouse const& mouse);
+		static b8 key_down(EKey const& key);
+		static b8 mouse_down(EMouse const& mouse);
 	};
 
 }

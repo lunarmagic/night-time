@@ -68,8 +68,6 @@ namespace night
 			_pyramidVertices[4] = vec3{ 0.0f, 0.0f, 1.0f };
 		}
 
-	protected:
-
 		virtual void update_gui(handle<NodeGui> gui) override
 		{
 			ASSERT(gui != nullptr);
@@ -155,6 +153,8 @@ namespace night
 			_shape.transform = math::quat_to_mat4(quat(_shape.rotation)) * _shape.transform;
 			_shape.transform = math::translate(_shape.position) * _shape.transform;
 		}
+
+	protected:
 
 		virtual void on_render(RenderGraph& out_graph) const override
 		{
@@ -275,8 +275,8 @@ namespace night
 		array<vec3, 3> _triangleVertices;
 		array<vec3, 8> _boxVertices;
 		array<vec3, 5> _pyramidVertices;
-		u8 _showOutline = false;
-		u8 _showTriangleFill = true;
+		b8 _showOutline = false;
+		b8 _showTriangleFill = true;
 	};
 
 }

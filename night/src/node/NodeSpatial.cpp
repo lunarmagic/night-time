@@ -73,7 +73,7 @@ namespace night
 		dispatch_system([](NodeSpatial& node)
 			{
 				node.on_transformed();
-			}, exclude<>, true);
+			}, stopper<>, true);
 	}
 
 	void NodeSpatial::update_tsr()
@@ -91,7 +91,7 @@ namespace night
 		dispatch_system([](NodeSpatial& node)
 			{
 				node.on_transformed();
-			}, exclude<>, true);
+			}, stopper<>, true);
 	}
 
 	// TODO: cache global transform of tree every time local transform is updated or node is moved

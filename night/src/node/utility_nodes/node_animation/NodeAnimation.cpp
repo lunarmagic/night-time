@@ -21,7 +21,7 @@ namespace night
 	}
 
 	// TODO: delay play until after lag spike.
-	u8 NodeAnimation::play()
+	b8 NodeAnimation::play()
 	{
 		if (_keyframes.empty())
 		{
@@ -43,7 +43,7 @@ namespace night
 		return true;
 	}
 
-	u8 NodeAnimation::pause()
+	b8 NodeAnimation::pause()
 	{
 		if (_state == ENodeAnimationState::Paused || _state == ENodeAnimationState::Reset)
 		{
@@ -54,7 +54,7 @@ namespace night
 		return true;
 	}
 
-	u8 NodeAnimation::resume()
+	b8 NodeAnimation::resume()
 	{
 		if(_state == ENodeAnimationState::Playing || _state == ENodeAnimationState::Finished || _state == ENodeAnimationState::Reset)
 		{

@@ -20,16 +20,12 @@ namespace night
 	template<typename T>
 	struct QuadParams;
 	struct Text;
-	//struct ITexture;
 	struct TextureParams;
 	struct IShader;
-	//struct IMaterial;
 	struct IComputeShader;
 	struct ShaderParams;
 	struct MaterialParams;
 	struct ComputeShaderParams;
-	//struct Ray3D;
-	//struct TextureUniformData;
 
 	using RenderTarget = handle<const ITexture>;
 
@@ -41,12 +37,12 @@ namespace night
 		function<void(Event&)> event_callback{nullptr};
 	};
 
-#define RENDERER_LINE_DEFAULT_WIDTH 0.005f
-#define RENDERER_POINT_DEFAULT_WIDTH 0.0075f
-#define RENDERER_POINT_DEFAULT_HEIGHT 0.05f
+#define RENDERER_LINE_DEFAULT_WIDTH ((real)0.005)
+#define RENDERER_POINT_DEFAULT_WIDTH ((real)0.0075)
+#define RENDERER_POINT_DEFAULT_HEIGHT ((real)0.05)
 
 #define RENDERER_DEFAULT_RENDER_TARGET_NEAR_CLIP NIGHT_CAMERA_DEFAULT_NEAR_CLIP
-#define RENDERER_DEFAULT_RENDER_TARGET_FAR_CLIP NIGHT_CAMERA_DEFAULT_FAR_CLIP * 2.0f
+#define RENDERER_DEFAULT_RENDER_TARGET_FAR_CLIP (NIGHT_CAMERA_DEFAULT_FAR_CLIP * (real)2.0)
 
 	struct DrawLineParams
 	{
@@ -63,7 +59,7 @@ namespace night
 	{
 		virtual s32 init(const RendererParams& params);
 
-		virtual void update_resources() = 0;
+		//virtual void update_resources() = 0;
 
 		void update();
 		void present();
@@ -102,8 +98,10 @@ namespace night
 		void deactivate_material() { _activeMaterial = nullptr; }
 		handle<IMaterial> active_material() const;
 
-		template<typename... Textures>
-		void activate_textures(Textures&&... textures);
+		//template<typename... Textures>
+		//void activate_textures(Textures&&... textures);
+		void activate_textures(TextureUniformData const& texture);
+		void activate_textures(initializer_list<TextureUniformData> const& textures);
 		vector<TextureUniformData>& active_textures() { return _activeTextures; } // TODO: this function should not be exposed to the api.
 		void deactivate_textures() { _activeTextures.clear(); }
 
@@ -178,7 +176,7 @@ namespace night
 		vector<TextureUniformData> _activeTextures{}; // TODO: make textures const
 		vector<u8> _activeUniformBuffer{};
 		mat4 _activeTransform{ mat4(1) };
-		// TODO: add u8 _hasStateChanged so we can avoid looking up the corresponding draw call.
+		// TODO: add b8 _hasStateChanged so we can avoid looking up the corresponding draw call.
 
 		shandle<ITexture> _defaultRenderTarget{nullptr};
 
@@ -205,21 +203,21 @@ namespace night
 #endif
 	};
 
-	template<typename ...Textures>
-	inline void IRenderer::activate_textures(Textures && ...textures)
-	{
-		_activeTextures.clear();
-		for (const auto i : { textures... })
-		{
-			_activeTextures.emplace_back(TextureUniformData{ .texture = i.ptr().lock(), .sample_depth_buffer = false });
-		}
-
-		//_activeTextures.clear();
-		//for (const auto i : { textures... })
-		//{
-		//	_activeTextures.emplace_back(i.ptr().lock());
-		//}
-	}
+	//template<typename ...Textures>
+	//inline void IRenderer::activate_textures(Textures && ...textures)
+	//{
+	//	_activeTextures.clear();
+	//	for (const auto i : { textures... })
+	//	{
+	//		_activeTextures.emplace_back(i);
+	//	}
+	//
+	//	//_activeTextures.clear();
+	//	//for (const auto i : { textures... })
+	//	//{
+	//	//	_activeTextures.emplace_back(i.ptr().lock());
+	//	//}
+	//}
 
 	template<typename T>
 	inline void IRenderer::activate_uniform_storage(T const& t)

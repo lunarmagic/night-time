@@ -6,14 +6,15 @@
 #include "color/Color.h"
 #include "Surface.h"
 #include "utility.h"
-#include <glm/gtc/matrix_transform.hpp>
+#include "application/Application.h"
+//#include <glm/gtc/matrix_transform.hpp>
 //#include "geometry/Quad.h"
 
 namespace night
 {
-	set<handle<ITexture>> ITexture::_toBeInitialized;
-	set<handle<ITexture>> ITexture::_toBeResized;
-	set<handle<ITexture>> ITexture::_toBeCleared;
+	//set<handle<ITexture>> ITexture::_toBeInitialized;
+	//set<handle<ITexture>> ITexture::_toBeResized;
+	//set<handle<ITexture>> ITexture::_toBeCleared;
 
 	ITexture::ITexture(TextureParams const& params, string const& id)
 		: IResource(id, params.surface == nullptr ? params.path : "loaded from surface")
@@ -37,10 +38,17 @@ namespace night
 
 	void ITexture::__tempInitHandle()
 	{
-		static mutex m;
-		m.lock();
-		_toBeInitialized.insert(handle_from_this());
-		m.unlock();
+		//static mutex m;
+		//m.lock();
+		//_toBeInitialized.insert(handle_from_this());
+		//m.unlock();
+
+		Application::get().queue_for_main_thread([self = (handle<ITexture>)handle_from_this()]()
+			{
+				ASSERT(self != nullptr);
+				self->init();
+			}
+		);
 	}
 
 	void ITexture::camera(Camera const& camera)
@@ -102,73 +110,60 @@ namespace night
 
 	void ITexture::resize(ivec2 const& new_size)
 	{
-		_pendingResize = new_size;
-		size(_pendingResize);
-		//utility::renderer().resize_texture(handle_from_this());
-		static mutex m;
-		m.lock();
-		_toBeResized.insert(handle_from_this());
-		m.unlock();
+		size(new_size);
+		on_resize(new_size);
 	}
 
 	void ITexture::clear(Color const& clear_color)
 	{
-		_pendingClear = clear_color;
-		//utility::renderer().clear_texture(handle_from_this());
-		static mutex m;
-		m.lock();
-		_toBeCleared.insert(handle_from_this());
-		m.unlock();
+		on_clear(clear_color);
+	}
+
+	vec2 ITexture::global_to_local(vec2 const& global) const
+	{
+		//return project(vec3(global, 0));
+		vec2 ar = aspect_ratio();
+		return global * ar;
+	}
+
+	vec2 ITexture::local_to_global(vec2 const& local) const
+	{
+		//return (vec2)mouse_pick(local).origin;
+		vec2 ar = aspect_ratio();
+		return local / ar;
+	}
+
+	ivec2 ITexture::local_to_internal(vec2 const& local) const
+	{
+		ivec2 result;
+		result.x = (s32)(((local.x + 1.0f) / 2.0f) * width());
+		result.y = (s32)(((local.y + 1.0f) / 2.0f) * height());
+		return result;
 	}
 
 	ivec2 ITexture::global_to_internal(vec2 const& global) const
 	{
-		vec2 l = project(vec3(global, 0));
+		vec2 local = global_to_local(global);
 		ivec2 result;
-		result.x = (s32)(((l.x + 1.0f) / 2.0f) * width());
-		result.y = (s32)(((l.y + 1.0f) / 2.0f) * height());
+		result.x = (s32)(((local.x + 1.0f) / 2.0f) * width());
+		result.y = (s32)(((local.y + 1.0f) / 2.0f) * height());
+		return result;
+	}
+
+	vec2 ITexture::internal_to_local(ivec2 const& internal) const
+	{
+		vec2 result;
+		result.x = ((real)internal.x / width()) * 2.0f - 1.0f;
+		result.y = ((real)internal.y / height()) * 2.0f - 1.0f;
 		return result;
 	}
 
 	vec2 ITexture::internal_to_global(ivec2 const& internal) const
 	{
-		vec2 result;
-		result.x = ((real)internal.x / width()) * 2.0f - 1.0f;
-		result.y = ((real)internal.y / height()) * 2.0f - 1.0f;
-		return mouse_pick(result).origin;
-	}
-
-	void ITexture::update_textures()
-	{
-		for (auto& i : _toBeInitialized)
-		{
-			if (i != nullptr)
-			{
-				i->init();
-			}
-		}
-
-		for (auto& i : _toBeResized)
-		{
-			if (i != nullptr)
-			{
-				i->on_resize();
-				i->_pendingResize = { -1, -1 };
-			}
-		}
-
-		for (auto& i : _toBeCleared)
-		{
-			if (i != nullptr)
-			{
-				i->on_clear();
-				i->_pendingClear = { -1, -1, -1, -1 };
-			}
-		}
-
-		_toBeInitialized.clear();
-		_toBeResized.clear();
-		_toBeCleared.clear();
+		vec2 local;
+		local.x = ((real)internal.x / width()) * 2.0f - 1.0f;
+		local.y = ((real)internal.y / height()) * 2.0f - 1.0f;
+		return local_to_global(local);
 	}
 
 	DepthBuffer ITexture::depth_buffer() const
@@ -198,21 +193,5 @@ namespace night
 
 		return result;
 	}
-
-#ifdef false
-	u8 ITexture::should_cull_triangle(vec3 const& p1, vec3 const& p2, vec3 const& p3)
-	{
-		vec2 pp1 = project_to_screen(p1);
-		vec2 pp2 = project_to_screen(p2);
-		vec2 pp3 = project_to_screen(p3);
-
-		// TODO: we had camera flipping in Renderer3D.
-
-		vec2 a = pp2 - pp1;
-		vec2 b = pp3 - pp2;
-
-		return (perp_math::dot(pp2 - pp1, pp3 - pp2) >= 0.0f);
-	}
-#endif
 
 }

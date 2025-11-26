@@ -14,11 +14,12 @@
 #include "node/NodeWindow.h"
 #include "shape_renderer/ShapeRenderer.h"
 
+// TODO: may need to dispatch main thread callbacks before flushing renderer
 // TODO: make involved nodes a stack.
 // TODO: exclude text rendering of parent algorithm steps.
 // TODO: make gui accessable through algo callback, we can use sliders and buttons to see better
 
-#define NIGHT_DB_RENDERER_ALGO_FADE 2
+#define NIGHT_DB_RENDERER_ALGO_FADE 0.75f
 #ifdef NIGHT_ENABLE_DEBUG_RENDERER
 
 namespace night
@@ -29,74 +30,22 @@ namespace night
     vector<pair<string, s32>>  DebugRenderer::_guiSelectedAlgorithmSteps;
     DebugRenderer::Break DebugRenderer::_guiBreak;
     string DebugRenderer::_guiSelectedAlgorithm;
-    //vector<string> DebugRenderer::_algoAlgorithmStack;
      handle<ITexture> DebugRenderer::_renderTarget = nullptr;
-    //handle<ITexture> DebugRenderer::_sceneRenderTarget = nullptr;
-    //vector<handle<ITexture>> DebugRenderer::_algoRenderTargets;
-    //u8 DebugRenderer::_algoIsAutoUpdating = true; // TODO: add button to toggle this
     RenderGraph DebugRenderer::_renderGraph;
     EDebugRendererTab DebugRenderer::_guiCurrentTab = EDebugRendererTab::Scene;
     umap<type_index, function<void(void*)>> DebugRenderer::_sceneObjectDrawFunctionTable;
-    umap<handle<INode>, u8> DebugRenderer::_sceneSelectedNodes;
-    u8 _isViewingAlgo = false;
+    umap<handle<INode>, b8> DebugRenderer::_sceneSelectedNodes;
+    b8 _isViewingAlgo = false;
     CameraTransform DebugRenderer::_algoCameraTransform = {};
     string DebugRenderer::_assetsSelectedTexture = "";
-    u8 DebugRenderer::_assetsTextureShowDepthBuffer = false;
-    u8 DebugRenderer::_assetsShouldSaveDebugTextures = false;
+    b8 DebugRenderer::_assetsTextureShowDepthBuffer = false;
+    b8 DebugRenderer::_assetsShouldSaveDebugTextures = false;
 
-    //DebugRenderer& DebugRenderer::get()
-    //{
-    //    static DebugRenderer instance;
-    //    return instance;
-    //}
+    static INode dummy_node = {};
 
     // TODO: may want to make debug renderer into a framebuffer node.
     void DebugRenderer::init()
     {
-        
-        //_renderTarget = utility::renderer().create_texture("__DB_Render_Target", {.surface = &surface});
-
-#if 0
-        sref<Surface> surface(new Surface(SurfaceParams{ .width = utility::renderer().width(), .height = utility::renderer().height(), .fill_color = {0.0f, 0.0f, 0.0f, 0.0f} }));
-        for (s32 i = 0; i < DB_ALGO_MAX_DEPTH; i++)
-        {
-            auto rt = _algoRenderTargets.emplace_back(utility::renderer().create_texture("__DB_Render_Target#" + to_string(i), { .surface = surface }));
-            ASSERT(rt != nullptr);
-
-            Camera camera;
-            camera.translation = FORWARD * 7.0f;
-            camera.look_at = ORIGIN;
-            camera.up = UP;
-            camera.near_clip = 0.1f;
-            camera.far_clip = 100.0f;
-
-            camera.type = ECameraType::Orthographic;
-            camera.ortho_region = { .left = -1, .right = 1, .top = 1, .bottom = -1 };
-            rt->camera(camera);
-            rt->render_flush_priority(10000.0f + i);
-        }
-
-
-        {
-            _sceneRenderTarget = utility::renderer().create_texture("__DB_Object_Render_Target#", { .surface = surface });
-            ASSERT(_sceneRenderTarget != nullptr);
-
-            Camera camera;
-            camera.translation = FORWARD * 7.0f;
-            camera.look_at = ORIGIN;
-            camera.up = UP;
-            camera.near_clip = 0.1f;
-            camera.far_clip = 100.0f;
-
-            camera.type = ECameraType::Orthographic;
-            camera.ortho_region = { .left = -1, .right = 1, .top = 1, .bottom = -1 };
-            _sceneRenderTarget->camera(camera);
-            _sceneRenderTarget->render_flush_priority(10000.0f + (DB_ALGO_MAX_DEPTH + 1));
-        }
-
-        _renderGraph.current_buffer(_sceneRenderTarget, nullptr, nullptr); // TODO: get render target sorted.
-#endif
-
         sref<Surface> surface(new Surface(SurfaceParams{ .width = utility::renderer().width(), .height = utility::renderer().height(), .fill_color = {0.0f, 0.0f, 0.0f, 0.0f} }));
         _renderTarget = utility::renderer().create_texture("__DEBUG_Render_Target", { .surface = surface });
         ASSERT(_renderTarget != nullptr);
@@ -105,18 +54,21 @@ namespace night
         _renderTarget->should_use_depth_testing = false;
         _renderTarget->should_use_blending = true;
 
-        algo_involve_nodes(handle<INode>()); // base nodes are null
+        //_nodlessDummyNode = shandle<INode>(&dummy_node);
+
+        //algo_involve_nodes(handle<INode>()); // base nodes are null
+        //algo_involve_nodes(handle<INode>(_nodlessDummyNode));
     }
 
     // TODO: don't do a map lookup every step.
     void DebugRenderer::algo_push(string const& name)
     {
-        if (!_algoIsActive)
+        if (!_algoIsActive || _algoCurrentlyInvolvedNodesStack.empty())
         {
             return;
         }
 
-        ASSERT(!_algoCurrentlyInvolvedNodesStack.empty());
+        //ASSERT(!_algoCurrentlyInvolvedNodesStack.empty());
 
         auto& top = _algoCurrentlyInvolvedNodesStack.back();
         ASSERT(!top.involved_nodes.empty());
@@ -143,38 +95,15 @@ namespace night
 
         //curr->render_steps.push_back({});
         curr->render_steps.clear();
-
-#if 0
-        ASSERT(!_algoCurrentlyInvolvedNodesStack.empty());
-        auto& top = _algoCurrentlyInvolvedNodesStack.back();
-        //ASSERT(!top.algorithm_stack.empty());
-        ASSERT(!top.involved_nodes.empty());
-
-        auto& algo = _algoInvolvedNodes[top.involved_nodes][name];
-        algo.render_steps.clear();
-        top.algorithm_stack.push_back(name);
-#endif
-
-#if 0
-        if (_algoAlgorithmStack.empty()) // refresh algo draw, but don't clear algos that are only called once
-        {
-            auto& algo = _algoInvolvedNodes[_algoCurrentlyInvolvedNodes][name];
-            algo.render_steps.clear();
-        }
-
-        _algoAlgorithmStack.push_back(name);
-        //algo_increment_step();
-#endif
     }
 
     void DebugRenderer::algo_increment_step()
     {
-        if (!_algoIsActive)
+        if (!_algoIsActive || _algoCurrentlyInvolvedNodesStack.empty())
         {
             return;
         }
 
-        ASSERT(!_algoCurrentlyInvolvedNodesStack.empty());
         auto& top = _algoCurrentlyInvolvedNodesStack.back();
         ASSERT(!top.involved_nodes.empty());
         ASSERT(!top.algorithm_stack.empty());
@@ -193,66 +122,31 @@ namespace night
         }
 
         curr->render_steps.push_back({});
-
-#if 0
-        auto& nodes = _algoInvolvedNodes[_algoCurrentlyInvolvedNodes];
-
-        auto* curr = &nodes[_algoAlgorithmStack[0]];
-
-        for (s32 i = 1; i < _algoAlgorithmStack.size(); i++)
-        {
-            auto& algo = _algoAlgorithmStack[i];
-
-            ASSERT(!curr->render_steps.empty());
-
-            curr = &curr->render_steps.back().second[algo];
-        }
-
-        curr->render_steps.push_back({});
-#endif
     }
 
     void DebugRenderer::algo_pop()
     {
-        if (!_algoIsActive)
+        if (!_algoIsActive || _algoCurrentlyInvolvedNodesStack.empty())
         {
             return;
         }
 
-        ASSERT(!_algoCurrentlyInvolvedNodesStack.empty());
         auto& top = _algoCurrentlyInvolvedNodesStack.back();
         ASSERT(!top.involved_nodes.empty());
         ASSERT(!top.algorithm_stack.empty());
 
         top.algorithm_stack.pop_back();
-
-#if 0
-        ASSERT(!_algoAlgorithmStack.empty());
-        _algoAlgorithmStack.pop_back();
-#endif
     }
 
     void DebugRenderer::algo_uninvolve_nodes()
     {
         ASSERT(!_algoCurrentlyInvolvedNodesStack.empty());
         _algoCurrentlyInvolvedNodesStack.pop_back();
-
-
-#if 0
-        if (!_algoIsAutoUpdating || _guiCurrentTab != EDebugRendererTab::Algorithms)
-        {
-            return;
-        }
-
-        ASSERT(!_algoCurrentlyInvolvedNodes.empty());
-        _algoCurrentlyInvolvedNodes.clear();
-        _algoAlgorithmStack.clear();
-#endif
     }
 
     void DebugRenderer::render()
     {
-        ASSERT(_algoCurrentlyInvolvedNodesStack.size() == 1);
+        ASSERT(_algoCurrentlyInvolvedNodesStack.empty());
 
         for (auto i = _algoInvolvedNodes.begin(); i != _algoInvolvedNodes.end();)
         {
@@ -288,6 +182,27 @@ namespace night
 
         if (gui.begin("Debug Renderer"))
         {
+            b8 paused = Application::get().is_paused();
+
+            if (gui.button(paused ? ">" : "O"))
+            {
+                //paused ? Application::get().pause() : Application::get().unpause();
+                Application::get()._isPaused = !Application::get()._isPaused;
+            }
+
+            gui.same_line();
+
+            if (gui.button(">>"))
+            {
+                Application::get().frame_advance();
+            }
+
+            gui.same_line();
+
+            gui.drag_real("Time Scale", &utility::window().timescale(), 0.05f, 0.0f, INFINITY);
+
+            gui.seperator();
+
             if (gui.button("Scene"))
             {
                 _guiCurrentTab = EDebugRendererTab::Scene;
@@ -347,7 +262,8 @@ namespace night
 
         _algoCurrentlyInvolvedNodesStack.clear();
         // TODO: us dummy node because nullptr is used to clean up algo selection view.
-        algo_involve_nodes(handle<INode>());
+        //algo_involve_nodes(handle<INode>());
+        //algo_involve_nodes(handle<INode>(_nodlessDummyNode));
     }
 
     void DebugRenderer::scene_render()
@@ -364,14 +280,26 @@ namespace night
             return;
         }
 
-        function<void(handle<INode>, handle<NodeRenderTarget>)> fn = [&](handle<INode> maybe_window, handle<NodeRenderTarget> crt)
+        function<void(handle<INode>, handle<NodeRenderTarget>, s32)> rec1 = [&](handle<INode> maybe_window, handle<NodeRenderTarget> crt, s32 index)
             {
-                u8 maybe = maybe_window->is_of_type<NodeWindow>();
+                b8 maybe = maybe_window->is_of_type<NodeWindow>();
                 if (maybe)
                 {
                     auto& is_selected = _sceneSelectedNodes[maybe_window];
 
-                    gui.button(!is_selected ? "-" : "0"); // TODO: dont add function if it does not exist.
+                    string label = !is_selected ? "-" : "0";
+
+                    if (maybe_window->is_signal_space())
+                    {
+                        label = !is_selected ? "(-)" : "(0)";
+                    }
+
+                    for (s32 i = 0; i < index; i++)
+                    {
+                        label += "##xx";
+                    }
+                    gui.button(label); // TODO: dont add function if it does not exist.
+                    
                     if (gui.is_item_clicked())
                     {
                         is_selected = !is_selected;
@@ -388,10 +316,11 @@ namespace night
 
                         _renderTarget->resize(ivec2(nw->width(), nw->height()));
                         _renderTarget->clear(COLOR_ZERO);
-                        utility::renderer().update_resources();
+                        Application::get().dispatch_main_thread_callbacks();
+                        //utility::renderer().update_resources();
 
                         // render child nodes of window node to _renderTarget
-                        function<void(handle<INode>)> rec = [&](handle<INode> not_window)
+                        function<void(handle<INode>, s32)> rec2 = [&](handle<INode> not_window, s32 index)
                             {
                                 ASSERT(not_window != nullptr);
 
@@ -402,7 +331,18 @@ namespace night
 
                                 auto& is_selected = _sceneSelectedNodes[not_window];
 
-                                gui.button(!is_selected ? "-" : "0"); // TODO: dont add function if it does not exist.
+                                string label = !is_selected ? "-" : "0";
+                                for (s32 i = 0; i < index; i++)
+                                {
+                                    label += "##xx";
+                                }
+
+                                if (not_window->is_signal_space())
+                                {
+                                    label = !is_selected ? "(-)" : "(0)";
+                                }
+
+                                gui.button(label); // TODO: dont add function if it does not exist.
                                 if (gui.is_item_clicked())
                                 {
                                     is_selected = !is_selected;
@@ -435,7 +375,7 @@ namespace night
 
                                 for (s32 i = 0; i < not_window->children().size(); i++)
                                 {
-                                    rec(not_window->children()[i]);
+                                    rec2(not_window->children()[i], i);
                                 }
 
                                 gui.tree_pop();
@@ -443,10 +383,10 @@ namespace night
 
                         for (s32 i = 0; i < maybe_window->children().size(); i++)
                         {
-                            rec(maybe_window->children()[i]);
+                            rec2(maybe_window->children()[i], i);
                         }
 
-                        Quad q = nw->global_area();
+                        Quad<> q = Quad<>(nw->base_render_target_window_area());
                         _renderGraph.current_buffer(
                             utility::renderer().default_render_target(),
                             nullptr,
@@ -457,183 +397,28 @@ namespace night
                         utility::renderer().flush();
                         _renderGraph.clear();
                         _renderGraph.append_transform(mat4(1));
-
-#if 0
-                        new_crt = current;
-                        handle<NodeWindow> nw = current;
-
-                        Camera const& camera = crt->camera();
-                        ASSERT(_renderTarget != nullptr);
-                        _renderTarget->camera(camera);
-
-                        _renderTarget->resize(nw->size());
-                        _renderTarget->clear(COLOR_ZERO);
-                        utility::renderer().update_resources();
-
-                        _renderGraph.current_buffer(_renderTarget, nullptr, nullptr); // TODO: may remove
-
-                        // TODO: may break if child nrts do not match the camera of window
-                        nw->dispatch_system([&](INode& node)
-                            {
-                                if (node.is_of_type<NodeRenderTarget>())
-                                {
-                                    return;
-                                }
-
-                                if (node.is_of_type<NodeWindow>())
-                                {
-                                    return;
-                                }
-
-                                if (is_selected)
-                                {
-                                    auto f = _sceneObjectDrawFunctionTable.find(current->type_id());
-                                    if (f != _sceneObjectDrawFunctionTable.end())
-                                    {
-                                        Camera const& camera = crt->camera();
-                                        ASSERT(_renderTarget != nullptr);
-                                        _renderTarget->camera(camera);
-                                        _renderGraph.current_buffer(_renderTarget, nullptr, nullptr);
-
-                                        void* generic = (void*)current.ptr().lock().get();
-                                        (*f).second(generic);
-
-                                        utility::renderer().flush_render_graph(_renderGraph);
-                                        utility::renderer().flush();
-                                    }
-                                }
-                            }, exclude<NodeWindow/*, NodeRenderTarget*/>);
-#endif
                     }
                 }
 
                 for (s32 i = 0; i < maybe_window->children().size(); i++)
                 {
                     auto& child = maybe_window->children()[i];
-                    fn(child, crt);
+                    rec1(child, crt, i);
                 }
 
                 if (maybe)
                 {
                     gui.tree_pop();
                 }
-#if 0
-                ASSERT(current != nullptr);
-                handle<NodeRenderTarget> new_crt = crt;
-
-                for (s32 i = 0; i < current->children().size(); i++)
-                {
-                    auto& child = current->children()[i];
-                    fn(child, new_crt);
-                }
-                
-                if (current->is_of_type<NodeRenderTarget>())
-                {
-                    // render _renderTarget into 
-                    if (crt != nullptr)
-                    {
-                        new_crt = current;
-                        _renderTarget->resize(crt->size());
-                        _renderTarget->clear(COLOR_ZERO);
-                        utility::renderer().update_resources();
-                    }
-                }
-                else if (current->is_of_type<NodeWindow>())
-                {
-                    // render _renderTarget to quad that overlaps the window quad,
-                    // then flush and clear renderTarget
-                }
-#endif
-
-#if 0
-                ASSERT(current != nullptr);
-
-                if (crt != nullptr)
-                {
-                    auto& is_selected = _sceneSelectedNodes[current];
-
-                    gui.button(!is_selected ? "-" : "0"); // TODO: dont add function if it does not exist.
-                    if (gui.is_item_clicked())
-                    {
-                        is_selected = !is_selected;
-                    }
-
-                    gui.same_line();
-                    gui.tree_node(current->name() + "(" + to_string(current->unique_id()) + ")", is_selected);
-
-                    if (is_selected)
-                    {
-                        auto f = _sceneObjectDrawFunctionTable.find(current->type_id());
-                        if (f != _sceneObjectDrawFunctionTable.end())
-                        {
-                            Camera const& camera = crt->camera();
-                            ASSERT(_renderTarget != nullptr);
-                            _renderTarget->camera(camera);
-                            _renderGraph.current_buffer(_renderTarget, nullptr, nullptr);
-
-                            void* generic = (void*)current.ptr().lock().get();
-                            (*f).second(generic);
-
-                            utility::renderer().flush_render_graph(_renderGraph);
-                            utility::renderer().flush();
-                        }
-                    }
-
-                    gui.tree_pop();
-                }
-
-                // TODO: collapse nodes that are not selected, add seperate button for view
-
-                if (current->is_of_type<NodeRenderTarget>())
-                {
-                    crt = current;
-                    _renderTarget->resize(crt->size());
-                    _renderTarget->clear(COLOR_ZERO);
-                    utility::renderer().update_resources();
-                }
-
-                for (s32 i = 0; i < current->children().size(); i++)
-                {
-                    auto& child = current->children()[i];
-                    fn(child, crt);
-                }
-
-                if (current->is_of_type<NodeWindow>())
-                {
-                    const real w = (real)crt->target()->width();
-                    const real h = (real)crt->target()->height();
-                    vec2 ar = { (h < w ? (real)w / (real)h : 1.0f), (w < h ? (real)h / (real)w : 1.0f) };
-                    // TODO: figure out depth
-                    const Quad quad(QuadParams{ .position = vec3(0.0f, 0.0f, -50.0f), .size = ar });
-
-                    //out_graph.current_buffer(
-                    //    crt,
-                    //    nullptr,
-                    //    _filledFormTarget
-                    //);
-
-                    //out_graph.draw_quad(quad);
-                }
-#endif
             };
 
-        fn(root, nullptr);
-
-        // TODO: draw render graph to crt
-
-        //_renderGraph.current_buffer(utility::renderer().default_render_target(), nullptr, vector<handle<const ITexture>>(1, _sceneRenderTarget));
-
-        //s32 w = _sceneRenderTarget->width(); // TODO: maybe use NodeFrameBuffer
-        //s32 h = _sceneRenderTarget->height();
-        //vec2 ar = { (h < w ? (real)h / (real)w : 1.0f), (w < h ? (real)w / (real)h : 1.0f) };
-        //vec3 scale = vec3(1.0f / ar.x, 1.0f / ar.y, 1.0f);
-        //_renderGraph.draw_quad(QuadParams{ .position = {0, 0, 0.999999f}, .size = scale });
+        rec1(root, nullptr, 0);
     }
 
     void DebugRenderer::algo_render()
     {
         auto& gui = utility::gui();
-        u8 is_viewing_step = false;
+        b8 is_viewing_step = false;
 
         if (gui.button(_algoIsActive ? "Deactivate" : "Activate"))
         {
@@ -668,11 +453,11 @@ namespace night
 
             string names;
 
-            if ((*i).first.size() == 1 && (*i).first.back() == nullptr)
-            {
-                names = "Nodeless";
-            }
-            else
+            //if ((*i).first.size() == 1 && (*i).first.back() == _nodlessDummyNode)
+            //{
+            //    names = "Nodeless";
+            //}
+            //else
             {
                 for (s32 j = 0; j < (*i).first.size(); j++)
                 {
@@ -749,7 +534,7 @@ namespace night
                 gui.text("Algorithms: ");
                 for (auto i = (*tree).second.begin(); i != (*tree).second.end(); i++)
                 {
-                    gui.selectable((*i).first, _guiSelectedAlgorithm == (*i).first);
+                    gui.selectable((*i).first + "##xx", _guiSelectedAlgorithm == (*i).first);
                     if (gui.is_item_clicked())
                     {
                         if (_guiSelectedAlgorithm != (*i).first)
@@ -784,7 +569,7 @@ namespace night
                                 Camera c;
                                 c.type = ECameraType::Perspective;
                                 c.fov = 60.0f;
-                                c.translation = FORWARD * 10.0f;
+                                c.translation = FORWARD * (real)10;
                                 c.look_at = ORIGIN;
                                 c.near_clip = NIGHT_CAMERA_DEFAULT_NEAR_CLIP;
                                 c.far_clip = NIGHT_CAMERA_DEFAULT_FAR_CLIP;
@@ -803,7 +588,7 @@ namespace night
                             Camera c;
                             c.type = ECameraType::Perspective;
                             c.fov = 60.0f;
-                            c.translation = FORWARD * 10.0f;
+                            c.translation = FORWARD * (real)10;
                             c.look_at = ORIGIN;
                             c.near_clip = NIGHT_CAMERA_DEFAULT_NEAR_CLIP;
                             c.far_clip = NIGHT_CAMERA_DEFAULT_FAR_CLIP;
@@ -903,7 +688,7 @@ namespace night
                                                 auto nw = _guiSelectedInvolvedNodes.front()->find_parent<NodeWindow>();
                                                 if (nw != nullptr)
                                                 {
-                                                    area = nw->global_area();
+                                                    area = Quad<>(nw->base_render_target_window_area());
                                                 }
                                                 else
                                                 {
@@ -955,7 +740,7 @@ namespace night
                                         }
                                         gui.text(tabs);
                                         gui.same_line();
-                                        gui.drag_s32("Step " + name, &dummy_step, 0.1f, -1, 0);
+                                        gui.drag_s32(" " + name, &dummy_step, 0.1f, -1, 0);
 
                                         if (dummy_step == 0)
                                         {
@@ -1013,25 +798,123 @@ namespace night
             _guiBreak.involved_nodes = _guiSelectedInvolvedNodes;
         }
         
+        static b8 _is_controling_camera = false;
+        static vec2 _locked_mouse_position = ORIGIN;
 
-        gui.text("Camera:");
-        gui.drag_r32("X", &_algoCameraTransform.translation.x, 0.05f);
-        gui.drag_r32("Y", &_algoCameraTransform.translation.y, 0.05f);
-        gui.drag_r32("Z", &_algoCameraTransform.translation.z, 0.05f);
+        gui.seperator();
 
-        
-        gui.drag_r32("Pitch", &rotation.x, 0.05f);
-        gui.drag_r32("Yaw", &rotation.y, 0.05f);
-        gui.drag_r32("Roll", &rotation.z, 0.05f);
-        quat q(rotation);
-        _algoCameraTransform.direction = q * NIGHT_CAMERA_DEFAULT_DIRECTION;
-
+        _wantsInput = false;
 
         if (gui.button("Reset Camera"))
         {
             _algoCameraTransform = {};
             rotation = vec3(0);
         }
+
+        gui.begin_canvas("Fly", 1.0f, BLACK);
+
+        if (utility::window().is_mouse_grabbed() && !_is_controling_camera)
+        {
+            // do not enter fly mode if mouse is already grabbed.
+            gui.end_canvas();
+            return;
+        }
+        if (gui.is_item_clicked())
+        {
+            if (!_is_controling_camera)
+            {
+                utility::window().grab_mouse();
+                _is_controling_camera = true;
+                _wantsInput = true;
+                _locked_mouse_position = utility::window().mouse();
+            }
+        }
+        else if (!utility::mouse_down(EMouse::Left) && _is_controling_camera)
+        {
+            utility::window().release_mouse();
+            _is_controling_camera = false;
+            //_wantsInput = false;
+            utility::window().warp_mouse(_locked_mouse_position);
+        }
+        else if(_is_controling_camera)
+        {
+            //utility::window().warp_mouse(_locked_mouse_position);
+
+            real delta = utility::window().delta_time();
+            //_wantsInput = false;
+
+            vec2 mouse_motion = utility::window().mouse_motion();
+
+            constexpr real mouse_sensitivity = 1.5f;
+
+            rotation.y -= mouse_motion.x * mouse_sensitivity;
+            rotation.x += mouse_motion.y * mouse_sensitivity;
+
+            quat q(rotation);
+            _algoCameraTransform.direction = q * NIGHT_CAMERA_DEFAULT_DIRECTION;
+
+            constexpr real flight_speed = 4.0f;
+
+            // TODO: translate according to direction
+            if (utility::key_down(EKey::A))
+            {
+                //_algoCameraTransform.translation.x -= 1.0f * delta;
+                _algoCameraTransform.translation += normalize(math::cross(_algoCameraTransform.direction, UP)) * flight_speed * delta;
+            }
+
+            if (utility::key_down(EKey::D))
+            {
+                //_algoCameraTransform.translation.x += 1.0f * delta;
+                _algoCameraTransform.translation += normalize(math::cross(_algoCameraTransform.direction, DOWN)) * flight_speed * delta;
+            }
+
+            if (utility::key_down(EKey::Space))
+            {
+                //_algoCameraTransform.translation.x -= 1.0f * delta;
+                _algoCameraTransform.translation += normalize(math::cross(_algoCameraTransform.direction, RIGHT)) * flight_speed * delta;
+            }
+
+            if (utility::key_down(EKey::LCtrl))
+            {
+                //_algoCameraTransform.translation.x += 1.0f * delta;
+                _algoCameraTransform.translation += normalize(math::cross(_algoCameraTransform.direction, LEFT)) * flight_speed * delta;
+            }
+
+            if (utility::key_down(EKey::W))
+            {
+                //_algoCameraTransform.translation.y += 1.0f * delta;
+                _algoCameraTransform.translation -= _algoCameraTransform.direction * flight_speed * delta;
+            }
+
+            if (utility::key_down(EKey::S))
+            {
+                //_algoCameraTransform.translation.y -= 1.0f * delta;
+                _algoCameraTransform.translation += _algoCameraTransform.direction * flight_speed * delta;
+            }
+
+            _wantsInput = true;
+        }
+
+        gui.end_canvas();
+
+        //gui.text("Camera:");
+        //gui.drag_r32("X", &_algoCameraTransform.translation.x, 0.05f);
+        //gui.drag_r32("Y", &_algoCameraTransform.translation.y, 0.05f);
+        //gui.drag_r32("Z", &_algoCameraTransform.translation.z, 0.05f);
+        //
+        //
+        //gui.drag_r32("Pitch", &rotation.x, 0.05f);
+        //gui.drag_r32("Yaw", &rotation.y, 0.05f);
+        //gui.drag_r32("Roll", &rotation.z, 0.05f);
+        //quat q(rotation);
+        //_algoCameraTransform.direction = q * NIGHT_CAMERA_DEFAULT_DIRECTION;
+        //
+        //
+        //if (gui.button("Reset Camera"))
+        //{
+        //    _algoCameraTransform = {};
+        //    rotation = vec3(0);
+        //}
         
 #if 0
         // TODO: use node tree to access algos, root node will display all algos in scene,
@@ -1044,7 +927,7 @@ namespace night
         //ASSERT(_algoAlgorithmStack.empty()); // don't forget to call DB_ALGO_POP
         ASSERT(_algoCurrentlyInvolvedNodesStack.empty());// don't forget to call DB_ALGO_POP
 
-        u8 is_viewing_step = false;
+        b8 is_viewing_step = false;
 
         for (auto& i : _algoRenderTargets)
         {
@@ -1349,25 +1232,25 @@ namespace night
 
             // TODO: handle this like the smoothing in canvas
             u32 dur_count = 0;
-            u64 dur_sum = 0;
-            for (s32 i = 0; i < node.timer_history.size(); i++)
-            {
-                dur_sum += node.timer_history[i].duration;
-                dur_count++;
-            }
-
-            if (dur_count > 0)
-            {
-                dur_sum /= dur_count;
-            }
-
-            dur_sum = node.timer_history.back().duration;
-
+            //u64 dur_sum = 0;
+            //for (s32 i = 0; i < node.timer_history.size(); i++)
+            //{
+            //    dur_sum += node.timer_history[i].duration;
+            //    dur_count++;
+            //}
+            //
+            //if (dur_count > 0)
+            //{
+            //    dur_sum /= dur_count;
+            //}
+            //
+            //dur_sum = node.timer_history.back().duration;
+            
             r64 time_elapsed = utility::window().time_elapsed();
-            r64 delta_time = time_elapsed - node.timer_history.back().time_stamp;
-            Color color = Color::lerp(WHITE, ORANGE, CLAMP((real)delta_time, 0, 1));
+            r64 delta_time = time_elapsed - node.timer_history.back().timestamp;
+            Color color = Color::lerp(node.color, node.color.darken(0.85f), CLAMP((r32)delta_time, 0, 1));
 
-            gui.text_colored(t + name + ": " + to_string(dur_sum), color);
+            gui.text_colored(t + name + ": " + to_string((s32)node.average_time), color);
 
             for (const auto& i : node.children)
             {
@@ -1443,7 +1326,7 @@ namespace night
             auto f = textures.find(_assetsSelectedTexture);
             if (f != textures.end())
             {
-                Quad q = QuadParams{ .position = FORWARD * 20.0f, .size = vec2(1) };
+                Quad q = QuadParams{ .position = FORWARD * (real)20, .size = vec2(1) };
 
                 if (!_assetsTextureShowDepthBuffer)
                 {
@@ -1475,7 +1358,7 @@ namespace night
         }
     }
 
-    void DebugRenderer::draw_sphere(DrawSphereParams const& params, u8 is_algo)
+    void DebugRenderer::draw_sphere(DrawSphereParams const& params, b8 is_algo)
     {
         push_draw_function([=]()
             {
@@ -1501,7 +1384,7 @@ namespace night
             }, is_algo);
     }
 
-    void DebugRenderer::draw_cylinder(DrawCylinderParams const& params, u8 is_algo)
+    void DebugRenderer::draw_cylinder(DrawCylinderParams const& params, b8 is_algo)
     {
         // TODO: fix edge case where cylinder lies on camera direction.
         //vec3 direction = this->direction();
@@ -1588,7 +1471,7 @@ namespace night
     }
 #endif
 
-    u8 DebugRenderer::algo_should_break()
+    b8 DebugRenderer::algo_should_break()
     {
         if (_guiBreak.algorithm_stack.empty())
         {
@@ -1645,7 +1528,7 @@ namespace night
         return true;
     }
 
-    void DebugRenderer::push_draw_function(function<void()> fn, u8 is_algo)
+    void DebugRenderer::push_draw_function(function<void()> fn, b8 is_algo)
     {
         if (_isViewingAlgo)
         {
@@ -1656,7 +1539,7 @@ namespace night
 
         if (is_algo)
         {
-            if (!_algoIsActive)
+            if (!_algoIsActive || _algoCurrentlyInvolvedNodesStack.empty())
             {
                 return;
             }
@@ -1665,7 +1548,6 @@ namespace night
             // can only exit after 1 algo push or we can't see algos that are called once on scene construction.
             //auto& nodes = _algoInvolvedNodes[_algoCurrentlyInvolvedNodes];
 
-            ASSERT(!_algoCurrentlyInvolvedNodesStack.empty());
             auto& top = _algoCurrentlyInvolvedNodesStack.back();
             ASSERT(!top.involved_nodes.empty());
             ASSERT(!top.algorithm_stack.empty());
@@ -1697,7 +1579,7 @@ namespace night
         }
     }
 
-    void DebugRenderer::draw_point(DrawPointParams const& params, u8 is_algo)
+    void DebugRenderer::draw_point(DrawPointParams const& params, b8 is_algo)
     {
         push_draw_function([=]()
         {
@@ -1705,7 +1587,7 @@ namespace night
         }, is_algo);
     }
 
-    void DebugRenderer::draw_line(DrawLineParams const& params, u8 is_algo)
+    void DebugRenderer::draw_line(DrawLineParams const& params, b8 is_algo)
     {
         push_draw_function([=]()
         {
@@ -1713,7 +1595,7 @@ namespace night
         }, is_algo);
     }
 
-    void DebugRenderer::draw_quad(Quad<> const& quad, u8 is_algo)
+    void DebugRenderer::draw_quad(Quad<> const& quad, b8 is_algo)
     {
         push_draw_function([=]()
             {
@@ -1721,7 +1603,7 @@ namespace night
             }, is_algo);
     }
 
-    void DebugRenderer::draw_text(Text const& text, u8 is_algo)
+    void DebugRenderer::draw_text(Text const& text, b8 is_algo)
     {
         // TODO: re-impl
 #if 0
@@ -1732,7 +1614,7 @@ namespace night
 #endif
     }
 
-    void DebugRenderer::draw_hover_text(DrawHoverTextParams const& params, u8 is_algo)
+    void DebugRenderer::draw_hover_text(DrawHoverTextParams const& params, b8 is_algo)
     {
         ASSERT(false); // TODO: impl
 #if 0
@@ -1786,17 +1668,17 @@ namespace night
 #endif
     }
 
-    void DebugRenderer::draw_arrow(DrawArrowParams const& params, u8 is_algo)
+    void DebugRenderer::draw_arrow(DrawArrowParams const& params, b8 is_algo)
     {
         push_draw_function([=]()
             {
                 vec3 direction = math::normalize(params.direction);
                 _renderGraph.draw_line(params.origin, params.origin + direction * params.length, params.color);
-                _renderGraph.draw_point(params.origin + direction * params.length * 0.95f, WHITE); // TODO: draw 3D arrow
+                _renderGraph.draw_point(params.origin + direction * params.length * (real)0.95, WHITE); // TODO: draw 3D arrow
             }, is_algo);
     }
 
-    void DebugRenderer::draw_plane(DrawPlaneParams const& params, u8 is_algo)
+    void DebugRenderer::draw_plane(DrawPlaneParams const& params, b8 is_algo)
     {
         push_draw_function([=]()
             {
@@ -1836,7 +1718,7 @@ namespace night
             }, is_algo);
     }
 
-    void DebugRenderer::draw_ellipse(DrawEllipseParams const& params, u8 is_algo)
+    void DebugRenderer::draw_ellipse(DrawEllipseParams const& params, b8 is_algo)
     {
         push_draw_function([=]()
             {

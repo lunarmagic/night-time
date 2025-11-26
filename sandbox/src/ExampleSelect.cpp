@@ -4,8 +4,11 @@
 #include "examples/ExampleBase.h"
 #include "examples/ExampleNodeAnimation.h"
 #include "examples/ExampleConvex2D.h"
+#include "examples/ExampleShapeCast2D.h"
 #include "examples/ExampleShapeCast3D.h"
 #include "examples/ExampleShapeRenderer3D.h"
+#include "examples/ExampleMath.h"
+#include "examples/ExampleNodeWindow.h"
 #include "profiler/Profiler.h"
 #include "event/MouseEvent.h"
 
@@ -22,11 +25,12 @@ namespace night
 		: NodeWindow(NodeWindowParams{
 				.state = ENodeWindowState::Fullscreen,
 				.dock_where = ENodeWindowDockWhere::Centered,
-				.dock_space = { 0.7f, 0.0f, 0.0f, 0.0f }
+				.dock_space = { .left = 0.7f, .top = 0.0f, .right = 0.0f, .bottom = 0.0f }
 			})
 	{
 		NodeWindowParams vp_params;
 		vp_params.dock_where = ENodeWindowDockWhere::Centered;
+		//vp_params.dock_space = AABB{ 0.5f, 0.5f, 0.0f, 0.0f };
 		_viewport = create<NodeWindow>("Viewport", vp_params);
 
 		NodeWindowParams gui_params;
@@ -35,7 +39,7 @@ namespace night
 		_gui->on_close(nullptr);
 
 		NodeRenderTargetParams nrt_params;
-		nrt_params.depth = 0;
+		nrt_params.depth = EXAMPLE_RENDER_TARGET_DEPTH;
 		nrt_params.clear_color = LIGHT;
 		nrt_params.should_use_depth_peeling = true;
 		nrt_params.should_use_depth_testing = true;
@@ -44,10 +48,10 @@ namespace night
 		nrt_params.should_automatically_render = true;
 
 		nrt_params.camera.type = ECameraType::Orthographic;
-		nrt_params.camera.translation = FORWARD * 10.0f;
+		nrt_params.camera.translation = FORWARD * (real)10;
 		nrt_params.camera.look_at = ORIGIN;
 		nrt_params.camera.up = UP;
-		nrt_params.camera.ortho_region = AABB<>{ .left = -4, .right = 4, .top = 4, .bottom = -4 };
+		nrt_params.camera.ortho_region = AABB<>{ .left = -4, .top = 4, .right = 4, .bottom = -4 };
 		nrt_params.camera.fov = NIGHT_CAMERA_DEFAULT_FOV;
 		nrt_params.camera.near_clip = NIGHT_CAMERA_DEFAULT_NEAR_CLIP;
 		nrt_params.camera.far_clip = NIGHT_CAMERA_DEFAULT_FAR_CLIP;
@@ -128,6 +132,24 @@ namespace night
 					_deltaMouse = event.motion();
 				});
 		}
+
+		bind_input(EKey::Q, EInputType::Pressed, [&]()
+			{
+				utility::window().grab_mouse();
+			});
+
+		bind_input(EKey::Q, EInputType::Released, [&]()
+			{
+				utility::window().release_mouse();
+				utility::window().warp_mouse(RIGHT);
+			});
+
+		//listen_signal("TEST SIGNAL", [&](SignalParams<real const&> x)
+		//	{
+		//		PRINT(x.node->name());
+		//		PRINT(x.params);
+		//	}
+		//);
 	}
 
 	void ExampleSelect::reset_camera()
@@ -217,16 +239,16 @@ namespace night
 
 					vec3 dxr = math::normalize(math::cross(direction, -math::normalize(math::cross(direction, _camera.up))));
 					vec3 dxu = math::normalize(math::cross(direction, _camera.up));
-					_camera.translation -= dxr * dm.y * _panSensitivity * 3.0f;
-					_camera.translation -= dxu * dm.x * _panSensitivity * 3.0f;
+					_camera.translation -= dxr * dm.y * _panSensitivity * (real)3;
+					_camera.translation -= dxu * dm.x * _panSensitivity * (real)3;
 					_camera.look_at = _camera.translation + direction * len;
 				}
 			}
 			else if (should_snap_camera_back_to_default)
 			{
 				// TODO: use slerp
-				vec3 tt = (_defaultCamera.translation - _camera.translation) * delta * 10.0f;
-				vec3 tl = (_defaultCamera.look_at - _camera.look_at) * delta * 10.0f;
+				vec3 tt = (_defaultCamera.translation - _camera.translation) * delta * (real)10;
+				vec3 tl = (_defaultCamera.look_at - _camera.look_at) * delta * (real)10;
 			
 				if (math::length(tt) < 0.001f)
 				{
@@ -266,19 +288,31 @@ namespace night
 		}
 		else
 		{
+			if (_gui->button("Math"))
+			{
+				create_example<ExampleMath>();
+			}
+			if (_gui->button("NodeWindow"))
+			{
+				create_example<ExampleNodeWindow>();
+			}
 			if (_gui->button("NodeAnimation"))
 			{
 				create_example<ExampleNodeAnimation>();
 			}
-			if (_gui->button("ExampleConvex2D"))
+			if (_gui->button("Convex 2D"))
 			{
 				create_example<ExampleConvex2D>();
 			}
-			if (_gui->button("ExampleShapecast3D"))
+			//if (_gui->button("Shape Cast 2D"))
+			//{
+			//	create_example<ExampleShapecast2D>();
+			//}
+			if (_gui->button("Shape Cast"))
 			{
 				create_example<ExampleShapecast3D>();
 			}
-			if (_gui->button("ExampleShapeRenderer3D"))
+			if (_gui->button("Shape Renderer 3D"))
 			{
 				create_example<ExampleShapeRenderer3D>();
 			}

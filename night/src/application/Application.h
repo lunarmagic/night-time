@@ -50,6 +50,14 @@ namespace night
 
 		void terminate() { _isPendingTermination = true; }
 
+		void pause() { _isPaused = true; _isPendingFrameAdvance = false; }
+		void unpause() { _isPaused = false; _isPendingFrameAdvance = false; }
+		b8 const& is_paused() const { return _isPaused; }
+		void frame_advance() { if(_isPaused) _isPendingFrameAdvance = true; };
+
+		void fixed_update_step_size(real size) { _fixedUpdateStepSize = size; };
+		real const& fixed_update_step_size() const { return _fixedUpdateStepSize; }
+
 		handle<INode> const root() { return _root; }
 
 		// TODO: use action mapping
@@ -125,7 +133,7 @@ namespace night
 		// TODO: make singletons
 		File settings;
 		umultimap<string, InputKey> action_map;
-		u8 low_input_latency_mode{ NIGHT_APPLICATION_DEFAULT_LOW_INPUT_LATENCY_MODE };
+		b8 low_input_latency_mode{ NIGHT_APPLICATION_DEFAULT_LOW_INPUT_LATENCY_MODE };
 
 	protected:
 
@@ -139,6 +147,8 @@ namespace night
 		//virtual void on_load_resources() { return; }
 		virtual void on_initialized() { return; }
 		virtual void on_close() { return; }
+
+		void dispatch_main_thread_callbacks();
 	
 	private:
 
@@ -151,19 +161,19 @@ namespace night
 		void on_event(Event& event);
 
 #ifdef false
-		u8 on_key_pressed(KeyPressedEvent& event);
-		u8 on_key_released(KeyReleasedEvent& event);
-		u8 on_mouse_button_pressed(MouseButtonPressedEvent& event);
-		u8 on_mouse_button_released(MouseButtonReleasedEvent& event);
-		u8 on_mouse_motion(MouseMotionEvent& event);
-		u8 on_mouse_wheel(MouseWheelEvent& event);
-		u8 on_pen_pressure(PenPressureEvent& event);
-		u8 on_pen_down(PenDownEvent& event);
-		u8 on_pen_up(PenUpEvent& event);
-		u8 on_pen_motion(PenMotionEvent& event);
-		u8 on_window_close(WindowCloseEvent& event);
-		u8 on_window_resize(WindowResizeEvent& event);
-		u8 on_renderer_presented(RendererPresentedEvent& event);
+		b8 on_key_pressed(KeyPressedEvent& event);
+		b8 on_key_released(KeyReleasedEvent& event);
+		b8 on_mouse_button_pressed(MouseButtonPressedEvent& event);
+		b8 on_mouse_button_released(MouseButtonReleasedEvent& event);
+		b8 on_mouse_motion(MouseMotionEvent& event);
+		b8 on_mouse_wheel(MouseWheelEvent& event);
+		b8 on_pen_pressure(PenPressureEvent& event);
+		b8 on_pen_down(PenDownEvent& event);
+		b8 on_pen_up(PenUpEvent& event);
+		b8 on_pen_motion(PenMotionEvent& event);
+		b8 on_window_close(WindowCloseEvent& event);
+		b8 on_window_resize(WindowResizeEvent& event);
+		b8 on_renderer_presented(RendererPresentedEvent& event);
 
 		template<typename T>
 		umultimap<EEventType, function<void(Event&)>>::iterator bind_event_impl(function<void(T&)> fn)
@@ -180,7 +190,7 @@ namespace night
 		}
 
 		void callback_bound_inputs(const InputKey& key);
-		template<typename T> u8 callback_bound_events(T& event);
+		template<typename T> b8 callback_bound_events(T& event);
 
 		umultimap<InputKey, function<void()>> _inputBindings; // TODO: may want to combine input bindings and event bindings.
 		umultimap<EEventType, function<void(Event&)>> _eventBindings;
@@ -190,9 +200,15 @@ namespace night
 		IResourceManager* _resourceManager{ nullptr };
 		friend struct EventManager;
 		EventManager _eventManager;
-		u8 _isPendingTermination{ false };
+		b8 _isPendingTermination{ false };
 
-		vector<function<void()>> _mainThreadCallbacks = {};
+		b8 _isPaused = false;
+		b8 _isPendingFrameAdvance = false;
+
+		real _fixedUpdateAccumulatedDeltaTime = 0.0f;
+		real _fixedUpdateStepSize = 1.0f / 60.0f;
+
+		deque<function<void()>> _mainThreadCallbacks = {};
 
 		shandle<INode> _root;
 		void create_root();
@@ -200,6 +216,7 @@ namespace night
 		static Application* _instance;
 
 		friend struct WindowParams;
+		friend struct DebugRenderer;
 	};
 
 	struct WindowParams

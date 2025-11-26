@@ -34,17 +34,10 @@ namespace night
             render_target = utility::renderer().default_render_target();
             ASSERT(render_target != nullptr);
         }
-
+    
         _currentRenderTarget = render_target;
         _currentMaterial = material;
-
-        //vector<TextureUniformData> s_textures;
-        //for (const auto& i : textures)
-        //{
-        //    ASSERT(i.texture != nullptr);
-        //    s_textures.push_back(i);
-        //}
-
+    
         _currentBuffer = &_sortedBuffers[render_target][material][textures];
     }
 
@@ -71,7 +64,46 @@ namespace night
     }
 #endif
 
-    void RenderGraph::current_buffer(handle<const ITexture> render_target, handle<IMaterial> material, vector<handle<const ITexture>> const& textures)
+    //void RenderGraph::current_buffer(handle<const ITexture> render_target, handle<IMaterial> material, vector<handle<const ITexture>> const& textures)
+    //{
+    //    if (render_target == nullptr)
+    //    {
+    //        render_target = utility::renderer().default_render_target();
+    //        ASSERT(render_target != nullptr);
+    //    }
+    //
+    //    _currentRenderTarget = render_target;
+    //    _currentMaterial = material;
+    //
+    //    vector<TextureUniformData> s_textures;
+    //    for (const auto& i : textures)
+    //    {
+    //        ASSERT(i != nullptr);
+    //        shandle<const ITexture> ptr = i.ptr().lock();
+    //        s_textures.push_back(TextureUniformData{ .texture = ptr, .sample_depth_buffer = false });
+    //    }
+    //
+    //    _currentBuffer = &_sortedBuffers[render_target][material][s_textures];
+    //}
+
+    void RenderGraph::current_buffer(handle<const ITexture> render_target, handle<IMaterial> material, TextureUniformData texture)
+    {
+        if (render_target == nullptr)
+        {
+            render_target = utility::renderer().default_render_target();
+            ASSERT(render_target != nullptr);
+        }
+
+        _currentRenderTarget = render_target;
+        _currentMaterial = material;
+
+        vector<TextureUniformData> s_texture;
+        s_texture.push_back(texture);
+
+        _currentBuffer = &_sortedBuffers[render_target][material][s_texture];
+    }
+
+    void RenderGraph::current_buffer(handle<const ITexture> render_target, handle<IMaterial> material, initializer_list<TextureUniformData> textures)
     {
         if (render_target == nullptr)
         {
@@ -83,12 +115,8 @@ namespace night
         _currentMaterial = material;
 
         vector<TextureUniformData> s_textures;
-        for (const auto& i : textures)
-        {
-            ASSERT(i != nullptr);
-            shandle<const ITexture> ptr = i.ptr().lock();
-            s_textures.push_back(TextureUniformData{ .texture = ptr, .sample_depth_buffer = false });
-        }
+
+        s_textures.insert(s_textures.end(), textures.begin(), textures.end());
 
         _currentBuffer = &_sortedBuffers[render_target][material][s_textures];
     }

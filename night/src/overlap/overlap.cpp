@@ -9,7 +9,7 @@
 
 namespace night
 {
-	u8 overlap::infinite_cone(vec3 const point, vec3 const& cone_origin, vec3 const& cone_dir, real cone_radius, real cone_height)
+	b8 overlap::infinite_cone(vec3 const point, vec3 const& cone_origin, vec3 const& cone_dir, real cone_radius, real cone_height)
 	{
 		vec3 cone_tip = cone_origin - cone_dir * cone_height;
 		vec3 proj = raycast3d::project_point_to_ray(point, cone_tip, cone_dir);

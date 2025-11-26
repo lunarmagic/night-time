@@ -71,8 +71,8 @@ namespace night
 	template<typename K, typename T>
 	using map = std::map<K, T>;
 
-	template<typename K, typename T>
-	using multimap = std::multimap<K, T>;
+	template<typename K, typename T, typename _Pr = std::less<K>>
+	using multimap = std::multimap<K, T, _Pr>;
 
 	template<typename K, typename T>
 	using umap = std::unordered_map<K, T>;
@@ -180,6 +180,65 @@ namespace night
 		std::lock_guard(m);
 	}
 
+	template<typename T>
+	using numeric_limits = std::numeric_limits<T>;
+
+	//template<typename T>
+	//struct numeric_limits
+	//{
+	//
+	//};
+	//
+	//template<>
+	//struct numeric_limits<s8>
+	//{
+	//	inline static s8 min = INT8_MIN;
+	//	inline static s8 max = INT8_MAX;
+	//};
+	//
+	//
+	//template<>
+	//struct numeric_limits<r32>
+	//{
+	//	constexpr static r32 min = -INFINITY;
+	//	constexpr static r32 max = INFINITY;
+	//};
+	//
+	//template<>
+	//struct numeric_limits<r64>
+	//{
+	//	constexpr static r64 min = -INFINITY;
+	//	constexpr static r64 max = INFINITY;
+	//};
+	//
+	//template<>
+	//struct numeric_limits<s32>
+	//{
+	//	constexpr static s32 min = INT32_MIN;
+	//	constexpr static s32 max = INT32_MAX;
+	//};
+	//
+	//template<>
+	//struct numeric_limits<u32>
+	//{
+	//	constexpr static u32 min = 0;
+	//	constexpr static u32 max = UINT32_MAX;
+	//};
+	//
+	//template<>
+	//struct numeric_limits<s64>
+	//{
+	//	constexpr static s64 min = INT64_MIN;
+	//	constexpr static s64 max = INT64_MAX;
+	//};
+	//
+	//template<>
+	//struct numeric_limits<u64>
+	//{
+	//	constexpr static u64 min = 0;
+	//	constexpr static u64 max = UINT64_MAX;
+	//};
+
 	namespace filesystem
 	{
 		//if (std::filesystem::exists(path) && std::filesystem::is_directory(path))
@@ -190,12 +249,12 @@ namespace night
 		using directory_entry = std::filesystem::directory_entry;
 		using path = std::filesystem::path;
 
-		inline u8 exists(string const& path)
+		inline b8 exists(string const& path)
 		{
 			return std::filesystem::exists(path);
 		}
 
-		inline u8 is_directory(string const& path)
+		inline b8 is_directory(string const& path)
 		{
 			return std::filesystem::is_directory(path);
 		}

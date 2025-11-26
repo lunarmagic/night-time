@@ -23,7 +23,7 @@ private:
 
 struct KeyPressedEvent : public KeyEvent
 {
-	KeyPressedEvent(EKey keycode, u8 isRepeat) : KeyEvent(keycode), _isRepeat(isRepeat) {}
+	KeyPressedEvent(EKey keycode, b8 isRepeat) : KeyEvent(keycode), _isRepeat(isRepeat) {}
 
 	string to_string() const override
 	{
@@ -32,12 +32,12 @@ struct KeyPressedEvent : public KeyEvent
 		return ss.str();
 	}
 
-	u8 isRepeat() const { return _isRepeat; }
+	b8 isRepeat() const { return _isRepeat; }
 	EVENT_CLASS_TYPE(KeyPressed)
 
 private:
 
-	u8 _isRepeat;
+	b8 _isRepeat;
 };
 
 struct KeyReleasedEvent : public KeyEvent

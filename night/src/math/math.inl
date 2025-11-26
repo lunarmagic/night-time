@@ -167,7 +167,7 @@ namespace night
 	template<typename T>
 	inline vec<3, T> Math<T>::perp(vec<3, T> const& vector)
 	{
-		if (abs(dot(normalize(vector), (vec<3, T>)RIGHT)) > 0.999f)
+		if (::abs(dot(normalize(vector), (vec<3, T>)RIGHT)) > 0.999f)
 		{
 			return normalize(cross(vector, UP)) * length(vector);
 		}
@@ -182,7 +182,7 @@ namespace night
 		mat<4, 4, T> m;
 		T d = dot(from, to);
 
-		if (abs(d) > 1.0f - epsilon) // TODO: case -1.0f + epsilon is broken
+		if (::abs(d) > 1.0f - epsilon) // TODO: case -1.0f + epsilon is broken
 		{
 			m = mat<4, 4, T>(1);
 		}
@@ -203,10 +203,10 @@ namespace night
 	}
 
 	template<typename T>
-	inline u8 Math<T>::is_point_inside_triangle(vec<2, T> const& pt, vec<2, T> const& v1, vec<2, T> const& v2, vec<2, T> const& v3)
+	inline b8 Math<T>::is_point_inside_triangle(vec<2, T> const& pt, vec<2, T> const& v1, vec<2, T> const& v2, vec<2, T> const& v3)
 	{
 		T d1, d2, d3;
-		u8 has_neg, has_pos;
+		b8 has_neg, has_pos;
 
 		d1 = sign(pt, v1, v2);
 		d2 = sign(pt, v2, v3);
@@ -219,7 +219,7 @@ namespace night
 	}
 
 	//template<typename T>
-	//inline T Math<T>::arc_length(vector<vec<2, T>> const& arc, u8 closed)
+	//inline T Math<T>::arc_length(vector<vec<2, T>> const& arc, b8 closed)
 	//{
 	//	T result = 0.0f;
 	//
@@ -241,7 +241,7 @@ namespace night
 
 	template<typename T>
 	template<typename _It>
-	inline T Math<T>::arc_length(_It begin, _It end, u8 closed)
+	inline T Math<T>::arc_length(_It begin, _It end, b8 closed)
 	{
 		if (begin == end || std::next(begin) == end)
 		{
@@ -303,9 +303,9 @@ namespace night
 	inline LineOfIntersecionBetween2PlanesResult<T> Math<T>::line_of_intersection_between_to_planes(vec<3, T> const& origin_a, vec<3, T> const& normal_a, vec<3, T> const& origin_b, vec<3, T> const& normal_b)
 	{
 		const vec<3, T> p3_normal = cross(normal_a, normal_b);
-		const float det = length(p3_normal) * length(p3_normal);
+		const T det = length(p3_normal) * length(p3_normal);
 
-		if (abs(det) > NIGHT_EPSILON_MEDIUM)
+		if (::abs(det) > NIGHT_EPSILON_MEDIUM)
 		{
 			T p1_d = distance_to_plane(vec<3, T>(0), origin_a, normal_a);
 			T p2_d = distance_to_plane(vec<3, T>(0), origin_b, normal_b);
@@ -336,6 +336,33 @@ namespace night
 		{
 			return EOrientation::Colinear;
 		}
+	}
+
+	//template<typename T>
+	//inline T Math<T>::ease_in(T t, T exponent)
+	//{
+	//	return pow(t, exponent);
+	//}
+	//
+	//template<typename T>
+	//inline T Math<T>::ease_out(T t, T exponent)
+	//{
+	//	return 1.0f - pow(1.0f - t, exponent / 1.0f);
+	//}
+
+	template<typename T>
+	inline T Math<T>::ease(T t, T exponent)
+	{
+		if (t < 0.5f)
+		{
+			t = pow(t * 2, exponent) / 2;
+		}
+		else if (t > 0.5f)
+		{
+			t = 1.0f - pow(1.0f - (t - 0.5f) * 2, exponent) / 2;
+		}
+
+		return t;
 	}
 
 #if 0
@@ -558,10 +585,10 @@ namespace night
 		return m;
 	}
 
-	u8  is_point_inside_triangle(vec2 const& pt, vec2 const& v1, vec2 const& v2, vec2 const& v3)
+	b8  is_point_inside_triangle(vec2 const& pt, vec2 const& v1, vec2 const& v2, vec2 const& v3)
 	{
 		real d1, d2, d3;
-		u8 has_neg, has_pos;
+		b8 has_neg, has_pos;
 
 		d1 = sign(pt, v1, v2);
 		d2 = sign(pt, v2, v3);
@@ -573,7 +600,7 @@ namespace night
 		return !(has_neg && has_pos);
 	}
 
-	real arc_length(vector<vec2> const& arc, u8 closed)
+	real arc_length(vector<vec2> const& arc, b8 closed)
 	{
 		real result = 0.0f;
 

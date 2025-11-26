@@ -20,7 +20,7 @@ namespace night
 		// The z-value of the cross product of segments 
 		// (a, b) and (a, c). Positive means c is ccw
 		// from (a, b), negative cw. Zero means its collinear.
-		inline float ccw(const vec2& a, const vec2& b, const vec2& c) {
+		inline real ccw(const vec2& a, const vec2& b, const vec2& c) {
 			return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
 		}
 
@@ -41,13 +41,13 @@ namespace night
 		};
 
 		// The length of segment (a, b).
-		inline float len(const vec2& a, const vec2& b) {
+		inline real len(const vec2& a, const vec2& b) {
 			return sqrt((b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y));
 		}
 
 		// The unsigned distance of p from segment (a, b).
 		inline float dist(const vec2& a, const vec2& b, const vec2& p) {
-			return fabs((b.x - a.x) * (a.y - p.y) - (b.y - a.y) * (a.x - p.x)) / len(a, b);
+			return (float)fabs((b.x - a.x) * (a.y - p.y) - (b.y - a.y) * (a.x - p.x)) / (float)len(a, b);
 		}
 
 		// Returns the index of the farthest vec2 from segment (a, b).

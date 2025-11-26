@@ -7,7 +7,7 @@
 #ifdef NIGHT_ENABLE_LOGGING
 namespace night {
 
-	//u8 Log::is_prev_cout_a_log = { false };
+	//b8 Log::is_prev_cout_a_log = { false };
 	s32 Log::debug_logging_mask = DEBUG_LOG_MASK_EVERYTHING;
 	map<string, u32> Log::logged_messages = {};
 

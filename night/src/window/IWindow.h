@@ -51,8 +51,8 @@ namespace night
 		//void destroy_texture(const string& id);
 
 		virtual vec2 mouse() const = 0;
-		virtual u8 mouse_down(EMouse mouse) const = 0;
-		virtual u8 key_down(EKey const& key) const = 0;
+		virtual b8 mouse_down(EMouse mouse) const = 0;
+		virtual b8 key_down(EKey const& key) const = 0;
 
 		string const& title() const { return _title; }
 
@@ -63,16 +63,26 @@ namespace night
 		real fps() const { return _fps; }
 		void fps(real fps) { _fps = fps; }
 
-		real delta_time() const { return _deltaTime; }
+		real delta_time() const;
 		r64 time_elapsed() const { return _timeElapsed; }
+
+		real fixed_delta_time() const;
 
 		virtual real precise_time_elapsed() = 0;
 
-		virtual void cursor_visibility(u8 visibility) = 0;
-		virtual u8 cursor_visibility() const = 0;
+		virtual void cursor_visibility(b8 visibility) = 0;
+		virtual b8 cursor_visibility() const = 0;
 
-		virtual void fullscreen(u8 make_fullscreen) = 0;
-		virtual u8 fullscreen() const = 0;
+		virtual void fullscreen(b8 make_fullscreen) = 0;
+		virtual b8 fullscreen() const = 0;
+
+		virtual void grab_mouse() = 0;
+		virtual void release_mouse() = 0;
+		virtual b8 is_mouse_grabbed() = 0;
+
+		virtual void warp_mouse(vec2 local_coordinate) = 0;
+
+		virtual vec2 mouse_motion() const = 0;
 
 		//static IWindow& get();
 
@@ -80,12 +90,15 @@ namespace night
 		IGui& gui() const { return *_gui; }
 		real const& framerate() { return _framerate; }
 
+		void timescale(real scale) { _timescale = scale; }
+		real const& timescale() const { return _timescale; }
+
 	protected:
 
 		IGui* _gui;
 		real _framerate{ 0.0f };
 
-		u8 on_resize(WindowResizeEvent& event);
+		b8 on_resize(WindowResizeEvent& event);
 
 		void delta_time(real dt) { _deltaTime = dt; }
 		void time_elapsed(r64 te) { _timeElapsed = te; }
@@ -112,6 +125,7 @@ namespace night
 		real _fps{ NIGHT_WINDOW_DEFAULT_FPS };
 		real _deltaTime;
 		r64 _timeElapsed;
+		real _timescale = 1.0f;
 	};
 
 }

@@ -10,7 +10,7 @@ namespace night
 		Thread() = default;
 		Thread(function<Return(Args&&...)> fn, Args&&... args);
 
-		u8 valid() const { return _future.valid(); }
+		b8 valid() const { return _future.valid(); }
 
 		void wait() const;
 

@@ -103,7 +103,7 @@ namespace night
 			IGui& gui = utility::gui();
 
 			ASSERT(_animation != nullptr);
-			u8 is_open = true;
+			b8 is_open = true;
 			gui.begin("Test Node Animation", &is_open);
 
 			if (!is_open)

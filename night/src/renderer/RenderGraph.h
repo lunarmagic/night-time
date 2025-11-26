@@ -119,14 +119,6 @@ namespace night
 			draw_line(DrawLineParams{ .p1 = (vec3)p1, .p2 = (vec3)p2, .color = color, .width = width });
 		}
 
-#if 0
-		void draw_text(Text const& text)
-		{
-			ASSERT(_currentBuffer != nullptr);
-			_currentBuffer->texts.emplace_back(text);
-		}
-#endif
-
 		// TODO: meshes will be there own node with variable num of materials, bones, animations
 		// TODO: add way to append vertices directly to renderer, no iterating
 
@@ -158,13 +150,10 @@ namespace night
 
 			for (s32 i = 0; i < sizeof(T); i++)
 			{
-				_currentBuffer->uniform_storage.emplace_back(((const u8*)&t)[i]);
+				_currentBuffer->uniform_storage.emplace_back(((const b8*)&t)[i]);
 			}
 
 			_currentBuffer->current_uniform_index++;
-
-			//_activeUniformBuffer = vector<u8>(sizeof(T));
-			//memcpy(_activeUniformBuffer.data(), (void*)&t, sizeof(T));
 		}
 
 		void append_transform(mat4 const& transform)
@@ -176,16 +165,10 @@ namespace night
 		vector<u8> const& uniform_storage() const { ASSERT(_currentBuffer != nullptr); return _currentBuffer->uniform_storage; }
 		vector<mat4> const& transform_storage() const { ASSERT(_currentBuffer != nullptr); return _transformStorage; }
 
-		//void current_buffer(handle<const ITexture> render_target, handle<IMaterial> material, TextureUniformData const& texture);
 		void current_buffer(handle<const ITexture> render_target, handle<IMaterial> material, vector<TextureUniformData> const& textures);
-
-		//void current_buffer(handle<const ITexture> render_target, handle<IMaterial> material, handle<const ITexture> texture);
-		void current_buffer(handle<const ITexture> render_target, handle<IMaterial> material, vector<handle<const ITexture>> const& textures); // TODO: remove
-
+		void current_buffer(handle<const ITexture> render_target, handle<IMaterial> material, TextureUniformData texture);
+		void current_buffer(handle<const ITexture> render_target, handle<IMaterial> material, initializer_list<TextureUniformData> textures);
 		void current_buffer(handle<const ITexture> render_target, handle<IMaterial> material, std::nullptr_t null);
-
-		template<typename... Textures>
-		void current_buffer(handle<const ITexture> render_target, handle<IMaterial> material, Textures... textures);
 
 		// only storage that is not a uniform size needs to be in the buffer object
 		vector<mat4> _transformStorage;
@@ -200,22 +183,20 @@ namespace night
 			//vector<Text> texts;
 
 			s32 current_uniform_index{ -1 }; // TODO: may want different node graphs per graphics api
-			//s32 current_transform_index{ -1 };
 			vector<u8> uniform_storage;
-			//vector<mat4> transform_storage;
 		};
 
 		Buffer* current_buffer() { return _currentBuffer; }
 		void current_buffer(Buffer* buffer) { _currentBuffer = buffer; }
 
-		map < // TODO: may be able to use set
+		umap<
 			shandle<const ITexture>, // render targets
-			map<
-			shandle<IMaterial>, // materials
-			map<
-			vector<TextureUniformData>, // textures
-			Buffer
-			>
+			umap<
+				shandle<IMaterial>, // materials
+				map<
+					vector<TextureUniformData>, // textures
+					Buffer
+				>
 			>
 		> const& sorted_buffers() const { return _sortedBuffers; }
 
@@ -232,15 +213,14 @@ namespace night
 			_currentMaterial = nullptr;
 		}
 
-		u8 empty()
+		b8 empty()
 		{
 			return _sortedBuffers.empty();
 		}
 
-		// TODO: use umap
-		map < // TODO: may be able to use set
+		umap<
 			shandle<const ITexture>, // render targets
-			map<
+			umap<
 				shandle<IMaterial>, // materials
 				map<
 					vector<TextureUniformData>, // textures
@@ -253,42 +233,5 @@ namespace night
 		handle<const ITexture> _currentRenderTarget{ nullptr };
 		handle<IMaterial> _currentMaterial{ nullptr };
 	};
-
-	template<typename ...Textures>
-	inline void RenderGraph::current_buffer(handle<const ITexture> render_target, handle<IMaterial> material, Textures ...textures)
-	{
-		if (render_target == nullptr)
-		{
-			render_target = utility::renderer().default_render_target();
-			ASSERT(render_target != nullptr);
-		}
-
-		_currentRenderTarget = render_target;
-		_currentMaterial = material;
-
-		vector<TextureUniformData> s_textures;
-
-		([&]
-			{
-				if constexpr (std::is_same_v<decltype(textures), DepthBuffer>)
-				{
-					TextureUniformData data;
-					ASSERT(textures.texture != nullptr);
-					data.texture = textures.texture;
-					data.sample_depth_buffer = true;
-					s_textures.push_back(data);
-				}
-				else
-				{
-					TextureUniformData data;
-					ASSERT(textures != nullptr);
-					data.texture = textures;
-					data.sample_depth_buffer = false;
-					s_textures.push_back(data);
-				}
-			} (), ...);
-
-		_currentBuffer = &_sortedBuffers[render_target][material][s_textures];
-	}
 
 }

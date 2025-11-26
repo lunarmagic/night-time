@@ -2,10 +2,11 @@
 #include "nightpch.h"
 #include "IComputeShader.h"
 #include "log/log.h"
+#include "application/Application.h"
 
 namespace night
 {
-	set<handle<IComputeShader>> IComputeShader::_toBeInitialized;
+	//set<handle<IComputeShader>> IComputeShader::_toBeInitialized;
 	//vector<IComputeShader::MainThreadDispatch> IComputeShader::_toBeDispatchedInMainThread;
 
 	IComputeShader::IComputeShader(ComputeShaderParams params, string const& id)
@@ -16,10 +17,16 @@ namespace night
 
 	void IComputeShader::__tempInitHandle()
 	{
-		static mutex m;
-		m.lock();
-		_toBeInitialized.insert(handle_from_this());
-		m.unlock();
+		//static mutex m;
+		//m.lock();
+		//_toBeInitialized.insert(handle_from_this());
+		//m.unlock();
+
+		Application::get().queue_for_main_thread([self = (handle<IComputeShader>)handle_from_this()]()
+			{
+				ASSERT(self != nullptr);
+				self->init();
+			});
 	}
 
 	//void IComputeShader::dispatch_to_main_thread(function<void(IComputeShader&)> fn, function<void(IComputeShader&)> callback)
@@ -31,33 +38,33 @@ namespace night
 	//	m.unlock();
 	//}
 
-	void IComputeShader::update_compute_shaders()
-	{
-		for (auto& i : _toBeInitialized)
-		{
-			if (i != nullptr)
-			{
-				i->init();
-			}
-		}
-
-		_toBeInitialized.clear();
-
-		//for (const auto& i : _toBeDispatchedInMainThread)
-		//{
-		//	ASSERT(i.compute_shader != nullptr);
-		//	ASSERT(i.fn != nullptr);
-
-		//	i.fn(*i.compute_shader.ptr().lock());
-
-		//	if (i.callback != nullptr)
-		//	{
-		//		i.callback(*i.compute_shader.ptr().lock());
-		//	}
-		//}
-
-		//_toBeDispatchedInMainThread.clear();
-	}
+	//void IComputeShader::update_compute_shaders()
+	//{
+	//	for (auto& i : _toBeInitialized)
+	//	{
+	//		if (i != nullptr)
+	//		{
+	//			i->init();
+	//		}
+	//	}
+	//
+	//	_toBeInitialized.clear();
+	//
+	//	//for (const auto& i : _toBeDispatchedInMainThread)
+	//	//{
+	//	//	ASSERT(i.compute_shader != nullptr);
+	//	//	ASSERT(i.fn != nullptr);
+	//
+	//	//	i.fn(*i.compute_shader.ptr().lock());
+	//
+	//	//	if (i.callback != nullptr)
+	//	//	{
+	//	//		i.callback(*i.compute_shader.ptr().lock());
+	//	//	}
+	//	//}
+	//
+	//	//_toBeDispatchedInMainThread.clear();
+	//}
 
 	//void IComputeShader::dispatch_to_main_thread_impl(function<void(IComputeShader&)> fn)
 	//{

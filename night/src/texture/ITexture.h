@@ -12,6 +12,7 @@
 #include "resource_manager/IResource.h"
 //#include "geometry/Quad.h"
 #include "aabb/AABB.h"
+#include "TextureUniformData.h"
 
 namespace night
 {
@@ -20,7 +21,6 @@ namespace night
 
 	template<typename T>
 	struct Ray3D;
-	//struct Color;
 
 	struct DepthBuffer;
 
@@ -32,7 +32,6 @@ namespace night
 
 	struct TextureParams
 	{
-		//Surface* surface{ nullptr };
 		sref<Surface> surface{ nullptr };
 		string path{ "" };
 		ETextureFiltering filtering{ ETextureFiltering::Nearest };
@@ -62,8 +61,8 @@ namespace night
 		vec3 unproject(vec3 const& point) const;
 		vec3 unproject(vec2 const& point) const;
 
-		virtual void on_resize() = 0;
-		virtual void on_clear() = 0;
+		virtual void on_resize(ivec2 const& new_size) = 0;
+		virtual void on_clear(Color const& clear_color) = 0;
 
 		void resize(ivec2 const& new_size);
 		void clear(Color const& clear_color);
@@ -75,20 +74,23 @@ namespace night
 
 		real render_flush_priority() const { return _renderFlushPriority; }
 
+		vec2 global_to_local(vec2 const& global) const;
+		vec2 local_to_global(vec2 const& local) const;
+		ivec2 local_to_internal(vec2 const& local) const;
 		ivec2 global_to_internal(vec2 const& global) const;
+		vec2 internal_to_local(ivec2 const& internal) const;
 		vec2 internal_to_global(ivec2 const& internal) const;
 
-		u8 should_use_blending{ true };
-		u8 should_use_depth_testing{ true };
-		u8 should_use_depth_peeling{ true };
+		b8 should_use_blending{ true };
+		b8 should_use_depth_testing{ true };
+		b8 should_use_depth_peeling{ true };
 
-		static void update_textures();
+		//static void update_textures();
 
 		DepthBuffer depth_buffer() const;
 
 		vec2 aspect_ratio() const;
 
-		//Quad area() const;
 		AABB<> area() const;
 
 	protected:
@@ -106,9 +108,6 @@ namespace night
 		sref<Surface> _surfaceToBeInitialized;
 		ETextureFiltering _filtering;
 
-		ivec2 _pendingResize{ ivec2(-1, -1) };
-		Color _pendingClear{ Color(-1, -1, -1, -1) };
-
 	private:
 
 		s32 _width{ 0 };
@@ -116,16 +115,12 @@ namespace night
 		mat4 _mvp{ mat4(1) };
 		Camera _camera; // TODO: figure out if we need this.
 		real _renderFlushPriority{ 0.0f };
-
-		static set<handle<ITexture>> _toBeInitialized;
-		static set<handle<ITexture>> _toBeResized;
-		static set<handle<ITexture>> _toBeCleared;
 	};
 
 	// TODO: may want to add ref
 	struct CompareITextureSHandleByRenderFlushPriority
 	{
-		u8 operator()(shandle<const ITexture> const& a, shandle<const ITexture> const& b) const
+		b8 operator()(shandle<const ITexture> const& a, shandle<const ITexture> const& b) const
 		{
 			ASSERT(a != nullptr && b != nullptr);
 			if (a->render_flush_priority() == b->render_flush_priority())
@@ -139,7 +134,16 @@ namespace night
 
 	struct DepthBuffer
 	{
-		handle<const ITexture> texture;
+		handle<const ITexture> texture; // TODO: change to handle
+
+		//operator TextureUniformData() const
+		//{
+		//	TextureUniformData data;
+		//	data.texture = this->texture;
+		//	data.sample_depth_buffer = true;
+		//
+		//	return data;
+		//}
 	};
 
 }

@@ -4,6 +4,8 @@
 #include "GLCall.h"
 #include "log/log.h"
 
+#include "RendererOpenGLReal.h"
+
 namespace night
 {
     void ShaderOpenGL::init()
@@ -22,7 +24,7 @@ namespace night
     }
 
 
-    u8 ShaderOpenGL::load_from_path(string const& path)
+    b8 ShaderOpenGL::load_from_path(string const& path)
     {
         ifstream file;
         file.open(path);
@@ -89,7 +91,7 @@ namespace night
 #endif
     }
 
-    u8 ShaderOpenGL::load_from_memory(const string& vs, const string& fs)
+    b8 ShaderOpenGL::load_from_memory(const string& vs, const string& fs)
     {
         clean();
         _rendererID = createShader(vs, fs);
@@ -175,27 +177,28 @@ namespace night
 
     void ShaderOpenGL::uniform1f(const string& name, real value)
     {
-        GLCall(glUniform1f(uniformLocation(name), value));
+        GLCall(glUniform1f(uniformLocation(name), (gl_real)value));
     }
 
     void ShaderOpenGL::uniform2f(const string& name, real v0, real v1)
     {
-        GLCall(glUniform2f(uniformLocation(name), v0, v1));
+        GLCall(glUniform2f(uniformLocation(name), (gl_real)v0, (gl_real)v1));
     }
 
     void ShaderOpenGL::uniform3f(const string& name, real v0, real v1, real v2)
     {
-        GLCall(glUniform3f(uniformLocation(name), v0, v1, v2));
+        GLCall(glUniform3f(uniformLocation(name), (gl_real)v0, (gl_real)v1, (gl_real)v2));
     }
 
     void ShaderOpenGL::uniform4f(const string& name, real v0, real v1, real v2, real v3)
     {
-        GLCall(glUniform4f(uniformLocation(name), v0, v1, v2, v3));
+        GLCall(glUniform4f(uniformLocation(name), (gl_real)v0, (gl_real)v1, (gl_real)v2, (gl_real)v3));
     }
 
     void ShaderOpenGL::uniformMat4f(const string& name, const mat4& matrix)
     {
-        GLCall(glUniformMatrix4fv(uniformLocation(name), 1, GL_FALSE, &matrix[0][0]));
+        mat<4, 4, gl_real>  fmatrix = matrix;
+        GLCall(glUniformMatrix4fv(uniformLocation(name), 1, GL_FALSE, &fmatrix[0][0]));
     }
 
     int ShaderOpenGL::uniformLocation(const string& name)

@@ -7,6 +7,7 @@
 #include "TextureOpenGL.h"
 #include <GL/glew.h>
 #include "RendererOpenGL.h"
+#include "RendererOpenGLReal.h"
 
 namespace night
 {
@@ -25,7 +26,7 @@ namespace night
 
 #if 0
 	// TODO: the texture should not be destroyed untill all materials unbind it.
-	u8 MaterialOpenGL::uniform(const string& name, handle<ITexture> texture)
+	b8 MaterialOpenGL::uniform(const string& name, handle<ITexture> texture)
 	{
 		ASSERT(texture != nullptr);
 
@@ -51,7 +52,7 @@ namespace night
 		return false;
 	}
 
-	u8 MaterialOpenGL::uniform(string const& name, DepthBuffer depth_buffer)
+	b8 MaterialOpenGL::uniform(string const& name, DepthBuffer depth_buffer)
 	{
 		ASSERT(depth_buffer != nullptr);
 
@@ -78,7 +79,7 @@ namespace night
 	}
 #endif
 
-	u8 MaterialOpenGL::uniform(const string& name, TextureUniformData const& texture)
+	b8 MaterialOpenGL::uniform(const string& name, TextureUniformData const& texture)
 	{
 		ASSERT(texture.texture != nullptr);
 
@@ -147,7 +148,7 @@ namespace night
 				break;
 
 			case GL_FLOAT:
-				temp += size * sizeof(GLfloat);
+				temp += size * sizeof(real);
 				break;
 
 			case GL_FLOAT_VEC2:
@@ -271,7 +272,7 @@ namespace night
 		_uniforms.clear();
 	}
 
-	u8 MaterialOpenGL::bind()
+	b8 MaterialOpenGL::bind()
 	{
 		ref<ShaderOpenGL> shader = ref<ShaderOpenGL>(_shader);
 
@@ -297,32 +298,37 @@ namespace night
 
 				case GL_FLOAT:
 				{
-					const GLfloat* value = (float*)&_data[index];
-					GLCall(glUniform1fv(location, size, value));
+					gl_real value = (gl_real)(*(real*)&_data[index]);
+					//const GLfloat* value = (float*)&_data[index];
+					GLCall(glUniform1fv(location, size, &value));
 				} break;
 
 				case GL_FLOAT_VEC2:
 				{
-					const float* value = (float*)&_data[index];
-					GLCall(glUniform2fv(location, size, value));
+					//const float* value = (float*)&_data[index];
+					vec<2, gl_real> value = (vec<2, gl_real>)(*(vec2*)&_data[index]);
+					GLCall(glUniform2fv(location, size, &value[0]));
 				} break;
 
 				case GL_FLOAT_VEC3:
 				{
-					const float* value = (float*)&_data[index];
-					GLCall(glUniform3fv(location, size, value));
+					//const float* value = (float*)&_data[index];
+					vec<3, gl_real> value = (vec<3, gl_real>)(*(vec3*)&_data[index]);
+					GLCall(glUniform3fv(location, size, &value[0]));
 				} break;
 
 				case GL_FLOAT_VEC4:
 				{
-					const float* value = (float*)&_data[index];
-					GLCall(glUniform4fv(location, size, value));
+					//const float* value = (float*)&_data[index];
+					vec<4, gl_real> value = (vec<4, gl_real>)(*(vec4*)&_data[index]);
+					GLCall(glUniform4fv(location, size, &value[0]));
 				} break;
 
 				case GL_FLOAT_MAT4:
 				{
-					const float* value = (float*)&_data[index];
-					GLCall(glUniformMatrix4fv(location, size, GL_FALSE, value));
+					//const float* value = (float*)&_data[index];
+					mat<4, 4, gl_real> value = (mat<4, 4, gl_real>)(*(mat4*)&_data[index]);
+					GLCall(glUniformMatrix4fv(location, size, GL_FALSE, &value[0][0]));
 				} break;
 
 				case GL_SAMPLER_2D:

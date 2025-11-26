@@ -13,7 +13,7 @@ namespace night
 		s32 height{};
 		Color fill_color{ WHITE };
 		string path{ "" };
-		u8 flip_vertically{ false };
+		b8 flip_vertically{ false };
 	};
 
 	struct NIGHT_API Surface

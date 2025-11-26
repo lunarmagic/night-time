@@ -24,7 +24,7 @@ namespace night
 		ivec2 local_to_internal(const vec2& local_coordinate) const;
 		vec3 internal_to_world(const ivec2& internal_coordinate) const;
 
-		u8 is_coord_in_bounds(const ivec2& coordinate) const;
+		b8 is_coord_in_bounds(const ivec2& coordinate) const;
 
 		void area(Quad<> const& a) { _area = a; }
 		void fragments(T* f) { _fragments = f; };
@@ -40,9 +40,9 @@ namespace night
 
 		void fill(const T& fragment);
 
-		void draw_line(ivec2 const& p1, ivec2 const& p2, function<void(const LineFragmentData<T>&)> callback, u8 should_draw_out_of_bounds = false) const;
+		void draw_line(ivec2 const& p1, ivec2 const& p2, function<void(const LineFragmentData<T>&)> callback, b8 should_draw_out_of_bounds = false) const;
 
-		void draw_line(vec2 const& p1, vec2 const& p2, function<void(const LineFragmentData<T>&)> callback, u8 should_draw_out_of_bounds = false) const;
+		void draw_line(vec2 const& p1, vec2 const& p2, function<void(const LineFragmentData<T>&)> callback, b8 should_draw_out_of_bounds = false) const;
 
 
 	private:
@@ -119,7 +119,7 @@ namespace night
 	}
 
 	template<typename T>
-	inline u8 WorldSpaceRasterizer2D<T>::is_coord_in_bounds(const ivec2& coordinate) const
+	inline b8 WorldSpaceRasterizer2D<T>::is_coord_in_bounds(const ivec2& coordinate) const
 	{
 		return coordinate.x >= 0 && coordinate.x < _width && coordinate.y >= 0 && coordinate.y < _height;
 	}
@@ -127,8 +127,8 @@ namespace night
 	template<typename T>
 	inline void WorldSpaceRasterizer2D<T>::fill(const T& fragment)
 	{
-		ASSERT(_fragments != nullptr); // set fragments before drawing.
-		ASSERT(_width != 0 && _height != 0); // set width and height
+		ASSERT(_fragments != nullptr);
+		ASSERT(_width != 0 && _height != 0);
 
 		for (s32 y = 0; y < _height; y++)
 		{
@@ -140,11 +140,11 @@ namespace night
 	}
 
 	template<typename T>
-	inline void WorldSpaceRasterizer2D<T>::draw_line(ivec2 const& p1, ivec2 const& p2, function<void(const LineFragmentData<T>&)> callback, u8 should_draw_out_of_bounds) const
+	inline void WorldSpaceRasterizer2D<T>::draw_line(ivec2 const& p1, ivec2 const& p2, function<void(const LineFragmentData<T>&)> callback, b8 should_draw_out_of_bounds) const
 	{
-		ASSERT(_fragments != nullptr); // set fragments before drawing.
-		ASSERT(_width != 0 && _height != 0); // set width and height
-		ASSERT(callback != nullptr); // callback is nullptr
+		ASSERT(_fragments != nullptr);
+		ASSERT(_width != 0 && _height != 0);
+		ASSERT(callback != nullptr);
 
 		s32 dx = p2.x - p1.x;
 		s32 dy = p2.y - p1.y;
@@ -167,7 +167,7 @@ namespace night
 		constexpr s32 max_iterations = 1000; // TODO: handle this correctly.
 		for (s32 i = 0; i < d_long && i < max_iterations; i++)
 		{
-			u8 in_bounds = is_coord_in_bounds(current);
+			b8 in_bounds = is_coord_in_bounds(current);
 
 			//if (!in_bounds && !should_draw_out_of_bounds)
 			//{
@@ -202,7 +202,7 @@ namespace night
 	}
 
 	template<typename T>
-	inline void WorldSpaceRasterizer2D<T>::draw_line(vec2 const& p1, vec2 const& p2, function<void(const LineFragmentData<T>&)> callback, u8 should_draw_out_of_bounds) const
+	inline void WorldSpaceRasterizer2D<T>::draw_line(vec2 const& p1, vec2 const& p2, function<void(const LineFragmentData<T>&)> callback, b8 should_draw_out_of_bounds) const
 	{
 		ivec2 p1i = local_to_internal(global_to_local(p1));
 		ivec2 p2i = local_to_internal(global_to_local(p2));

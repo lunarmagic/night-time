@@ -19,7 +19,7 @@ namespace night
 	{
 		File() = default;
 
-		u8 is_leaf() const
+		b8 is_leaf() const
 		{
 			return _branches.empty();
 		}
@@ -29,9 +29,9 @@ namespace night
 			_data = data;
 		}
 
-		u8 write();
-		u8 write(string const& path);
-		u8 read(string const& path);
+		b8 write();
+		b8 write(string const& path);
+		b8 read(string const& path);
 
 		void clear();
 
@@ -73,7 +73,7 @@ namespace night
 		
 		// TODO: get vector.
 
-		u8 empty() const
+		b8 empty() const
 		{
 			return _data.empty();
 		}
@@ -96,9 +96,13 @@ namespace night
 		{
 			//t = (real)std::stod(segment.c_str()); // TODO: get type of arg
 
-			if constexpr (std::is_same_v<T, real>)
+			if constexpr (std::is_same_v<T, r32>)
 			{
-				t = (real)std::stod(segment.c_str()); // TODO: get type of arg
+				t = (r32)std::stof(segment.c_str()); // TODO: get type of arg
+			}
+			else if constexpr (std::is_same_v<T, r64>)
+			{
+				t = (r64)std::stod(segment.c_str()); // TODO: get type of arg
 			}
 			else if constexpr (std::is_same_v<T, s32>)
 			{
@@ -118,13 +122,17 @@ namespace night
 
 		if (std::getline(stream, segment, ','))
 		{
-			if constexpr (std::is_same_v<T, real>)
+			if constexpr (std::is_same_v<T, r32>)
 			{
-				t = (real)std::stod(segment.c_str()); // TODO: get type of arg
+				t = (r32)std::stof(segment.c_str());
+			}
+			else if constexpr (std::is_same_v<T, r64>)
+			{
+				t = (r64)std::stod(segment.c_str());
 			}
 			else if constexpr (std::is_same_v<T, s32>)
 			{
-				t = std::stoi(segment.c_str()); // TODO: get type of arg
+				t = std::stoi(segment.c_str());
 			}
 			else
 			{

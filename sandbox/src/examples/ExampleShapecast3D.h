@@ -15,8 +15,8 @@ namespace night
 			Point = 0,
 			Triangle,
 			Box,
-			Pyramid,
 			Sphere,
+			Pyramid,
 			Cylinder,
 			Cone,
 			Max
@@ -70,9 +70,26 @@ namespace night
 			_pyramidVertices[3] = vec3{ -1.0f, -1.0f, -1.0f };
 
 			_pyramidVertices[4] = vec3{ 0.0f, 0.0f, 1.0f };
-		}
 
-	protected:
+
+			_triangleVertices2D[0] = vec2{
+				cos(math::lerp(0.0f, R_PI * 2, 1.0f / 3)),
+				sin(math::lerp(0.0f, R_PI * 2, 1.0f / 3))
+			};
+			_triangleVertices2D[1] = vec2{
+				cos(math::lerp(0.0f, R_PI * 2, (1.0f / 3) * 2.0f)),
+				sin(math::lerp(0.0f, R_PI * 2, (1.0f / 3) * 2.0f))
+			};
+			_triangleVertices2D[2] = vec2{
+				cos(R_PI * 2),
+				sin(R_PI * 2)
+			};
+
+			_boxVertices2D[0] = vec2{ -1.0f, 1.0f };
+			_boxVertices2D[1] = vec2{ 1.0f, 1.0f };
+			_boxVertices2D[2] = vec2{ 1.0f, -1.0f };
+			_boxVertices2D[3] = vec2{ -1.0f, -1.0f };
+		}
 
 		template<EShape A, vec3 AD, EShape B, vec3 BD>
 		void edge_case()
@@ -99,7 +116,26 @@ namespace night
 		virtual void update_gui(handle<NodeGui> gui) override
 		{
 			ASSERT(gui != nullptr);
-			
+
+			if (gui->button(_2DMode ? "3D Mode" : "2D Mode"))
+			{
+				_2DMode = !_2DMode;
+				reset_shapes();
+
+				if (_2DMode)
+				{
+					auto p = find_parent<ExampleSelect>();
+					ASSERT(p != nullptr);
+					p->perspective_mode(ECameraType::Orthographic);
+				}
+				else
+				{
+					auto p = find_parent<ExampleSelect>();
+					ASSERT(p != nullptr);
+					p->perspective_mode(ECameraType::Perspective);
+				}
+			}
+
 			gui->seperator();
 
 			gui->text("shape 1:");
@@ -109,14 +145,28 @@ namespace night
 
 			if (gui->button("<"))
 			{
-				_shape1.type = EShape((s32(_shape1.type) + (s32(EShape::Max) - 1)) % (s32)EShape::Max);
+				if (!_2DMode)
+				{
+					_shape1.type = EShape((s32(_shape1.type) + (s32(EShape::Max) - 1)) % (s32)EShape::Max);
+				}
+				else
+				{
+					_shape1.type = EShape((s32(_shape1.type) + (s32(EShape::Pyramid) - 1)) % (s32)EShape::Pyramid);
+				}
 			}
 			
 			gui->same_line();
 
 			if (gui->button(">"))
 			{
-				_shape1.type = EShape((s32(_shape1.type) + 1) % (s32)EShape::Max);
+				if (!_2DMode)
+				{
+					_shape1.type = EShape((s32(_shape1.type) + 1) % (s32)EShape::Max);
+				}
+				else
+				{
+					_shape1.type = EShape((s32(_shape1.type) + 1) % (s32)EShape::Pyramid);
+				}
 			}
 
 			gui->drag_vec3("position", &_shape1.position, 0.01f);
@@ -133,14 +183,28 @@ namespace night
 
 			if (gui->button("<##xx"))
 			{
-				_shape2.type = EShape((s32(_shape2.type) + (s32(EShape::Max) - 1)) % (s32)EShape::Max);
+				if (!_2DMode)
+				{
+					_shape2.type = EShape((s32(_shape2.type) + (s32(EShape::Max) - 1)) % (s32)EShape::Max);
+				}
+				else
+				{
+					_shape2.type = EShape((s32(_shape2.type) + (s32(EShape::Pyramid) - 1)) % (s32)EShape::Pyramid);
+				}
 			}
 
 			gui->same_line();
 
 			if (gui->button(">##xx"))
 			{
-				_shape2.type = EShape((s32(_shape2.type) + 1) % (s32)EShape::Max);
+				if (!_2DMode)
+				{
+					_shape2.type = EShape((s32(_shape2.type) + 1) % (s32)EShape::Max);
+				}
+				else
+				{
+					_shape2.type = EShape((s32(_shape2.type) + 1) % (s32)EShape::Pyramid);
+				}
 			}
 
 			gui->seperator();
@@ -156,96 +220,144 @@ namespace night
 			using es3d = ExampleShapecast3D;
 			typedef void (ExampleShapecast3D:: * FN)();
 
-			FN fns[] = {
-				& es3d::edge_case_triangle_epsilon,
-				& es3d::edge_case<es::Cylinder, RIGHT, es::Cylinder, RIGHT>,
-				& es3d::edge_case<es::Cylinder, UP, es::Cylinder, UP>,
-				& es3d::edge_case<es::Cylinder, UP, es::Cylinder, FORWARD>,
-				& es3d::edge_case<es::Cylinder, RIGHT, es::Cylinder, FORWARD>,
-				& es3d::edge_case<es::Cylinder, RIGHT, es::Cone, RIGHT>,
-				& es3d::edge_case<es::Cylinder, UP, es::Cone, UP>,
-				& es3d::edge_case<es::Cylinder, UP, es::Cone, FORWARD>,
-				& es3d::edge_case<es::Cylinder, FORWARD, es::Cone, RIGHT>,
-				& es3d::edge_case<es::Cone, UP, es::Cone, UP>,
-				& es3d::edge_case<es::Cone, LEFT, es::Cone, RIGHT>,
-				& es3d::edge_case<es::Cone, LEFT, es::Cone, LEFT>,
-				& es3d::edge_case<es::Cone, UP, es::Cone, LEFT>,
-				& es3d::edge_case<es::Cone, UP, es::Cone, DOWN>,
-				& es3d::edge_case<es::Cone, FORWARD, es::Cone, RIGHT>,
-				& es3d::edge_case<es::Cylinder, UP, es::Sphere, ORIGIN>,
-				& es3d::edge_case<es::Cylinder, RIGHT, es::Sphere, ORIGIN>,
-				& es3d::edge_case<es::Cone, UP, es::Sphere, ORIGIN>,
-				& es3d::edge_case<es::Cone, RIGHT, es::Sphere, ORIGIN>,
-				& es3d::edge_case<es::Cone, DOWN, es::Sphere, ORIGIN>,
-				& es3d::edge_case<es::Cylinder, UP, es::Triangle, FORWARD>,
-				& es3d::edge_case<es::Cylinder, RIGHT, es::Triangle, FORWARD>,
-				& es3d::edge_case<es::Cone, UP, es::Triangle, FORWARD>,
-				& es3d::edge_case<es::Cone, RIGHT, es::Triangle, FORWARD>,
-				& es3d::edge_case<es::Cone, FORWARD, es::Triangle, FORWARD>,
-				& es3d::edge_case<es::Cylinder, UP, es::Point, FORWARD>,
-				& es3d::edge_case<es::Cylinder, RIGHT, es::Point, FORWARD>,
-				& es3d::edge_case<es::Cone, UP, es::Point, FORWARD>,
-				& es3d::edge_case<es::Cone, RIGHT, es::Point, FORWARD>,
-				& es3d::edge_case<es::Cone, FORWARD, es::Point, FORWARD>,
-				& es3d::edge_case<es::Triangle, FORWARD, es::Triangle, RIGHT>,
-				& es3d::edge_case<es::Triangle, FORWARD, es::Triangle, UP>,
-				& es3d::edge_case<es::Triangle, UP, es::Triangle, UP>,
-				& es3d::edge_case<es::Triangle, FORWARD, es::Triangle, FORWARD>, // should fail
-				& es3d::edge_case<es::Triangle, RIGHT, es::Triangle, RIGHT>, // should fail
-			};
-
-			s32 prev = edge_case_index;
-			gui->drag_s32("edge case", &edge_case_index, 0.1f, -1, sizeof(fns) / sizeof(*fns) - 1);
-
-			if (edge_case_index > -1)
+			if (!_2DMode)
 			{
-				(this->*fns[edge_case_index])();
+				FN fns[] = {
+					& es3d::edge_case_triangle_epsilon,
+					& es3d::edge_case<es::Cylinder, RIGHT, es::Cylinder, RIGHT>,
+					& es3d::edge_case<es::Cylinder, UP, es::Cylinder, UP>,
+					& es3d::edge_case<es::Cylinder, UP, es::Cylinder, FORWARD>,
+					& es3d::edge_case<es::Cylinder, RIGHT, es::Cylinder, FORWARD>,
+					& es3d::edge_case<es::Cylinder, RIGHT, es::Cone, RIGHT>,
+					& es3d::edge_case<es::Cylinder, UP, es::Cone, UP>,
+					& es3d::edge_case<es::Cylinder, UP, es::Cone, FORWARD>,
+					& es3d::edge_case<es::Cylinder, FORWARD, es::Cone, RIGHT>,
+					& es3d::edge_case<es::Cone, UP, es::Cone, UP>,
+					& es3d::edge_case<es::Cone, LEFT, es::Cone, RIGHT>,
+					& es3d::edge_case<es::Cone, LEFT, es::Cone, LEFT>,
+					& es3d::edge_case<es::Cone, UP, es::Cone, LEFT>,
+					& es3d::edge_case<es::Cone, UP, es::Cone, DOWN>,
+					& es3d::edge_case<es::Cone, FORWARD, es::Cone, RIGHT>,
+					& es3d::edge_case<es::Cylinder, UP, es::Sphere, ORIGIN>,
+					& es3d::edge_case<es::Cylinder, RIGHT, es::Sphere, ORIGIN>,
+					& es3d::edge_case<es::Cone, UP, es::Sphere, ORIGIN>,
+					& es3d::edge_case<es::Cone, RIGHT, es::Sphere, ORIGIN>,
+					& es3d::edge_case<es::Cone, DOWN, es::Sphere, ORIGIN>,
+					& es3d::edge_case<es::Cylinder, UP, es::Triangle, FORWARD>,
+					& es3d::edge_case<es::Cylinder, RIGHT, es::Triangle, FORWARD>,
+					& es3d::edge_case<es::Cone, UP, es::Triangle, FORWARD>,
+					& es3d::edge_case<es::Cone, RIGHT, es::Triangle, FORWARD>,
+					& es3d::edge_case<es::Cone, FORWARD, es::Triangle, FORWARD>,
+					& es3d::edge_case<es::Cylinder, UP, es::Point, FORWARD>,
+					& es3d::edge_case<es::Cylinder, RIGHT, es::Point, FORWARD>,
+					& es3d::edge_case<es::Cone, UP, es::Point, FORWARD>,
+					& es3d::edge_case<es::Cone, RIGHT, es::Point, FORWARD>,
+					& es3d::edge_case<es::Cone, FORWARD, es::Point, FORWARD>,
+					& es3d::edge_case<es::Triangle, FORWARD, es::Triangle, RIGHT>,
+					& es3d::edge_case<es::Triangle, FORWARD, es::Triangle, UP>,
+					& es3d::edge_case<es::Triangle, UP, es::Triangle, UP>,
+					& es3d::edge_case<es::Triangle, FORWARD, es::Triangle, FORWARD>, // should fail
+					& es3d::edge_case<es::Triangle, RIGHT, es::Triangle, RIGHT>, // should fail
+				};
+
+				s32 prev = edge_case_index;
+				gui->drag_s32("edge case", &edge_case_index, 0.1f, -1, sizeof(fns) / sizeof(*fns) - 1);
+
+				if (edge_case_index > -1)
+				{
+					(this->*fns[edge_case_index])();
+				}
+				else if (prev != -1)
+				{
+					reset_shapes();
+				}
 			}
-			else if (prev != -1)
+			else
 			{
-				reset_shapes();
+				// TODO: support 2D edge cases
+				
+				//FN fns[] = {
+				//	&es3d::edge_case<es::Triangle, FORWARD, es::Triangle, FORWARD>,
+				//};
+				//
+				//s32 prev = edge_case_index;
+				//gui->drag_s32("edge case", &edge_case_index, 0.1f, -1, sizeof(fns) / sizeof(*fns) - 1);
+				//
+				//if (edge_case_index > -1)
+				//{
+				//	(this->*fns[edge_case_index])();
+				//}
+				//else if (prev != -1)
+				//{
+				//	reset_shapes();
+				//}
 			}
 
 			real delta = utility::window().delta_time();
 
-			if (utility::key_down(EKey::A))
+			if (!_2DMode)
 			{
-				_shape1.rotation.y += 1.0f * delta;
-			}
-			
-			if (utility::key_down(EKey::D))
-			{
-				_shape1.rotation.y -= 1.0f * delta;
-			}
+				if (utility::key_down(EKey::A))
+				{
+					_shape1.rotation.y += 1.0f * delta;
+				}
 
-			if (utility::key_down(EKey::W))
-			{
-				_shape1.rotation.x += 1.0f * delta;
-			}
+				if (utility::key_down(EKey::D))
+				{
+					_shape1.rotation.y -= 1.0f * delta;
+				}
 
-			if (utility::key_down(EKey::S))
-			{
-				_shape1.rotation.x -= 1.0f * delta;
-			}
+				if (utility::key_down(EKey::W))
+				{
+					_shape1.rotation.x += 1.0f * delta;
+				}
 
-			if (utility::key_down(EKey::Left))
-			{
-				_shape2.rotation.y += 1.0f * delta;
-			}
+				if (utility::key_down(EKey::S))
+				{
+					_shape1.rotation.x -= 1.0f * delta;
+				}
 
-			if (utility::key_down(EKey::Right))
-			{
-				_shape2.rotation.y -= 1.0f * delta;
-			}
+				if (utility::key_down(EKey::Left))
+				{
+					_shape2.rotation.y += 1.0f * delta;
+				}
 
-			if (utility::key_down(EKey::Up))
-			{
-				_shape2.rotation.x += 1.0f * delta;
-			}
+				if (utility::key_down(EKey::Right))
+				{
+					_shape2.rotation.y -= 1.0f * delta;
+				}
 
-			if (utility::key_down(EKey::Down))
+				if (utility::key_down(EKey::Up))
+				{
+					_shape2.rotation.x += 1.0f * delta;
+				}
+
+				if (utility::key_down(EKey::Down))
+				{
+					_shape2.rotation.x -= 1.0f * delta;
+				}
+			}
+			else
 			{
-				_shape2.rotation.x -= 1.0f * delta;
+				if (utility::key_down(EKey::A))
+				{
+					_shape1.rotation.z += 1.0f * delta;
+				}
+
+				if (utility::key_down(EKey::D))
+				{
+					_shape1.rotation.z -= 1.0f * delta;
+				}
+
+				if (utility::key_down(EKey::Left))
+				{
+					_shape2.rotation.z += 1.0f * delta;
+				}
+
+				if (utility::key_down(EKey::Right))
+				{
+					_shape2.rotation.z -= 1.0f * delta;
+				}
 			}
 
 			_shape1.transform = mat4(1);
@@ -256,7 +368,7 @@ namespace night
 			_shape2.transform = math::quat_to_mat4(quat(_shape2.rotation)) * _shape2.transform;
 			_shape2.transform = math::translate(_shape2.position) * _shape2.transform;
 
-			auto get_support = [&](Shape const& shape) -> function<vec3 (vec3 const&)>
+			auto get_support_3d = [&](Shape const& shape) -> function<vec3 (vec3 const&)>
 			{
 				DecomposedTransform<> dt = math::decompose(shape.transform);
 
@@ -265,7 +377,7 @@ namespace night
 				if (shape.rotation_origin != ORIGIN)
 				{
 					direction = shape.rotation_origin * dt.rotation;
-					dt.rotation = quat(direction * R_PI * 0.5f);
+					dt.rotation = quat(direction * R_PI * (real)0.5);
 				}
 				else
 				{
@@ -339,21 +451,113 @@ namespace night
 				return nullptr;
 			};
 
-			function<vec3 (vec3 const&)> support_1 = get_support(_shape1);
-			function<vec3 (vec3 const&)> support_2 = get_support(_shape2);
+			auto get_support_2d = [&](Shape const& shape) -> function<vec2(vec2 const&)>
+				{
+					DecomposedTransform<> dt = math::decompose(shape.transform);
 
-			ShapeCastParams3D<> params;
-			params.support_casted = get_support(_shape1);
-			params.support_against = get_support(_shape2);
-			params.motion = _motion;
+					vec3 direction;
 
+					if (shape.rotation_origin != ORIGIN)
+					{
+						direction = shape.rotation_origin * dt.rotation;
+						dt.rotation = quat(direction * R_PI * (real)0.5);
+					}
+					else
+					{
+						direction = FORWARD * dt.rotation;
+					}
+
+					mat4 transform = math::compose(dt);
+
+					switch (shape.type)
+					{
+					case EShape::Point:
+					{
+						return [=](vec2 const& dir) -> vec2
+							{
+								return dt.translation;
+							};
+						break;
+					}
+
+					case EShape::Triangle:
+					{
+						return [=](vec2 const& dir) -> vec2
+							{
+								return GJK2D<>::support_polygon(dir, transform, _triangleVertices2D.begin(), _triangleVertices2D.end());
+							};
+						break;
+					}
+
+					case EShape::Box:
+					{
+						return [=](vec2 const& dir) -> vec2
+							{
+								return GJK2D<>::support_polygon(dir, shape.transform, _boxVertices2D.begin(), _boxVertices2D.end());
+							};
+						break;
+					}
+
+					case EShape::Sphere:
+					{
+						return [=](vec2 const& dir) -> vec2
+							{
+								return GJK2D<>::support_circle(dir, transform, shape.radius);
+							};
+						break;
+					}
+					}
+
+					return nullptr;
+				};
+
+			if (!_2DMode)
 			{
-				DB_ALGO_INVOLVE_NODES_SCOPED(handle_from_this());
-				DB_ALGO_SCOPED("GJK Shapecast Example");
-				NIGHT_PROFILER_SCOPED("GJK Shapecast Example");
-				_shapeCastResult = GJK3D<>::shape_cast(params);
+				//function<vec3(vec3 const&)> support_1 = get_support_3d(_shape1);
+				//function<vec3(vec3 const&)> support_2 = get_support_3d(_shape2);
+
+				ShapeCastParams3D<> params;
+				params.support_casted = get_support_3d(_shape1);
+				params.support_against = get_support_3d(_shape2);
+				params.motion = _motion;
+#ifdef NIGHT_USE_DOUBLE_PRECISION
+				params.epsilon = NIGHT_EPSILON_SMALL_DOUBLE;
+#endif
+
+				{
+					DB_ALGO_INVOLVE_NODES_SCOPED(handle_from_this());
+					DB_ALGO_SCOPED("GJK Shapecast Example");
+					NIGHT_PROFILER_SCOPED("GJK Shapecast Example");
+					_shapeCastResult = GJK3D<>::shape_cast(params);
+				}
+			}
+			else
+			{
+				ShapeCastParams2D<> params;
+				params.support_casted = get_support_2d(_shape1);
+				params.support_against = get_support_2d(_shape2);
+				params.motion = _motion;
+#ifdef NIGHT_USE_DOUBLE_PRECISION
+				params.epsilon = NIGHT_EPSILON_SMALL_DOUBLE;
+#endif
+
+				{
+					DB_ALGO_INVOLVE_NODES_SCOPED(handle_from_this());
+					DB_ALGO_SCOPED("GJK Shapecast Example");
+					NIGHT_PROFILER_SCOPED("GJK Shapecast Example");
+					auto result = GJK2D<>::shape_cast(params);
+					_shapeCastResult.result = result.result;
+					_shapeCastResult.t0 = result.t0;
+					_shapeCastResult.t1 = result.t1;
+					_shapeCastResult.n0 = vec3(result.n0, 0.0f);
+					_shapeCastResult.n1 = vec3(result.n1, 0.0f);
+					_shapeCastResult.c0 = vec3(result.c0, 50.0f);
+					_shapeCastResult.c1 = vec3(result.c1, 50.0f);
+				}
 			}
 		}
+
+	protected:
 
 		virtual void on_render(RenderGraph& out_graph) const override
 		{
@@ -376,7 +580,7 @@ namespace night
 					};
 			}
 
-			if (!_showTriangleFill)
+			if (!_showTriangleFill || _2DMode)
 			{
 				on_draw_triangle = nullptr;
 			}
@@ -410,7 +614,7 @@ namespace night
 					if (shape.rotation_origin != ORIGIN)
 					{
 						direction = shape.rotation_origin * dt.rotation;
-						dt.rotation = quat(direction * R_PI * 0.5f);
+						dt.rotation = quat(direction * R_PI * (real)0.5);
 					}
 					else
 					{
@@ -424,15 +628,15 @@ namespace night
 					case EShape::Point:
 					{
 						// TODO: contact points
-						out_graph.draw_point(dt.translation, color);
+						out_graph.draw_point(dt.translation, BLACK.opaqued(0.75f));
 						break;
 					}
 
 					case EShape::Triangle:
 					{
-						out_graph.draw_line(transform * vec4(_triangleVertices[0], 1), transform * vec4(_triangleVertices[1], 1), color);
-						out_graph.draw_line(transform * vec4(_triangleVertices[1], 1), transform * vec4(_triangleVertices[2], 1), color);
-						out_graph.draw_line(transform * vec4(_triangleVertices[2], 1), transform * vec4(_triangleVertices[0], 1), color);
+						out_graph.draw_line(transform * vec4(_triangleVertices[0], 1), transform * vec4(_triangleVertices[1], 1), BLACK.opaqued(0.75f));
+						out_graph.draw_line(transform * vec4(_triangleVertices[1], 1), transform * vec4(_triangleVertices[2], 1), BLACK.opaqued(0.75f));
+						out_graph.draw_line(transform * vec4(_triangleVertices[2], 1), transform * vec4(_triangleVertices[0], 1), BLACK.opaqued(0.75f));
 
 						break;
 					}
@@ -507,6 +711,12 @@ namespace night
 			{
 				draw_shape(_shape1, _motion * _shapeCastResult.t0, RED.opaqued(0.75f));
 				draw_shape(_shape1, _motion * _shapeCastResult.t1, BLUE.opaqued(0.5f));
+
+				if (_2DMode) // TODO: support contacts for 3D
+				{
+					out_graph.draw_line(_shapeCastResult.c0, _shapeCastResult.c0 + _shapeCastResult.n0, RED);
+					out_graph.draw_line(_shapeCastResult.c1, _shapeCastResult.c1 + _shapeCastResult.n1, BLUE);
+				}
 			}
 			
 			draw_shape(_shape2, ORIGIN, GREY.opaqued(0.76f));
@@ -522,6 +732,7 @@ namespace night
 			_shape2.position = vec3(2.0f, 0.0f, 0.0f);
 			_shape1.type = EShape::Box;
 			_shape2.type = EShape::Sphere;
+			edge_case_index = -1;
 		}
 
 		Shape _shape1 = {};
@@ -531,9 +742,14 @@ namespace night
 		array<vec3, 3> _triangleVertices;
 		array<vec3, 8> _boxVertices;
 		array<vec3, 5> _pyramidVertices;
-		u8 _showOutline = true;
-		u8 _showTriangleFill = true;
+
+		b8 _showOutline = true;
+		b8 _showTriangleFill = true;
 		s32 edge_case_index = -1;
+
+		b8 _2DMode = false;
+		array<vec2, 3> _triangleVertices2D;
+		array<vec2, 4> _boxVertices2D;
 	};
 
 }

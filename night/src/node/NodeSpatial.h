@@ -28,7 +28,7 @@ namespace night
 
 		void detach_from_parent() { _isDetachedFromParent = true; }
 		void reattach_to_parent() { _isDetachedFromParent = false; }
-		u8 is_detached_from_parent() { return _isDetachedFromParent; }
+		b8 is_detached_from_parent() { return _isDetachedFromParent; }
 
 	protected:
 
@@ -41,7 +41,7 @@ namespace night
 		vec3 _translation{ 0, 0, 0 };
 		quat _rotation{ quat(vec3(0, 0, 0)) };
 
-		u8 _isDetachedFromParent{ false };
+		b8 _isDetachedFromParent{ false };
 
 		void update_transform();
 		void update_tsr();

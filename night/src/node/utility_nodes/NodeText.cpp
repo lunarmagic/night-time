@@ -30,14 +30,14 @@ namespace night
 			ascii_index.x = chr % 16;
 			ascii_index.y = chr / 16;
 
-			array<vec2, 4> texture_coords;
-			texture_coords[0] = vec2(real(ascii_index.x) / 16.0f, 1.0f - real(ascii_index.y) / 16.0f);
-			texture_coords[1] = vec2(real(ascii_index.x + 1) / 16.0f, 1.0f - real(ascii_index.y) / 16.0f);
-			texture_coords[2] = vec2(real(ascii_index.x + 1) / 16.0f, 1.0f - real(ascii_index.y + 1) / 16.0f);
-			texture_coords[3] = vec2(real(ascii_index.x) / 16.0f, 1.0f - real(ascii_index.y + 1) / 16.0f);
+			array<fvec2, 4> texture_coords;
+			texture_coords[0] = fvec2(r32(ascii_index.x) / 16.0f, 1.0f - r32(ascii_index.y) / 16.0f);
+			texture_coords[1] = fvec2(r32(ascii_index.x + 1) / 16.0f, 1.0f - r32(ascii_index.y) / 16.0f);
+			texture_coords[2] = fvec2(r32(ascii_index.x + 1) / 16.0f, 1.0f - r32(ascii_index.y + 1) / 16.0f);
+			texture_coords[3] = fvec2(r32(ascii_index.x) / 16.0f, 1.0f - r32(ascii_index.y + 1) / 16.0f);
 
 			out_graph.draw_quad(
-				{
+				QuadParams<>{
 					.position = vec3(ORIGIN.x + (real)i * 2.0f, ORIGIN.y, 0),
 					.size = vec2(1.0f),
 					.color = _color,

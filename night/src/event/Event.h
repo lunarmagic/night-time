@@ -80,16 +80,16 @@ namespace night
 		virtual const s8* name() const = 0;
 		virtual string to_string() const { return name(); }
 
-		u8 is_in_category(EEventCategory category) { return this->category() & category; }
+		b8 is_in_category(EEventCategory category) { return this->category() & category; }
 
-		void handled(u8 handled) { _handled = handled; }
-		u8 handled() const { return _handled; }
+		void handled(b8 handled) { _handled = handled; }
+		b8 handled() const { return _handled; }
 
 		r64 timestamp() const { return _timestamp; }
 
 	private:
 
-		u8 _handled = false;
+		b8 _handled = false;
 		r64 _timestamp{ -1.0f };
 	};
 
@@ -98,7 +98,7 @@ namespace night
 		EventDispatcher(Event& event) : _event(event) {}
 
 		template<typename T>
-		u8 dispatch(auto fn)
+		b8 dispatch(auto fn)
 		{
 			if (_event.type() == T::get_static_type())
 			{

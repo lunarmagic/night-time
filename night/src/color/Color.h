@@ -64,12 +64,12 @@ namespace night
 			return *this;
 		}
 
-		inline const u8 operator==(Color const& other) const
+		inline const b8 operator==(Color const& other) const
 		{
 			return (r == other.r && g == other.g && b == other.b && a == other.a);
 		}
 
-		inline const u8 operator!=(Color const& other) const
+		inline const b8 operator!=(Color const& other) const
 		{
 			return !(r == other.r && g == other.g && b == other.b && a == other.a);
 		}
@@ -78,21 +78,21 @@ namespace night
 
 		static Color rainbow(r32 t);
 
-		static Color lerp(const Color& a, const Color& b, r32 t);
+		static Color lerp(const Color& a, const Color& b, real t);
 
-		Color opaqued(r32 opacity) const
+		Color opaqued(real opacity) const
 		{
 			Color result = *this;
-			result.a *= opacity;
+			result.a *= (r32)opacity;
 			return result;
 		}
 
-		Color darken(r32 lightness) const
+		Color darken(real lightness) const
 		{
 			Color result = *this;
-			result.r *= lightness;
-			result.g *= lightness;
-			result.b *= lightness;
+			result.r *= (r32)lightness;
+			result.g *= (r32)lightness;
+			result.b *= (r32)lightness;
 			return result;
 		}
 	};

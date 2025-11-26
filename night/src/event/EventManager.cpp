@@ -123,7 +123,7 @@ namespace night
 	}
 
 	template<typename T>
-	inline u8 EventManager::callback_bound_events(T& event)
+	inline b8 EventManager::callback_bound_events(T& event)
 	{
 		auto r = _eventBindings.equal_range(T::get_static_type());
 
@@ -135,75 +135,75 @@ namespace night
 		return true;
 	}
 
-	u8 EventManager::on_event(KeyPressedEvent& event)
+	b8 EventManager::on_event(KeyPressedEvent& event)
 	{
 		callback_bound_inputs(InputKey((EKey)event.keycode(), event.isRepeat() ? EInputType::Repeat : EInputType::Pressed));
 		return callback_bound_events(event);
 	}
 
-	u8 EventManager::on_event(KeyReleasedEvent& event)
+	b8 EventManager::on_event(KeyReleasedEvent& event)
 	{
 		callback_bound_inputs(InputKey((EKey)event.keycode(), EInputType::Released));
 		return callback_bound_events(event);
 	}
 
-	u8 EventManager::on_event(MouseButtonPressedEvent& event)
+	b8 EventManager::on_event(MouseButtonPressedEvent& event)
 	{
 		callback_bound_inputs(InputKey((EMouse)event.button(), EInputType::Pressed));
 		return callback_bound_events(event);
 	}
 
-	u8 EventManager::on_event(MouseButtonReleasedEvent& event)
+	b8 EventManager::on_event(MouseButtonReleasedEvent& event)
 	{
 		callback_bound_inputs(InputKey((EMouse)event.button(), EInputType::Released));
 		return callback_bound_events(event);
 	}
 
-	u8 EventManager::on_event(MouseWheelEvent& event)
+	b8 EventManager::on_event(MouseWheelEvent& event)
 	{
 		return callback_bound_events(event);
 	}
 
-	u8 EventManager::on_event(PenPressureEvent& event)
+	b8 EventManager::on_event(PenPressureEvent& event)
 	{
 		return callback_bound_events(event);
 	}
 
-	u8 EventManager::on_event(PenDownEvent& event)
+	b8 EventManager::on_event(PenDownEvent& event)
 	{
 		return callback_bound_events(event);
 	}
 
-	u8 EventManager::on_event(PenUpEvent& event)
+	b8 EventManager::on_event(PenUpEvent& event)
 	{
 		return callback_bound_events(event);
 	}
 
-	u8 EventManager::on_event(PenMotionEvent& event)
+	b8 EventManager::on_event(PenMotionEvent& event)
 	{
 		return callback_bound_events(event);
 	}
 
-	u8 EventManager::on_event(MouseMotionEvent& event)
+	b8 EventManager::on_event(MouseMotionEvent& event)
 	{
 		return callback_bound_events(event);
 	}
 
-	u8 EventManager::on_event(WindowCloseEvent& event)
+	b8 EventManager::on_event(WindowCloseEvent& event)
 	{
-		u8 result = callback_bound_events(event);
+		b8 result = callback_bound_events(event);
 
 		Application::get().terminate();
 
 		return result;
 	}
 
-	u8 EventManager::on_event(WindowResizeEvent& event)
+	b8 EventManager::on_event(WindowResizeEvent& event)
 	{
 		return callback_bound_events(event);
 	}
 
-	u8 EventManager::on_event(RendererPresentedEvent& event)
+	b8 EventManager::on_event(RendererPresentedEvent& event)
 	{
 		return callback_bound_events(event);
 	}

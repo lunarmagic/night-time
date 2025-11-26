@@ -23,6 +23,7 @@
 #include "gui/Gui.h"
 #include "sdl_scancode_map.h"
 #include "profiler/Profiler.h"
+#include "debug_renderer/DebugRenderer.h"
 
 namespace night
 {
@@ -65,6 +66,16 @@ namespace night
 			_gui = new IGui; // create a blank gui so our gui code does not break.
 		}
 
+		float x, y;
+		_mouseButtonState = (u32)SDL_GetMouseState(&x, &y);
+		_mousePosition.x = (real)x;
+		_mousePosition.y = (real)y;
+
+		_mousePosition.y = height() - _mousePosition.y; // flip coord for opengl
+		_isMouseGrabbed = SDL_GetWindowMouseGrab(_sdlWindow);
+		_isCursorVisible = SDL_CursorVisible();
+		_isFullscreen = false;
+
 		return 1;
 	}
 
@@ -79,6 +90,7 @@ namespace night
 
 	void WindowSDL::poll_events()
 	{
+		_mouseMotion = vec2(0);
 		auto& callback = event_callback();
 
 		if (callback)
@@ -103,6 +115,49 @@ namespace night
 					break;
 				}
 
+				case SDL_EVENT_MOUSE_MOTION:
+				{
+					//if (!gui_result.wants_mouse_capture) // may not want this
+					{
+						//MouseMotionEvent e((real)event.motion.xrel, (real)event.motion.yrel);
+						ivec2 internal = vec2(event.motion.xrel, event.motion.yrel);
+						//vec2 local = internal_to_local(internal);
+
+						s32 w = width();
+						s32 h = height();
+
+						vec2 local = { (real)internal.x, (real)internal.y };
+						local.x /= (real)w / 2;
+						local.y /= (real)h / 2;
+						local.y = -local.y;
+
+						_mouseMotion += local;
+
+						MouseMotionEvent e(local);
+						callback(e);
+					}
+					break;
+				}
+
+				case SDL_EVENT_WINDOW_RESIZED:
+				{
+					WindowResizeEvent e(event.window.data1, event.window.data2);
+					renderer().on_window_resize(event.window.data1, event.window.data2);
+					on_resize(e); // TODO: may want to call this from application.
+					callback(e);
+					break;
+				}
+				}
+
+#ifdef NIGHT_ENABLE_DEBUG_RENDERER
+				if (DebugRenderer::wants_input())
+				{
+					continue;
+				}
+#endif
+
+				switch (event.type)
+				{
 				case SDL_EVENT_KEY_DOWN: // TODO: map sdl keycodes to our own keycodes
 				{
 					if (!gui_result.wants_keyboard_capture)
@@ -160,28 +215,6 @@ namespace night
 					break;
 				}
 
-				case SDL_EVENT_MOUSE_MOTION:
-				{
-					if (!gui_result.wants_mouse_capture) // may not want this
-					{
-						//MouseMotionEvent e((real)event.motion.xrel, (real)event.motion.yrel);
-						ivec2 internal = vec2(event.motion.xrel, event.motion.yrel);
-						//vec2 local = internal_to_local(internal);
-
-						s32 w = width();
-						s32 h = height();
-
-						vec2 local = { (real)internal.x, (real)internal.y };
-						local.x /= (real)w / 2;
-						local.y /= (real)h / 2;
-						local.y = -local.y;
-
-						MouseMotionEvent e(local);
-						callback(e);
-					}
-					break;
-				}
-
 				case SDL_EVENT_PEN_AXIS:
 				{
 					PenPressureEvent e((real)event.paxis.value, (s32)event.paxis.which);
@@ -218,15 +251,6 @@ namespace night
 					callback(e);
 					break;
 				}
-
-				case SDL_EVENT_WINDOW_RESIZED:
-				{
-					WindowResizeEvent e(event.window.data1, event.window.data2);
-					renderer().on_window_resize(event.window.data1, event.window.data2);
-					on_resize(e); // TODO: may want to call this from application.
-					callback(e);
-					break;
-				}
 				}
 			}
 		}
@@ -234,6 +258,13 @@ namespace night
 
 	void WindowSDL::update() // TODO: map sdl events to our own events
 	{
+		float x, y;
+		_mouseButtonState = (u32)SDL_GetMouseState(&x, &y);
+		_mousePosition.x = (real)x;
+		_mousePosition.y = (real)y;
+
+		_mousePosition.y = height() - _mousePosition.y; // flip coord for opengl
+
 		renderer().update();
 	}
 
@@ -284,41 +315,31 @@ namespace night
 		time_elapsed(time_elapsed() + (r64)delta_time());
 	}
 
-	//ref<ITexture> WindowSDL::create_texture(const string& id, const TextureParams& params)
-	//{
-	//	auto i = find_texture(id);
-	//	if (i != nullptr)
-	//	{
-	//		WARNING("Texture already created!, id: ", id);
-	//		return i;
-	//	}
-
-	//	sref<WindowSDL::Texture> texture(new WindowSDL::Texture(this, params));
-	//	textures()[id] = (sref<ITexture>)texture;
-
-	//	TRACE("Window created texture, id: ", id);
-
-	//	return (ref<ITexture>)texture;
-	//}
-
 	vec2 WindowSDL::mouse() const
 	{
-		r32 x;
-		r32 y;
-		SDL_GetMouseState(&x, &y);
+		//r32 x;
+		//r32 y;
+		//SDL_GetMouseState(&x, &y);
+		//
+		//y = height() - y; // flip coord for opengl
 
-		y = height() - y; // flip coord for opengl
-
-		return internal_to_local({ x, y }); // TODO: pass in r32s
+		return internal_to_local({ _mousePosition.x, _mousePosition.y });
 	}
 
-	u8 WindowSDL::mouse_down(EMouse mouse) const
+	b8 WindowSDL::mouse_down(EMouse mouse) const
 	{
-		r32 x;
-		r32 y;
-		SDL_MouseButtonFlags flags = SDL_GetMouseState(&x, &y);
+		//r32 x;
+		//r32 y;
+		//SDL_MouseButtonFlags flags = SDL_GetMouseState(&x, &y);
 
-		switch (flags)
+#ifdef NIGHT_ENABLE_DEBUG_RENDERER
+		if (DebugRenderer::wants_input())
+		{
+			return false;
+		}
+#endif
+
+		switch ((SDL_MouseButtonFlags)_mouseButtonState)
 		{
 		case SDL_BUTTON_LEFT:
 		{
@@ -353,8 +374,15 @@ namespace night
 		}
 	}
 
-	u8 WindowSDL::key_down(EKey const& key) const
+	b8 WindowSDL::key_down(EKey const& key) const
 	{
+#ifdef NIGHT_ENABLE_DEBUG_RENDERER
+		if (DebugRenderer::wants_input())
+		{
+			return false;
+		}
+#endif
+
 		SDL_Scancode code = SDL_SCANCODE_UNKNOWN;
 		for (const auto& i : sdl_scancode_map)
 		{
@@ -383,26 +411,9 @@ namespace night
 		return { new RendererOpenGL, params };
 	}
 
-	//ref<ISurface> WindowSDL::create_surface(const string& id, const SurfaceParams& params)
-	//{
-	//	auto i = find_surface(id);
-	//	if (i != nullptr)
-	//	{
-	//		WARNING("Texture already created!, id: ", id);
-	//		return i;
-	//	}
-
-	//	sref<WindowSDL::Surface> surface(new WindowSDL::Surface(params));
-	//	surfaces()[id] = (sref<ISurface>)surface;
-
-	//	TRACE("Window created texture, id: ", id);
-
-	//	return (ref<ISurface>)surface;
-	//}
-
 	SDL_Color WindowSDL::sdl_color(const Color& color) 
 	{
-		return { (u8)(color.r * 255), (u8)(color.g * 255), (u8)(color.b * 255), (u8)(color.a * 255) };
+		return { (b8)(color.r * 255), (b8)(color.g * 255), (b8)(color.b * 255), (b8)(color.a * 255) };
 	}
 
 	fvec2 WindowSDL::local_to_internal(const vec2& coordinate) const // TODO: handle aspect ratio
@@ -410,7 +421,7 @@ namespace night
 		s32 w = width();
 		s32 h = height();
 
-		fvec2 result = { (r32)coordinate.x, (r32)coordinate.y };
+		fvec2 result = { (r32)coordinate.x, -(r32)coordinate.y };
 		//result.x *= h < w ? (r32)h / (r32)w : 1.0f;
 		//result.y *= w < h ? (r32)w / (r32)h : 1.0f;
 		result.x += 1.0f;
@@ -420,21 +431,6 @@ namespace night
 		//result.y = -result.y; // TODO: test this.
 		return result;
 	}
-
-	//fvec2 WindowSDL::local_to_internal(const fvec2& coordinate) const
-	//{
-	//	s32 w = width();
-	//	s32 h = height();
-	//
-	//	fvec2 result = { coordinate.x, coordinate.y };
-	//	result.x *= h < w ? (r32)h / (r32)w : 1.0f;
-	//	result.y *= w < h ? (r32)w / (r32)h : 1.0f;
-	//	result.x += 1.0f;
-	//	result.y += 1.0f;
-	//	result.x *= w / 2;
-	//	result.y *= h / 2;
-	//	return result;
-	//}
 
 	vec2 WindowSDL::internal_to_local(const ivec2& coordinate) const
 	{
@@ -452,185 +448,139 @@ namespace night
 		return result;
 	}
 
-	void WindowSDL::cursor_visibility(u8 visibility)
+	void WindowSDL::cursor_visibility(b8 visibility)
 	{
-		if (visibility && !cursor_visibility())
-		{
-			if (!SDL_ShowCursor())
+		Application::get().queue_for_main_thread([this, visibility]()
 			{
-				ERROR("SDL failed to show cursor, SDL_ERROR: {0}", SDL_GetError());
-			}
-		}
-		else if(cursor_visibility())
-		{
-			if (!SDL_HideCursor())
+				if (visibility && !this->cursor_visibility())
+				{
+					if (!SDL_ShowCursor())
+					{
+						ERROR("SDL failed to show cursor, SDL_ERROR: {0}", SDL_GetError());
+					}
+
+					this->_isCursorVisible = SDL_CursorVisible();
+				}
+				else if (this->cursor_visibility())
+				{
+					if (!SDL_HideCursor())
+					{
+						ERROR("SDL failed to show cursor, SDL_ERROR: {0}", SDL_GetError());
+					}
+
+					this->_isCursorVisible = SDL_CursorVisible();
+				}
+			});
+
+		//_isCursorVisible = visibility;
+	}
+
+	b8 WindowSDL::cursor_visibility() const
+	{
+		//return SDL_CursorVisible();
+		return _isCursorVisible;
+	}
+
+	void WindowSDL::fullscreen(b8 make_fullscreen)
+	{
+		Application::get().queue_for_main_thread([this, make_fullscreen]()
 			{
-				ERROR("SDL failed to show cursor, SDL_ERROR: {0}", SDL_GetError());
-			}
-		}
+				if (!SDL_SetWindowFullscreen(this->_sdlWindow, (bool)make_fullscreen))
+				{
+					ERROR("SDL failed to set window fullscreen, SDL_ERROR: {0}", SDL_GetError());
+				}
+
+				_isFullscreen = make_fullscreen;
+			});
 	}
 
-	u8 WindowSDL::cursor_visibility() const
-	{
-		return SDL_CursorVisible();
-	}
-
-	void WindowSDL::fullscreen(u8 make_fullscreen)
-	{
-		if (!SDL_SetWindowFullscreen(_sdlWindow, (bool)make_fullscreen))
-		{
-			ERROR("SDL failed to set window fullscreen, SDL_ERROR: {0}", SDL_GetError());
-		}
-
-		_isFullscreen = make_fullscreen;
-	}
-
-	u8 WindowSDL::fullscreen() const
+	b8 WindowSDL::fullscreen() const
 	{
 		return _isFullscreen;
+	}
+
+	void WindowSDL::grab_mouse()
+	{
+		Application::get().queue_for_main_thread([this]()
+			{
+				ASSERT(this->_sdlWindow != nullptr);
+				if(!SDL_SetWindowRelativeMouseMode(this->_sdlWindow, true))
+				{
+					WARNING("WindowSDL failed to grab mouse, SDL_ERROR: {0}", SDL_GetError());
+				}
+
+				this->_isMouseGrabbed = SDL_GetWindowRelativeMouseMode(this->_sdlWindow);
+
+				//if (this->_isMouseGrabbed)
+				//{
+				//	if (!SDL_ShowCursor())
+				//	{
+				//		WARNING("WindowSDL failed to hide mouse, SDL_ERROR: {0}", SDL_GetError());
+				//	}
+				//
+				//	this->_mousePositionBeforeGrabbing = this->_mousePosition;
+				//}
+				//else
+				//{
+				//	if (!SDL_HideCursor())
+				//	{
+				//		WARNING("WindowSDL failed to hide mouse, SDL_ERROR: {0}", SDL_GetError());
+				//	}
+				//
+				//	SDL_WarpMouseInWindow(this->_sdlWindow, this->_mousePositionBeforeGrabbing.x, this->height() - this->_mousePositionBeforeGrabbing.y);
+				//}
+			});
+	}
+
+	void WindowSDL::release_mouse()
+	{
+		Application::get().queue_for_main_thread([this]()
+			{
+				ASSERT(this->_sdlWindow != nullptr);
+				if (!SDL_SetWindowRelativeMouseMode(this->_sdlWindow, false))
+				{
+					WARNING("WindowSDL failed to grab mouse, SDL_ERROR: {0}", SDL_GetError());
+				}
+
+				this->_isMouseGrabbed = SDL_GetWindowRelativeMouseMode(this->_sdlWindow);
+
+				//if (this->_isMouseGrabbed)
+				//{
+				//	if (!SDL_ShowCursor())
+				//	{
+				//		WARNING("WindowSDL failed to hide mouse, SDL_ERROR: {0}", SDL_GetError());
+				//	}
+				//	this->_mousePositionBeforeGrabbing = this->_mousePosition;
+				//}
+				//else
+				//{
+				//	if (!SDL_HideCursor())
+				//	{
+				//		WARNING("WindowSDL failed to hide mouse, SDL_ERROR: {0}", SDL_GetError());
+				//	}
+				//
+				//	SDL_WarpMouseInWindow(this->_sdlWindow, this->_mousePositionBeforeGrabbing.x, this->height() - this->_mousePositionBeforeGrabbing.y);
+				//}
+			});
+	}
+
+	b8 WindowSDL::is_mouse_grabbed()
+	{
+		return _isMouseGrabbed;
+	}
+
+	void WindowSDL::warp_mouse(vec2 window_position)
+	{
+		Application::get().queue_for_main_thread([this, window_position]()
+			{
+				vec2 global = local_to_internal(window_position);
+				SDL_WarpMouseInWindow(this->_sdlWindow, (float)global.x, (float)global.y);
+			});
 	}
 
 	real WindowSDL::precise_time_elapsed()
 	{
 		return ((real)(SDL_GetTicks() - _startTick) / 1000.0f);
 	}
-
-	//WindowSDL::Texture::Texture(WindowSDL* const window, const TextureParams& params)
-	//	: ITexture(params)
-	//{
-	//	//ASSERT(window != nullptr);
-
-	//	//_sdlWindow = window;
-
-	//	//if (!params.path.empty())
-	//	//{
-	//	//	SDL_Surface* sdl_surface = IMG_Load(params.path.c_str());
-	//	//	
-	//	//	if (!sdl_surface)
-	//	//	{
-	//	//		WARNING("SDL_Image failed to load image, path: ", params.path);
-	//	//	}
-	//	//	
-	//	//	_sdlTexture = SDL_CreateTextureFromSurface(((RendererSDL&)window->renderer()).sdl_renderer(), sdl_surface);
-	//	//	
-	//	//	if (!_sdlTexture)
-	//	//	{
-	//	//		WARNING("SDL failed to create texture from surface!, SDL_error: ", SDL_GetError());
-	//	//		return;
-	//	//	}
-	//	//}
-	//	//else if (params.surface != nullptr) // TODO: add error message
-	//	//{
-	//	//	ref<WindowSDL::Surface> surface;
-	//	//	surface = params.surface;
-
-	//	//	_sdlTexture = SDL_CreateTextureFromSurface(((RendererSDL&)window->renderer()).sdl_renderer(), surface->sdl_surface());
-
-	//	//	if (!_sdlTexture)
-	//	//	{
-	//	//		WARNING("SDL failed to create texture from surface!, SDL_error: ", SDL_GetError());
-	//	//		return;
-	//	//	}
-	//	//}
-	//	//else
-	//	//{
-	//	//	_sdlTexture = SDL_CreateTexture(((RendererSDL&)window->renderer()).sdl_renderer(), SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, params.width, params.height);
-
-	//	//	if (!_sdlTexture)
-	//	//	{
-	//	//		WARNING("SDL failed to create texture!, SDL_error: ", SDL_GetError());
-	//	//		return;
-	//	//	}
-	//	//}
-
-	//	////s32 w, h;
-
-	//	////TextureParams new_params = {};
-	//	//
-	//	//r32 w = 0.0f;
-	//	//r32 h = 0.0f;
-	//	//u8 error = SDL_GetTextureSize(_sdlTexture, &w, &h);
-	//	////new_params.width = (s32)w;
-	//	////new_params.height = (s32)h;
-
-	//	//if (!error)
-	//	//{
-	//	//	ERROR("SDL_QueryTexture failed!, SDL_Error: ", SDL_GetError());
-	//	//}
-
-	//	//width((s32)w);
-	//	//height((s32)h);
-
-	//	////ITexture::ITexture(new_params);
-
-	//	////width(w);
-	//	////height(h);
-	//}
-
-	//WindowSDL::Texture::~Texture()
-	//{
-	//	if (_sdlTexture)
-	//	{
-	//		SDL_DestroyTexture(_sdlTexture);
-	//	}
-	//}
-
-	//WindowSDL::Surface::Surface(const SurfaceParams& params)
-	//	: ISurface(params)
-	//{
-	//	if (params.path.empty())
-	//	{
-	//		// create blank surface
-	//		//_sdlSurface = SDL_CreateRGBSurface(
-	//		//	0,
-	//		//	width(),
-	//		//	height(),
-	//		//	32,
-	//		//	0x000000FF,
-	//		//	0x0000FF00,
-	//		//	0x00FF0000,
-	//		//	0xFF000000
-	//		//);
-
-	//		_sdlSurface = SDL_CreateSurface(width(), height(), SDL_PIXELFORMAT_RGBA8888);
-	//		//SDL_Palette* palette = SDL_CreateSurfacePalette(_sdlSurface); // TODO: figure out what this is
-
-	//		if (!_sdlSurface)
-	//		{
-	//			WARNING("SDL failed to create surface! SDL_Error: ", SDL_GetError());
-	//		}
-	//	}
-	//	else
-	//	{
-	//		_sdlSurface = IMG_Load(params.path.c_str());
-
-	//		if (!_sdlSurface)
-	//		{
-	//			WARNING("SDL_Image failed to load image, path: ", params.path);
-	//		}
-
-	//		width(_sdlSurface->w);
-	//		height(_sdlSurface->h);
-	//	}
-	//}
-
-	//WindowSDL::Surface::~Surface()
-	//{
-	//	if (_sdlSurface)
-	//	{
-	//		SDL_DestroySurface(_sdlSurface);
-	//	}
-	//}
-
-	//Color8* WindowSDL::Surface::pixels() const
-	//{
-	//	if (_sdlSurface)
-	//	{
-	//		return (Color8*)_sdlSurface->pixels;
-	//	}
-
-	//	WARNING("SDL surface is nullptr!");
-	//	return nullptr;
-	//}
 
 }

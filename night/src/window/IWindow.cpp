@@ -82,7 +82,17 @@ namespace night
 		return a < b ? a : b;
 	}
 
-	u8 IWindow::on_resize(WindowResizeEvent& event)
+	real IWindow::delta_time() const
+	{
+		return _deltaTime * _timescale;
+	}
+
+	real IWindow::fixed_delta_time() const
+	{
+		return (1.0f / _fps) * _timescale;
+	}
+
+	b8 IWindow::on_resize(WindowResizeEvent& event)
 	{
 		_width = event.width();
 		_height = event.height();

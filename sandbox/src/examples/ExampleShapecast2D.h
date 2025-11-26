@@ -1,5 +1,6 @@
 #pragma once
 
+#if 0
 #include "ExampleBase.h"
 #include "random/random.h"
 #include "geometry/Convex.h"
@@ -7,16 +8,15 @@
 
 namespace night
 {
-	struct ExampleConvex2D : public ExampleBase
+	struct ExampleShapecast2D : public ExampleBase
 	{
-
 		struct Shape
 		{
 			vector<vec2> points;
 			vec2 position;
 		};
 
-		ExampleConvex2D()
+		ExampleShapecast2D()
 			: ExampleBase(ECameraType::Orthographic)
 		{
 			reset_shapes();
@@ -48,7 +48,7 @@ namespace night
 		virtual void update_gui(handle<NodeGui> gui) override
 		{
 			ASSERT(gui != nullptr);
-			
+
 			gui->drag_s32("Size", &_fillSize, 0.1f, 0, 64);
 
 			gui->seperator();
@@ -159,19 +159,17 @@ namespace night
 			}
 		}
 
-protected:
+	protected:
 
 		virtual void on_render(RenderGraph& out_graph) const override
 		{
-			auto draw_shape = [&](vector<vec2> points)
+			auto draw_shape = [&](vector<vec2> const& points, Color const& color)
 				{
 					for (s32 i = 0; i < points.size(); i++)
 					{
-						real t = (real)i / (real)(points.size() - 1);
 						vec2 p1 = points[i];
 						vec2 p2 = points[(i + 1) % points.size()];
-						out_graph.draw_point(vec3(p1, NIGHT_EPSILON_MEDIUM * 2), Color::lerp(BLUE, RED, t));
-						out_graph.draw_line(vec3(p1, -NIGHT_EPSILON_MEDIUM), vec3(p2, -NIGHT_EPSILON_MEDIUM), Color::lerp(BLUE.opaqued(0.5f), RED.opaqued(0.5f), t));
+						out_graph.draw_line(vec3(p1, -NIGHT_EPSILON_MEDIUM), vec3(p2, -NIGHT_EPSILON_MEDIUM), color);
 					}
 				};
 
@@ -180,8 +178,8 @@ protected:
 			vector<vec2> s2x = _shape2.points;
 			for (auto& i : s2x) i += _shape2.position;
 
-			draw_shape(s1x);
-			draw_shape(s2x);
+			draw_shape(s1x, BLACK.opaqued(0.75f));
+			draw_shape(s2x, BLACK.opaqued(0.75f));
 
 			IntersectsParams2D<> ip2d;
 			ip2d.support_a = [&](vec2 const& dir) -> vec2
@@ -195,33 +193,36 @@ protected:
 				};
 
 			DB_ALGO_INVOLVE_NODES_SCOPED(handle_from_this());
-			if (GJK2D<>::intersects(ip2d))
-			{
-				vector<vec2> clip = Convex2D<>::clip(s1x.begin(), s1x.end(), s2x.begin(), s2x.end());
-
-				for (s32 i = 0; i < clip.size(); i++)
-				{
-					real t = (real)i / (real)(clip.size() - 1);
-					vec2 p1 = clip[i];
-					vec2 p2 = clip[(i + 1) % clip.size()];
-					out_graph.draw_line(vec3(p1, NIGHT_EPSILON_MEDIUM), vec3(p2, NIGHT_EPSILON_MEDIUM), GREEN);
-				}
-			}
 
 			ShapeCastParams2D scp2d;
-			scp2d.motion = RIGHT;
+			vec2 motion = RIGHT;
+			scp2d.motion = motion;
 
-			scp2d.support_casted = [&](vec2 const& dir) -> vec2
+			scp2d.support_casted = [&](vec2 const& dir) -> vec2 const&
 				{
 					return GJK2D<>::support_polygon(dir, mat4(1), s1x.begin(), s1x.end());
 				};
 
-			scp2d.support_against = [&](vec2 const& dir) -> vec2
+			scp2d.support_against = [&](vec2 const& dir) -> vec2 const&
 				{
 					return GJK2D<>::support_polygon(dir, mat4(1), s2x.begin(), s2x.end());
 				};
 
-			auto sc = GJK2D<>::shape_cast(scp2d);
+			auto sc = GJK2D<>::shape_cast(scp2d, false);
+
+			if (sc.result)
+			{
+				vector<vec2> s1xx = s1x;
+				for (auto& i : s1xx) i += scp2d.motion * sc.t0;
+				draw_shape(s1xx, RED.opaqued(0.5f));
+
+				s1xx = s1x;
+				for (auto& i : s1xx) i += scp2d.motion * sc.t1;
+				draw_shape(s1xx, BLUE.opaqued(0.5f));
+
+				out_graph.draw_point(sc.c0, RED);
+				out_graph.draw_point(sc.c1, BLUE);
+			}
 		}
 
 	private:
@@ -231,5 +232,7 @@ protected:
 
 		Shape _shape1;
 		Shape _shape2;
-	}; 
+	};
 }
+
+#endif

@@ -14,6 +14,7 @@ namespace night
 	{
 		return handle<const IResource>(shared_from_this());
 	}
+
 	handle<IResource> IResource::handle_from_this()
 	{
 		return handle<IResource>(shared_from_this());

@@ -233,6 +233,22 @@ namespace night
 		}
 	}
 
+	void INode::fixed_update(real step)
+	{
+		if (!is_active)
+		{
+			return;
+		}
+
+		on_fixed_update(step);
+
+		for (const auto& i : _children)
+		{
+			ASSERT(i != nullptr);
+			i->fixed_update(step);
+		}
+	}
+
 	void INode::remove(const string& name)
 	{
 #ifdef false
@@ -356,7 +372,7 @@ namespace night
 		shandle<INode> ref = handle_from_this();
 		ASSERT(ref != nullptr);
 
-		u8 is_child = false;
+		b8 is_child = false;
 
 		for (auto i = parent->_children.begin(); i != parent->_children.end();)
 		{
@@ -396,6 +412,39 @@ namespace night
 		
 		NodeMovedEvent event(parent, new_parent);
 		on_event(event);
+	}
+
+	handle<INode> INode::find_signal_space() const
+	{
+		handle<INode> parent = _parent;
+		while (parent != nullptr)
+		{
+			if (parent->_isSignalSpace == true)
+			{
+				return parent;
+			}
+
+			parent = parent->parent();
+		}
+
+		return nullptr;
+	}
+
+	void INode::listen_signal_impl(string const& signal, function<void(SignalParams<SignalNodeOnlyParams>)> fn)
+	{
+		auto& global_signal = _globalSignals[signal];
+		auto f = global_signal.find(handle_from_this());
+		if (f == global_signal.end())
+		{
+			global_signal.insert({ handle_from_this(), sref<ISignalCallback>(new SignalCallback<SignalNodeOnlyParams>(fn)) });
+			_localSignals.insert(signal);
+		}
+		else
+		{
+			(*f).second = sref<ISignalCallback>(new SignalCallback<SignalNodeOnlyParams>(fn));
+		}
+
+		TRACE("Node {0} is listening for signal: {1}", name_and_id(), signal);
 	}
 
 	void INode::listen_signal_impl(string const& signal, function<void()> fn)
@@ -440,7 +489,7 @@ namespace night
 	}
 
 	// EVENT SYSTEM:
-	void INode::on_event(Event& event, u8 pass_down)
+	void INode::on_event(Event& event, b8 pass_down)
 	{
 		if (!is_taking_events || !is_active)
 		{
@@ -485,23 +534,8 @@ namespace night
 		_passedDownEventCategoryMask = (EEventCategory)((s32)_passedDownEventCategoryMask & ~(s32)category);
 	}
 
-	void INode::pass_down_event(Event& event, u8 include_newly_created_children)
+	void INode::pass_down_event(Event& event, b8 include_newly_created_children)
 	{
-#ifdef false
-		for (auto i = _children.begin(); i != _children.end();)
-		{
-			auto& child = (*i);
-			if (child != nullptr && !child->_isPendingDestruction)
-			{
-				child->on_event(event);
-				i++;
-			}
-			else
-			{
-				i = _children.erase(i);
-			}
-		}
-#endif
 		if (_notPassedDownEventTypes.find(event.type()) != _notPassedDownEventTypes.end())
 		{
 			return;
@@ -553,7 +587,7 @@ namespace night
 	}
 
 	template<typename T>
-	inline u8 INode::callback_bound_events(T& event)
+	inline b8 INode::callback_bound_events(T& event)
 	{
 		auto r = _eventBindings.equal_range(T::get_static_type());
 
@@ -565,76 +599,76 @@ namespace night
 		return true;
 	}
 
-	u8 INode::on_key_pressed(KeyPressedEvent& event)
+	b8 INode::on_key_pressed(KeyPressedEvent& event)
 	{
 		callback_bound_inputs(InputKey((EKey)event.keycode(), event.isRepeat() ? EInputType::REPEAT : EInputType::PRESSED));
 		return callback_bound_events(event);
 	}
 
-	u8 INode::on_key_released(KeyReleasedEvent& event)
+	b8 INode::on_key_released(KeyReleasedEvent& event)
 	{
 		callback_bound_inputs(InputKey((EKey)event.keycode(), EInputType::RELEASED));
 		return callback_bound_events(event);
 	}
 
-	u8 INode::on_mouse_button_pressed(MouseButtonPressedEvent& event)
+	b8 INode::on_mouse_button_pressed(MouseButtonPressedEvent& event)
 	{
 		callback_bound_inputs(InputKey((EMouse)event.button(), EInputType::PRESSED));
 		return callback_bound_events(event);
 	}
 
-	u8 INode::on_mouse_button_released(MouseButtonReleasedEvent& event)
+	b8 INode::on_mouse_button_released(MouseButtonReleasedEvent& event)
 	{
 		callback_bound_inputs(InputKey((EMouse)event.button(), EInputType::RELEASED));
 		return callback_bound_events(event);
 	}
 
-	u8 INode::on_mouse_wheel(MouseWheelEvent& event)
+	b8 INode::on_mouse_wheel(MouseWheelEvent& event)
 	{
 		return callback_bound_events(event);
 	}
 
-	u8 INode::on_pen_pressure(PenPressureEvent& event)
+	b8 INode::on_pen_pressure(PenPressureEvent& event)
 	{
 		return callback_bound_events(event);
 	}
 
-	u8 INode::on_pen_down(PenDownEvent& event)
+	b8 INode::on_pen_down(PenDownEvent& event)
 	{
 		return callback_bound_events(event);
 	}
 
-	u8 INode::on_pen_up(PenUpEvent& event)
+	b8 INode::on_pen_up(PenUpEvent& event)
 	{
 		return callback_bound_events(event);
 	}
 
-	u8 INode::on_pen_motion(PenMotionEvent& event)
+	b8 INode::on_pen_motion(PenMotionEvent& event)
 	{
 		return callback_bound_events(event);
 	}
 
-	u8 INode::on_mouse_motion(MouseMotionEvent& event)
+	b8 INode::on_mouse_motion(MouseMotionEvent& event)
 	{
 		return callback_bound_events(event);
 	}
 
-	u8 INode::on_window_close(WindowCloseEvent& event)
+	b8 INode::on_window_close(WindowCloseEvent& event)
 	{
 		return callback_bound_events(event);
 	}
 
-	u8 INode::on_window_resize(WindowResizeEvent& event)
+	b8 INode::on_window_resize(WindowResizeEvent& event)
 	{
 		return callback_bound_events(event);
 	}
 
-	u8 INode::on_renderer_presented(RendererPresentedEvent& event)
+	b8 INode::on_renderer_presented(RendererPresentedEvent& event)
 	{
 		return callback_bound_events(event);
 	}
 
-	u8 INode::on_node_moved(NodeMovedEvent& event)
+	b8 INode::on_node_moved(NodeMovedEvent& event)
 	{
 		return callback_bound_events(event);
 	}

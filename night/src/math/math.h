@@ -12,15 +12,15 @@
 
 #include "log/log.h"
 
-#define NIGHT_EPSILON_SMALL 1e-06f
-#define NIGHT_EPSILON_MEDIUM 1e-04f
-#define NIGHT_EPSILON_LARGE 1e-02f
+#define NIGHT_EPSILON_SMALL ((real)1e-06f)
+#define NIGHT_EPSILON_MEDIUM ((real)1e-04f)
+#define NIGHT_EPSILON_LARGE ((real)1e-02f)
 
-#ifdef NIGHT_USE_DOUBLE_PRECISION
-#define R_PI	3.14159265358979323846
-#else
-#define R_PI	3.14159265358979323846f
-#endif
+#define NIGHT_EPSILON_SMALL_DOUBLE ((real)1e-12f)
+#define NIGHT_EPSILON_MEDIUM_DOUBLE ((real)1e-08f)
+#define NIGHT_EPSILON_LARGE_DOUBLE ((real)1e-04f)
+
+#define R_PI ((real)3.14159265358979323846)
 
 #define RADIANS(x) glm::radians((float)x)
 #define DEGREES(x) glm::degrees((float)x)
@@ -53,9 +53,9 @@ namespace night
 	using uvec3 = vec<3, u32>;
 	using uvec4 = vec<4, u32>;
 
-	using bvec2 = vec<2, u8>;
-	using bvec3 = vec<3, u8>;
-	using bvec4 = vec<4, u8>;
+	using bvec2 = vec<2, b8>;
+	using bvec3 = vec<3, b8>;
+	using bvec4 = vec<4, b8>;
 
 	template<s32 L1, s32 L2, typename T>
 	using mat = glm::mat<L1, L2, T>;
@@ -239,6 +239,10 @@ namespace night
 		inline static T dot(vec<3, T> const& a, vec<3, T> const& b) { return glm::dot(a, b); }
 		inline static T dot(vec<4, T> const& a, vec<4, T> const& b) { return glm::dot(a, b); }
 
+		inline static vec<2, T> abs(vec<2, T> vec) { return glm::abs(vec); }
+		inline static vec<3, T> abs(vec<3, T> vec) { return glm::abs(vec); }
+		inline static vec<4, T> abs(vec<4, T> vec) { return glm::abs(vec); }
+
 		inline static vec<3, T> cross(vec<3, T> const& a, vec<3, T> const& b) { return glm::cross(a, b); }
 
 		inline static vec<2, T> triple_cross(vec<2, T> const& a, vec<2, T> const& b, vec<2, T> const& c)
@@ -386,10 +390,10 @@ namespace night
 
 		inline static T sign(vec<2, T> const& p1, vec<2, T> const& p2, vec<2, T> const& p3);
 
-		inline static u8 is_point_inside_triangle(vec<2, T> const& pt, vec<2, T> const& v1, vec<2, T> const& v2, vec<2, T> const& v3);
+		inline static b8 is_point_inside_triangle(vec<2, T> const& pt, vec<2, T> const& v1, vec<2, T> const& v2, vec<2, T> const& v3);
 
 		template<typename _It>
-		inline static T arc_length(_It begin, _It end, u8 closed = false);
+		inline static T arc_length(_It begin, _It end, b8 closed = false);
 
 		inline static T triangle_area(vec<2, T> const& p1, vec<2, T> const& p2, vec<2, T> const& p3);
 
@@ -397,6 +401,10 @@ namespace night
 		inline static LineOfIntersecionBetween2PlanesResult<T> line_of_intersection_between_to_planes(vec<3, T> const& origin_a, vec<3, T> const& normal_a, vec<3, T> const& origin_b, vec<3, T> const& normal_b);
 
 		inline static EOrientation orientation(const vec<2, T>& a, const vec<2, T>& b, const vec<2, T>& c);
+
+		//inline static T ease_in(T t, T exponent);
+		//inline static T ease_out(T t, T exponent);
+		inline static T ease(T t, T exponent);
 	};
 
 	using math = Math<real>;
@@ -469,52 +477,55 @@ namespace night
 		return stream.str();
 	}
 
-	//template<> string Log::print_format<vec2>(vec2& v) { return _pv(v); }
-	//template<> string Log::print_format<vec3>(vec3& v) { return _pv(v); }
-	//template<> string Log::print_format<vec4>(vec4& v) { return _pv(v); }
+	//template<> string to_string<vec2>(vec2& v) { return _pv(v); }
+	//template<> string to_string<vec3>(vec3& v) { return _pv(v); }
+	//template<> string to_string<vec4>(vec4& v) { return _pv(v); }
 
-	template<> inline string Log::print_format<dvec2>(dvec2& v) { return _pv(v); }
-	template<> inline string Log::print_format<dvec3>(dvec3& v) { return _pv(v); }
-	template<> inline string Log::print_format<dvec4>(dvec4& v) { return _pv(v); }
+	//template<> inline string to_string<dvec2>(dvec2 const& t) { return _pv(t); };
+	//template<> inline string to_string<fvec2>(fvec2 const& t) { return _pv(t); };
 
-	template<> inline string Log::print_format<fvec2>(fvec2& v) { return _pv(v); }
-	template<> inline string Log::print_format<fvec3>(fvec3& v) { return _pv(v); }
-	template<> inline string Log::print_format<fvec4>(fvec4& v) { return _pv(v); }
+	template<> inline string to_string<dvec2>(dvec2 const& v) { return _pv(v); }
+	template<> inline string to_string<dvec3>(dvec3 const& v) { return _pv(v); }
+	template<> inline string to_string<dvec4>(dvec4 const& v) { return _pv(v); }
 
-	template<> inline  string Log::print_format<ivec2>(ivec2& v) { return _pv(v); }
-	template<> inline  string Log::print_format<ivec3>(ivec3& v) { return _pv(v); }
-	template<> inline  string Log::print_format<ivec4>(ivec4& v) { return _pv(v); }
+	template<> inline string to_string<fvec2>(fvec2 const& v) { return _pv(v); }
+	template<> inline string to_string<fvec3>(fvec3 const& v) { return _pv(v); }
+	template<> inline string to_string<fvec4>(fvec4 const& v) { return _pv(v); }
 
-	template<> inline  string Log::print_format<uvec2>(uvec2& v) { return _pv(v); }
-	template<> inline  string Log::print_format<uvec3>(uvec3& v) { return _pv(v); }
-	template<> inline  string Log::print_format<uvec4>(uvec4& v) { return _pv(v); }
+	template<> inline  string to_string<ivec2>(ivec2 const& v) { return _pv(v); }
+	template<> inline  string to_string<ivec3>(ivec3 const& v) { return _pv(v); }
+	template<> inline  string to_string<ivec4>(ivec4 const& v) { return _pv(v); }
 
-	template<> inline  string Log::print_format<bvec2>(bvec2& v) { return _pv(v); }
-	template<> inline  string Log::print_format<bvec3>(bvec3& v) { return _pv(v); }
-	template<> inline  string Log::print_format<bvec4>(bvec4& v) { return _pv(v); }
+	template<> inline  string to_string<uvec2>(uvec2 const& v) { return _pv(v); }
+	template<> inline  string to_string<uvec3>(uvec3 const& v) { return _pv(v); }
+	template<> inline  string to_string<uvec4>(uvec4 const& v) { return _pv(v); }
 
-	template<> inline  string Log::print_format<fmat4>(fmat4& v) { return _mv(v); }
-	template<> inline  string Log::print_format<fmat2>(fmat2& v) { return _mv(v); }
-	template<> inline  string Log::print_format<fmat2x3>(fmat2x3& v) { return _mv(v); }
-	template<> inline  string Log::print_format<fmat2x4>(fmat2x4& v) { return _mv(v); }
-	template<> inline  string Log::print_format<fmat3x2>(fmat3x2& v) { return _mv(v); }
-	template<> inline  string Log::print_format<fmat3>(fmat3& v) { return _mv(v); }
-	template<> inline  string Log::print_format<fmat3x4>(fmat3x4& v) { return _mv(v); }
-	template<> inline  string Log::print_format<fmat4x2>(fmat4x2& v) { return _mv(v); }
-	template<> inline  string Log::print_format<fmat4x3>(fmat4x3& v) { return _mv(v); }
+	template<> inline  string to_string<bvec2>(bvec2 const& v) { return _pv(v); }
+	template<> inline  string to_string<bvec3>(bvec3 const& v) { return _pv(v); }
+	template<> inline  string to_string<bvec4>(bvec4 const& v) { return _pv(v); }
 
-	template<> inline  string Log::print_format<dmat4>(dmat4& v) { return _mv(v); }
-	template<> inline  string Log::print_format<dmat2>(dmat2& v) { return _mv(v); }
-	template<> inline  string Log::print_format<dmat2x3>(dmat2x3& v) { return _mv(v); }
-	template<> inline  string Log::print_format<dmat2x4>(dmat2x4& v) { return _mv(v); }
-	template<> inline  string Log::print_format<dmat3x2>(dmat3x2& v) { return _mv(v); }
-	template<> inline  string Log::print_format<dmat3>(dmat3& v) { return _mv(v); }
-	template<> inline  string Log::print_format<dmat3x4>(dmat3x4& v) { return _mv(v); }
-	template<> inline  string Log::print_format<dmat4x2>(dmat4x2& v) { return _mv(v); }
-	template<> inline  string Log::print_format<dmat4x3>(dmat4x3& v) { return _mv(v); }
+	template<> inline  string to_string<fmat4>(fmat4 const& v) { return _mv(v); }
+	template<> inline  string to_string<fmat2>(fmat2 const& v) { return _mv(v); }
+	template<> inline  string to_string<fmat2x3>(fmat2x3 const& v) { return _mv(v); }
+	template<> inline  string to_string<fmat2x4>(fmat2x4 const& v) { return _mv(v); }
+	template<> inline  string to_string<fmat3x2>(fmat3x2 const& v) { return _mv(v); }
+	template<> inline  string to_string<fmat3>(fmat3 const& v) { return _mv(v); }
+	template<> inline  string to_string<fmat3x4>(fmat3x4 const& v) { return _mv(v); }
+	template<> inline  string to_string<fmat4x2>(fmat4x2 const& v) { return _mv(v); }
+	template<> inline  string to_string<fmat4x3>(fmat4x3 const& v) { return _mv(v); }
+
+	template<> inline  string to_string<dmat4>(dmat4 const& v) { return _mv(v); }
+	template<> inline  string to_string<dmat2>(dmat2 const& v) { return _mv(v); }
+	template<> inline  string to_string<dmat2x3>(dmat2x3 const& v) { return _mv(v); }
+	template<> inline  string to_string<dmat2x4>(dmat2x4 const& v) { return _mv(v); }
+	template<> inline  string to_string<dmat3x2>(dmat3x2 const& v) { return _mv(v); }
+	template<> inline  string to_string<dmat3>(dmat3 const& v) { return _mv(v); }
+	template<> inline  string to_string<dmat3x4>(dmat3x4 const& v) { return _mv(v); }
+	template<> inline  string to_string<dmat4x2>(dmat4x2 const& v) { return _mv(v); }
+	template<> inline  string to_string<dmat4x3>(dmat4x3 const& v) { return _mv(v); }
 	
-	template<> inline string Log::print_format<fquat>(fquat& v) { return _pq(v); }
-	template<> inline string Log::print_format<dquat>(dquat& v) { return _pq(v); }
+	template<> inline string to_string<fquat>(fquat const& v) { return _pq(v); }
+	template<> inline string to_string<dquat>(dquat const& v) { return _pq(v); }
 
 #endif
 

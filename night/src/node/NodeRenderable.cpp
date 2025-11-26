@@ -10,26 +10,9 @@
 
 namespace night
 {
-	//handle<NodeRenderTarget> NodeRenderable::current_node_render_target() const
-	//{
-	//	handle<INode> parent = this->parent();
-	//	while (parent != nullptr)
-	//	{
-	//		NodeRenderTarget* dc = dynamic_cast<NodeRenderTarget*>(parent.ptr().lock().get());
-	//		if (dc != nullptr)
-	//		{
-	//			return parent;
-	//		}
-
-	//		parent = parent->parent();
-	//	}
-
-	//	return nullptr;
-	//}
 
 	void NodeRenderable::manually_render_this_frame() const
 	{
-		//auto cnrt = current_node_render_target();
 		auto cnrt = find_parent<NodeRenderTarget>();
 		if (cnrt != nullptr)
 		{
@@ -37,18 +20,39 @@ namespace night
 		}
 	}
 
+	void NodeRenderable::textures(std::nullptr_t null)
+	{
+		_textures.clear();
+	}
+
+	void NodeRenderable::textures(TextureUniformData const& texture)
+	{
+		_textures.clear();
+		_textures.push_back(texture);
+	}
+
+	void NodeRenderable::textures(initializer_list<TextureUniformData> const& textures)
+	{
+		_textures.clear();
+		_textures.insert(_textures.end(), textures.begin(), textures.end());
+	}
+
+	void NodeRenderable::textures(vector<TextureUniformData> const& textures)
+	{
+		_textures.clear();
+		_textures.insert(_textures.end(), textures.begin(), textures.end());
+	}
+
 	void NodeRenderable::render_node_tree(handle<INode> root, RenderGraph& out_graph)
 	{
-		//RenderGraph graph;
-
 		// TODO: keep track of current render target iterator, material iterator, textures iterator
 		// TODO: calculate relative transform and push it into transform uniform storage
 
-		function<void(INode*, handle<const ITexture>, u8)> fn = [&](INode* node, handle<const ITexture> current_target, u8 should_skip_render)
+		function<void(INode*, handle<const ITexture>, b8)> fn = [&](INode* node, handle<const ITexture> current_target, b8 should_skip_render)
 		{
 			ASSERT(node != nullptr);
 
-			auto fn2 = [&]() -> u8
+			auto fn2 = [&]() -> b8
 			{
 				NodeRenderable* renderable = dynamic_cast<NodeRenderable*>(node);
 
@@ -105,8 +109,8 @@ namespace night
 			};
 
 			NodeRenderTarget* target = dynamic_cast<NodeRenderTarget*>(node);
-			u8 ssr = false;
-			u8 ret = false; // return if node is invisible
+			b8 ssr = false;
+			b8 ret = false; // return if node is invisible
 
 			if (target != nullptr)
 			{

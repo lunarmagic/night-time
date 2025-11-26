@@ -18,9 +18,13 @@ namespace night
 
 	struct NIGHT_API NodeRenderable : public NodeSpatial
 	{
-		template<typename Texture, typename... Textures>
-		void textures(Texture texture_1, Textures... textures);
-		void clear_textures() { _textures.clear(); }
+		//template<typename Texture, typename... Textures>
+		//void textures(Texture texture_1, Textures... textures);
+		void textures(std::nullptr_t null);
+		void textures(TextureUniformData const& texture);
+		void textures(initializer_list<TextureUniformData> const& textures);
+		void textures(vector<TextureUniformData> const& textures);
+		//void clear_textures() { _textures.clear(); }
 		vector<TextureUniformData> const& textures() const { return _textures; }
 
 		template<typename T>
@@ -31,7 +35,7 @@ namespace night
 
 		EVisibility visibility{ EVisibility::Visible };
 		handle<IMaterial> material{ nullptr }; // TODO: may want system for multiple materials
-		u8 should_skip_transformation_when_rendering{ false };
+		b8 should_skip_transformation_when_rendering{ false };
 
 		// can return nullptr
 		//handle<NodeRenderTarget> current_node_render_target() const;
@@ -48,44 +52,44 @@ namespace night
 		vector<TextureUniformData> _textures{};
 	};
 
-	template<typename Texture, typename ...Textures>
-	inline void NodeRenderable::textures(Texture texture_1, Textures ...textures)
-	{
-		_textures.clear();
-
-		if constexpr (std::is_same_v<decltype(texture_1), DepthBuffer>)
-		{
-			TextureUniformData data;
-			data.texture = texture_1.texture;
-			data.sample_depth_buffer = true;
-			_textures.push_back(data);
-		}
-		else
-		{
-			TextureUniformData data;
-			data.texture = texture_1;
-			data.sample_depth_buffer = false;
-			_textures.push_back(data);
-		}
-
-		([&]
-			{
-				if constexpr (std::is_same_v<decltype(textures), DepthBuffer>)
-				{
-					TextureUniformData data;
-					data.texture = textures.texture;
-					data.sample_depth_buffer = true;
-					_textures.push_back(data);
-				}
-				else
-				{
-					TextureUniformData data;
-					data.texture = textures;
-					data.sample_depth_buffer = false;
-					_textures.push_back(data);
-				}
-			} (), ...);
-	}
+	//template<typename Texture, typename ...Textures>
+	//inline void NodeRenderable::textures(Texture texture_1, Textures ...textures)
+	//{
+	//	_textures.clear();
+	//
+	//	if constexpr (std::is_same_v<decltype(texture_1), DepthBuffer>)
+	//	{
+	//		TextureUniformData data;
+	//		data.texture = texture_1.texture;
+	//		data.sample_depth_buffer = true;
+	//		_textures.push_back(data);
+	//	}
+	//	else
+	//	{
+	//		TextureUniformData data;
+	//		data.texture = texture_1;
+	//		data.sample_depth_buffer = false;
+	//		_textures.push_back(data);
+	//	}
+	//
+	//	([&]
+	//		{
+	//			if constexpr (std::is_same_v<decltype(textures), DepthBuffer>)
+	//			{
+	//				TextureUniformData data;
+	//				data.texture = textures.texture;
+	//				data.sample_depth_buffer = true;
+	//				_textures.push_back(data);
+	//			}
+	//			else
+	//			{
+	//				TextureUniformData data;
+	//				data.texture = textures;
+	//				data.sample_depth_buffer = false;
+	//				_textures.push_back(data);
+	//			}
+	//		} (), ...);
+	//}
 
 	template<typename T>
 	inline void NodeRenderable::uniform_buffer(T const& t)

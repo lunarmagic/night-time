@@ -299,8 +299,8 @@ namespace night
 		vec3 contact1 = ray_origin + ray_dir * t1;
 		real c1a = math::distance_to_plane(contact1, cap_a, cyl_dir);
 		real c1b = math::distance_to_plane(contact1, cap_b, -cyl_dir);
-		u8 c1ax = (c1a < 0);
-		u8 c1bx = (c1b < 0);
+		b8 c1ax = (c1a < 0);
+		b8 c1bx = (c1b < 0);
 
 		real min_t = INFINITY;
 		if (c1ax && c1bx)
@@ -353,8 +353,8 @@ namespace night
 		vec3 contact2 = ray_origin + ray_dir * t2;
 		real c2a = math::distance_to_plane(contact2, cap_a, cyl_dir);
 		real c2b = math::distance_to_plane(contact2, cap_b, -cyl_dir);
-		u8 c2ax = (c2a < 0);
-		u8 c2bx = (c2b < 0);
+		b8 c2ax = (c2a < 0);
+		b8 c2bx = (c2b < 0);
 		real max_t = -INFINITY;
 
 		if (c2ax && c2bx)

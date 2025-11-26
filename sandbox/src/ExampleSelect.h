@@ -2,6 +2,8 @@
 
 #include "node/NodeGui.h"
 
+#define EXAMPLE_RENDER_TARGET_DEPTH 0
+
 namespace night
 {
 
@@ -11,7 +13,7 @@ namespace night
 	{
 		ExampleSelect();
 
-		u8 should_snap_camera_back_to_default = false;
+		b8 should_snap_camera_back_to_default = false;
 
 		void perspective_mode(ECameraType mode);
 
@@ -41,16 +43,16 @@ namespace night
 		real _rotationSensitivity{ 1.0f };
 		real _zoomSensitivity{ DEGREES(1.0f) };
 
-		u8 _isTransformingCamera = false;
-		u8 _isRotatingCamera = false;
-		u8 _isPanningCamera = false;
-		u8 _isZoomingCamera = false;
+		b8 _isTransformingCamera = false;
+		b8 _isRotatingCamera = false;
+		b8 _isPanningCamera = false;
+		b8 _isZoomingCamera = false;
 
-		u8 _shouldTransformCamera{ true };
-		u8 _shouldPanCamera{ true };
-		u8 _shouldZoomCamera{ true };
-		u8 _shouldRotateCamera{ true };
-		u8 _shouldResetCamera{ true };
+		b8 _shouldTransformCamera{ true };
+		b8 _shouldPanCamera{ true };
+		b8 _shouldZoomCamera{ true };
+		b8 _shouldRotateCamera{ true };
+		b8 _shouldResetCamera{ true };
 
 		void reset_camera();
 	};

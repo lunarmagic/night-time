@@ -33,8 +33,8 @@ namespace night
 	{
 		vector<AnimationKeyframe> keyframes;
 		real playback_speed = 1.0f;
-		u8 should_loop = false;
-		u8 should_render_when_paused = true;
+		b8 should_loop = false;
+		b8 should_render_when_paused = true;
 		function<void()> on_finish = nullptr;
 	};
 
@@ -44,9 +44,9 @@ namespace night
 
 		virtual void initialize(NodeAnimationParams const& params);
 
-		virtual u8 play();
-		virtual u8 pause();
-		virtual u8 resume();
+		virtual b8 play();
+		virtual b8 pause();
+		virtual b8 resume();
 		virtual void reset();
 		virtual void finish();
 
@@ -55,16 +55,16 @@ namespace night
 		void keyframes(vector<AnimationKeyframe> const& keyframes);
 		void clear();
 
-		u8 is_playing() const { return _state == ENodeAnimationState::Playing; }
-		u8 is_reset() const { return _state == ENodeAnimationState::Reset; }
-		u8 is_finished() const { return _state == ENodeAnimationState::Finished; }
+		b8 is_playing() const { return _state == ENodeAnimationState::Playing; }
+		b8 is_reset() const { return _state == ENodeAnimationState::Reset; }
+		b8 is_finished() const { return _state == ENodeAnimationState::Finished; }
 		real animation_time() const;
 
 		ENodeAnimationState state() { return _state; };
 
 		real playback_speed = 1.0f;
-		u8 should_loop = false;
-		u8 should_render_when_paused = true;
+		b8 should_loop = false;
+		b8 should_render_when_paused = true;
 
 	protected:
 

@@ -6,7 +6,7 @@
 namespace night
 {
 
-	//u8 Convex::is_clockwise(vector<vec2> const& convex)
+	//b8 Convex::is_clockwise(vector<vec2> const& convex)
 	//{
 	//	for (s32 i = 0; i < convex.size(); i++)
 	//	{
@@ -64,7 +64,7 @@ namespace night
 	//		angles.push_back(angle);
 	//	}
 	//
-	//	std::sort(angles.begin(), angles.end(), [](auto& a, auto& b) -> u8 {return a.angle < b.angle; });
+	//	std::sort(angles.begin(), angles.end(), [](auto& a, auto& b) -> b8 {return a.angle < b.angle; });
 	//
 	//	for (s32 i = 0; i < angles.size(); i++)
 	//	{

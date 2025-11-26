@@ -1,8 +1,6 @@
 #pragma once
 
-//#include "NodeRenderable.h"
 #include "NodeRenderTarget.h"
-//#include "debug_renderer/DebugRenderer.h"
 
 namespace night
 {
@@ -24,22 +22,24 @@ namespace night
 		Right,
 		Top,
 		Bottom
-		// TODO make more dockspaces for in between the above ones
+	};
+
+	enum struct EGrabbedNodeWindowAction : s32
+	{
+		None = 0,
+		Move,
+		Resize
 	};
 
 	struct NodeWindowParams
 	{
 		vec2 position{vec2(-1.0f, 1.0f)}; // top left of window
 		vec2 size{ vec2(2.0f) };
-		u8 borderless = false;
+		b8 borderless = false;
 		ENodeWindowState state{ENodeWindowState::Free};
 		ENodeWindowDockWhere dock_where{ ENodeWindowDockWhere::None };
-		AABB<> dock_space{ AABB<>{ 0, 0, 0, 0 } };
+		AABB<> dock_space{ AABB<>{ .left = 0, .top = 0, .right = 0, .bottom = 0 } };
 
-		/*
-		* NodeWindowParams::down_scale
-		* divides resolution from find_internal_resolution by value on init, and resize
-		*/
 		real internal_resolution_scale{ 1 };
 
 		function<void()> on_close = nullptr;
@@ -50,21 +50,15 @@ namespace night
 	struct NIGHT_API NodeWindow : public NodeRenderTarget
 	{
 		NodeWindow(NodeWindowParams params = {});
+		~NodeWindow();
 
-		vec2 window_coord_to_local_coord(vec2 const& window_coord) const;
-		vec2 window_motion_to_local_motion(vec2 const& window_motion) const;
-
-		Ray3D<real> mouse_pick(vec2 const& window_mouse_position) const;
-
-		Quad<> global_area();
+		AABB<> base_render_target_window_area();
 
 		void dock_where(ENodeWindowDockWhere where);
 		ENodeWindowDockWhere const& dock_where() const { return _dockWhere; }
 
 		void dock_space(AABB<> space);
 		AABB<> const& dock_space() const { return _dockSpace; }
-
-		ivec2 find_internal_resolution() const;
 
 		void internal_resolution_scale(real scale);
 		real const& internal_resolution_scale() const { return _internalResolutionScale; }
@@ -73,8 +67,21 @@ namespace night
 		function<void()> const& on_close() const { return _onClose; }
 
 		vec2 mouse();
+		Ray3D<real> mouse_pick(vec2 const& local_coord) const;
 
-		virtual void on_event(Event& event, u8 pass_down_event = true) override;
+		b8 is_moveable() const;
+
+		vec2 const& position() const { return _position; };
+		void position(vec2 const& position);
+
+		vec2 base_render_target_coord_to_local_coord(vec2 const& window_coord) const;
+		vec2 base_render_target_motion_to_local_motion(vec2 const& window_motion) const;
+
+		virtual void on_event(Event& event, b8 pass_down_event = true) override;
+
+		u64 window_stack_depth() const;
+		void push_to_top_of_window_stack();
+		b8 is_at_top_of_window_stack() const;
 
 	protected:
 
@@ -82,33 +89,47 @@ namespace night
 
 	private:
 
-		vec2 event_mouse_position(vec2 const& parent_mouse_position) const;
-		vec2 event_mouse_motion(vec2 const& parent_mouse_motion) const;
+		vec2 passed_down_local_coord(vec2 const& local_coord) const;
+		vec2 passed_down_local_motion(vec2 const& local_motion) const;
 
-		// depth of most recently clicked/created window is set to max
 		// TODO: make static depth for all windows, increment by one every click/creation
 		vec2 _position{};
 		vec2 _size{};
-		u8 _borderless;
+		b8 _borderless;
 		ENodeWindowState _state;
 		u64 _windowDepth{ 0 };
-		AABB<> _dockSpace{ AABB<>{ 0, 0, 0, 0 } };
+		AABB<> _dockSpace{ AABB<>{ .left = 0, .top = 0, .right = 0, .bottom = 0 } };
 		ENodeWindowDockWhere _dockWhere{ ENodeWindowDockWhere::None };
 
-		/*
-		* NodeWindow::_downScale
-		* scales resolution from find_internal_resolution by value on init, and resize
-		*/
+		Color _borderColor = GREY;
+		Color _outlineColor = GREY.darken(0.75f);
+		real _handleBarHeight = 0.03f;
+		real _outerEdgeWidth = 0.003f;
+		real _edgeSmoothing = 0.003f;
+
+		handle<NodeWindow> _grabbedWindow = nullptr;
+		EGrabbedNodeWindowAction _grabbedWindowAction = EGrabbedNodeWindowAction::None;
+
+		static list<handle<NodeWindow>> _windowStack;
+		list<handle<NodeWindow>>::iterator _stackIterator;
+
 		real _internalResolutionScale{ 1 };
 
-		// TODO: add close button to window.
 		function<void()> _onClose = nullptr;
 
-		ivec4 area_internal() const;
-		AABB<> area_clamped_to_pixel_grid() const;
-		AABB<> docking_area(ENodeWindowDockWhere where) const;
+		ivec2 calculate_internal_resolution() const;
 
-		Quad<> global_area_rec(AABB<> area);
+		AABB<> window_area(b8 local) const;
+		AABB<> handle_area(b8 local) const;
+		AABB<s32> window_area_internal() const;
+		AABB<> window_area_clamped_to_pixel_grid(b8 local) const;
+		
+		AABB<> dock_area(ENodeWindowDockWhere where) const;
+
+		AABB<> base_render_target_window_area_rec(AABB<> const& area);
+
+		//vec2 window_coord_to_local_coord_rec(vec2 const& window_coord) const;
+		//vec2 window_motion_to_local_motion_rec(vec2 const& window_motion) const;
 	};
 
 }

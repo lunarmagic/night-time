@@ -195,19 +195,19 @@ namespace night
 		return _target->internal_to_global(internal);
 	}
 
-	void NodeRenderTarget::should_use_blending(u8 x)
+	void NodeRenderTarget::should_use_blending(b8 x)
 	{
 		ASSERT(target() != nullptr);
 		_target->should_use_blending = x;
 	}
 
-	void NodeRenderTarget::should_use_depth_testing(u8 x)
+	void NodeRenderTarget::should_use_depth_testing(b8 x)
 	{
 		ASSERT(target() != nullptr);
 		_target->should_use_depth_testing = x;
 	}
 
-	void NodeRenderTarget::should_use_depth_peeling(u8 x)
+	void NodeRenderTarget::should_use_depth_peeling(b8 x)
 	{
 		ASSERT(target() != nullptr);
 		_target->should_use_depth_peeling = x;

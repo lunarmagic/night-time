@@ -15,17 +15,17 @@ namespace night
 	{
 		s32 width{ 0 };
 		s32 height{ 0 };
-		u8 should_inherit_parent_resolution{ true };
+		b8 should_inherit_parent_resolution{ true };
 
 		real depth{ 0.0f };
 
 		Color clear_color{ COLOR_ZERO };
 
-		u8 should_use_depth_peeling{ true };
-		u8 should_use_depth_testing{ true };
-		u8 should_use_blending{ true };
-		u8 should_automatically_clear{ true };
-		u8 should_automatically_render{ true };
+		b8 should_use_depth_peeling{ true };
+		b8 should_use_depth_testing{ true };
+		b8 should_use_blending{ true };
+		b8 should_automatically_clear{ true };
+		b8 should_automatically_render{ true };
 
 		ETextureFiltering filtering{ETextureFiltering::Nearest};
 
@@ -36,7 +36,7 @@ namespace night
 			.up = UP,
 			.type = ECameraType::Orthographic,
 			.fov = NIGHT_CAMERA_DEFAULT_FOV,
-			.ortho_region = {.left = -1, .right = 1, .top = 1, .bottom = -1 },
+			.ortho_region = {.left = -1, .top = 1, .right = 1, .bottom = -1 },
 			.near_clip = RENDERER_DEFAULT_RENDER_TARGET_NEAR_CLIP,
 			.far_clip = RENDERER_DEFAULT_RENDER_TARGET_FAR_CLIP
 		};
@@ -69,18 +69,18 @@ namespace night
 		ivec2 global_to_internal(vec2 const& global) const;
 		vec2 internal_to_global(ivec2 const& internal) const;
 
-		void should_use_blending(u8 x);
-		void should_use_depth_testing(u8 x);
-		void should_use_depth_peeling(u8 x);
+		void should_use_blending(b8 x);
+		void should_use_depth_testing(b8 x);
+		void should_use_depth_peeling(b8 x);
 
 		Color clear_color{ COLOR_ZERO };
-		u8 should_automatically_clear{ true };
-		u8 should_automatically_render{ true };
+		b8 should_automatically_clear{ true };
+		b8 should_automatically_render{ true };
 
 		real depth{ 0.0f };
 
 		void manually_render_this_frame() { _isPendingManualRender = true; }
-		u8 const& is_pending_manual_render() const { return _isPendingManualRender; }
+		b8 const& is_pending_manual_render() const { return _isPendingManualRender; }
 
 		handle<const ITexture> target() const { return _target; }
 
@@ -102,14 +102,14 @@ namespace night
 		// do not destroy the target from subclass
 		handle<ITexture> _target{ nullptr };
 
-		u8 should_inherit_parent_resolution{ true };
+		b8 should_inherit_parent_resolution{ true };
 
 	private:
 
 		s32 _pendingWidth;
 		s32 _pendingHeight;
 
-		u8 _isPendingManualRender{ false };
+		b8 _isPendingManualRender{ false };
 
 		friend struct NodeRenderable;
 	};

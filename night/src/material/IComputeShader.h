@@ -12,7 +12,7 @@ namespace night
 		string path;
 		string from_memory;
 		//string path;
-		//u8 load_from_memory{ false };
+		//b8 load_from_memory{ false };
 	};
 
 	// do not dispatch compute shader in non-main thread
@@ -48,13 +48,13 @@ namespace night
 		//void num_groups(ivec3 num) { _numGroups = num; }
 		//ivec3 const& num_groups() const { return _numGroups; }
 
-		static void update_compute_shaders();
+		//static void update_compute_shaders();
 
 	protected:
 
 		ComputeShaderParams _params;
-		virtual u8 load_from_path(const string& path) = 0;
-		virtual u8 load_from_memory(const string& str) = 0;
+		virtual b8 load_from_path(const string& path) = 0;
+		virtual b8 load_from_memory(const string& str) = 0;
 
 	private:
 
@@ -69,7 +69,7 @@ namespace night
 		//};
 		//static vector<MainThreadDispatch> _toBeDispatchedInMainThread;
 
-		static set<handle<IComputeShader>> _toBeInitialized;
+		//static set<handle<IComputeShader>> _toBeInitialized;
 		//ivec3 _numGroups{ ivec3(1, 1, 1) };
 	};
 

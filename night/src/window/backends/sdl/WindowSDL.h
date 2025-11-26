@@ -34,8 +34,8 @@ namespace night
 		static SDL_Color sdl_color(const Color& color);
 
 		virtual vec2 mouse() const override;
-		virtual u8 mouse_down(EMouse mouse) const override;
-		virtual u8 key_down(EKey const& key) const override;
+		virtual b8 mouse_down(EMouse mouse) const override;
+		virtual b8 key_down(EKey const& key) const override;
 
 		SDL_Window* sdl_window() const { return _sdlWindow; }
 
@@ -43,11 +43,22 @@ namespace night
 		//fvec2 local_to_internal(const fvec2& coordinate) const;
 		vec2 internal_to_local(const ivec2& coordinate) const;
 
-		virtual void cursor_visibility(u8 visibility) override;
-		virtual u8 cursor_visibility() const override;
+		virtual void cursor_visibility(b8 visibility) override;
+		virtual b8 cursor_visibility() const override;
 
-		virtual void fullscreen(u8 make_fullscreen) override;
-		virtual u8 fullscreen() const override;
+		virtual void fullscreen(b8 make_fullscreen) override;
+		virtual b8 fullscreen() const override;
+
+		//virtual void grab_mouse(b8 should_grab) override;
+		//virtual b8 grab_mouse() override;
+
+		virtual void grab_mouse() override;
+		virtual void release_mouse() override;
+		virtual b8 is_mouse_grabbed() override;
+
+		virtual void warp_mouse(vec2 window_position) override;
+
+		virtual vec2 mouse_motion() const override { return _mouseMotion; }
 
 		virtual real precise_time_elapsed() override;
 
@@ -61,7 +72,16 @@ namespace night
 
 		u64 _frameTick;
 		u64 _startTick;
-		u8 _isFullscreen{ false };
+		b8 _isFullscreen{ false };
+		b8 _isCursorVisible = true;
+		b8 _isMouseGrabbed = false;
+
+		vec2 _mousePosition = vec2(0);
+		u32 _mouseButtonState = {};
+
+		vec2 _mouseMotion = vec2(0);
+
+		//vec2 _mousePositionBeforeGrabbing = vec2(0);
 	};
 
 }

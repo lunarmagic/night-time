@@ -9,7 +9,7 @@ namespace night
 	{
 		u32 type;
 		u32 count;
-		u8 normalized;
+		b8 normalized;
 
 		static u32 sizeOfType(u32 type);
 	};

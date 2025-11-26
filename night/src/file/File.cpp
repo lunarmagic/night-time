@@ -5,7 +5,7 @@
 
 namespace night
 {
-	u8 File::write()
+	b8 File::write()
 	{
 		if (_data.empty())
 		{
@@ -22,7 +22,7 @@ namespace night
 		return write(_data);
 	}
 
-	u8 File::write(string const& path)
+	b8 File::write(string const& path)
 	{
 		function<void(File const&, ofstream&, s32)> rf = [&](File const& df, ofstream& out_stream, s32 depth)
 		{
@@ -82,7 +82,7 @@ namespace night
 	}
 
 	// TODO: add header only option.
-	u8 File::read(string const& path)
+	b8 File::read(string const& path)
 	{
 		if (!std::filesystem::exists(path))
 		{

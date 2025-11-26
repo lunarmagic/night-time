@@ -175,12 +175,12 @@ namespace night
 		return Application::get().action_map;
 	}
 
-	u8 utility::key_down(EKey const& key)
+	b8 utility::key_down(EKey const& key)
 	{
 		return Application::get().window().key_down(key);
 	}
 
-	u8 utility::mouse_down(EMouse const& mouse)
+	b8 utility::mouse_down(EMouse const& mouse)
 	{
 		return Application::get().window().mouse_down(mouse);
 	}

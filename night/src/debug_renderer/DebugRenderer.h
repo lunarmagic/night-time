@@ -158,10 +158,10 @@ namespace night
 			TRACE("draw_format missing, type: {0}", typeid(T).name());
 		}
 
-		static void push_draw_function(function<void()> fn, u8 is_algo = false);
+		static void push_draw_function(function<void()> fn, b8 is_algo = false);
 
 		template<typename T> 
-		static void draw_object(T& t, u8 is_algo = false)
+		static void draw_object(T& t, b8 is_algo = false)
 		{
 			push_draw_function([=]() mutable
 				{
@@ -178,29 +178,29 @@ namespace night
 			Color color;
 		};
 
-		static void draw_point(DrawPointParams const& params, u8 is_algo = false);
-		static void draw_point(vec3 const& point, Color const& color = LIGHT_BLUE, u8 is_algo = false)
+		static void draw_point(DrawPointParams const& params, b8 is_algo = false);
+		static void draw_point(vec3 const& point, Color const& color = LIGHT_BLUE, b8 is_algo = false)
 		{
 			draw_point(DrawPointParams{ .point = point, .color = color }, is_algo);
 		}
-		static void draw_point(vec2 const& point, Color const& color = LIGHT_BLUE, u8 is_algo = false)
+		static void draw_point(vec2 const& point, Color const& color = LIGHT_BLUE, b8 is_algo = false)
 		{
 			draw_point(DrawPointParams{ .point = vec3(point, 0), .color = color }, is_algo);
 		}
 
-		static void draw_line(DrawLineParams const& params, u8 is_algo = false);
-		static void draw_line(vec3 const& p1, vec3 const& p2, Color const& color = RED, u8 is_algo = false)
+		static void draw_line(DrawLineParams const& params, b8 is_algo = false);
+		static void draw_line(vec3 const& p1, vec3 const& p2, Color const& color = RED, b8 is_algo = false)
 		{
 			draw_line(DrawLineParams{ .p1 = p1, .p2 = p2, .color = color }, is_algo);
 		}
-		static void draw_line(vec2 const& p1, vec2 const& p2, Color const& color = RED, u8 is_algo = false)
+		static void draw_line(vec2 const& p1, vec2 const& p2, Color const& color = RED, b8 is_algo = false)
 		{
 			draw_line(DrawLineParams{ .p1 = vec3(p1, 0), .p2 = vec3(p2, 0), .color = color }, is_algo);
 		}
 
-		static void draw_quad(Quad<> const& quad, u8 is_algo = false);
+		static void draw_quad(Quad<> const& quad, b8 is_algo = false);
 
-		static void draw_text(Text const& text, u8 is_algo = false);
+		static void draw_text(Text const& text, b8 is_algo = false);
 
 		struct DrawHoverTextParams
 		{
@@ -210,7 +210,7 @@ namespace night
 			Color color{ WHITE };
 		};
 
-		static void draw_hover_text(DrawHoverTextParams const& params, u8 is_algo = false);
+		static void draw_hover_text(DrawHoverTextParams const& params, b8 is_algo = false);
 
 		struct DrawArrowParams
 		{
@@ -220,7 +220,7 @@ namespace night
 			Color color{ RED };
 		};
 
-		static void draw_arrow(DrawArrowParams const& params, u8 is_algo = false);
+		static void draw_arrow(DrawArrowParams const& params, b8 is_algo = false);
 
 		struct DrawPlaneParams
 		{
@@ -232,7 +232,7 @@ namespace night
 			//RenderGraph& out_graph; // TODO: make render graph a static member so we don't need to call the draw functions in the draw callback
 		};
 
-		static void draw_plane(DrawPlaneParams const& params, u8 is_algo = false);
+		static void draw_plane(DrawPlaneParams const& params, b8 is_algo = false);
 
 		struct DrawEllipseParams
 		{
@@ -246,7 +246,7 @@ namespace night
 			s32 segments{ 32 };
 		};
 
-		static void draw_ellipse(DrawEllipseParams const& params, u8 is_algo = false);
+		static void draw_ellipse(DrawEllipseParams const& params, b8 is_algo = false);
 
 		struct DrawSphereParams
 		{
@@ -256,7 +256,7 @@ namespace night
 			s32 segments{ 32 };
 		};
 
-		static void draw_sphere(DrawSphereParams const& params, u8 is_algo = false);
+		static void draw_sphere(DrawSphereParams const& params, b8 is_algo = false);
 
 		struct DrawCylinderParams
 		{
@@ -268,22 +268,27 @@ namespace night
 			s32 segments{ 32 };
 		};
 
-		static void draw_cylinder(DrawCylinderParams const& params, u8 is_algo = false);
+		static void draw_cylinder(DrawCylinderParams const& params, b8 is_algo = false);
 
 		static RenderGraph& render_graph() { return _renderGraph; }
 		static IGui& gui(); // may want to use a dummy gui and apply elements delayed.
 
 		static void camera(Camera const& camera); // TODO: update camera automatically, flush render graph for each camera, camera is set according to currently processed nodes
 
-		static u8 algo_should_break();
+		static b8 algo_should_break();
 
-		static u8 should_save_debug_textures() { return _assetsShouldSaveDebugTextures; }
+		static b8 should_save_debug_textures() { return _assetsShouldSaveDebugTextures; }
+
+		static b8 wants_input() { return _wantsInput; }
 
 	protected:
 		DebugRenderer() = default;
 		DebugRenderer(DebugRenderer const& other) = default;
 
 	private:
+
+		inline static b8 _wantsInput = false;
+		//inline static shandle<INode> _nodlessDummyNode = nullptr;
 
 		static EDebugRendererTab _guiCurrentTab;
 		static vector<handle<INode>> _guiSelectedInvolvedNodes;
@@ -312,8 +317,8 @@ namespace night
 			vector<RenderStep> render_steps;
 		};
 
-		//static u8 _algoIsAutoUpdating;
-		inline static u8 _algoIsActive = true;
+		//static b8 _algoIsAutoUpdating;
+		inline static b8 _algoIsActive = true;
 		static map<vector<handle<INode>>, map<string, Algorithm>> _algoInvolvedNodes;
 		//static vector<handle<INode>> _algoCurrentlyInvolvedNodes;
 
@@ -331,16 +336,16 @@ namespace night
 		static CameraTransform _algoCameraTransform;
 
 		//static handle<ITexture> _sceneRenderTarget;
-		static umap<handle<INode>, u8> _sceneSelectedNodes;
+		static umap<handle<INode>, b8> _sceneSelectedNodes;
 		static umap<type_index, function<void(void*)>> _sceneObjectDrawFunctionTable;
 
 		static handle<ITexture> _renderTarget;
 		static RenderGraph _renderGraph;
 
 		static string _assetsSelectedTexture;
-		static u8 _assetsTextureShowDepthBuffer;
+		static b8 _assetsTextureShowDepthBuffer;
 
-		static u8 _assetsShouldSaveDebugTextures;
+		static b8 _assetsShouldSaveDebugTextures;
 
 		static void scene_render();
 		static void algo_render();

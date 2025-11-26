@@ -106,57 +106,79 @@ namespace night
 		ImGui::DestroyContext();
 	}
 
-	u8 Gui::begin(string const& name, u8* p_open, EGuiWindow flags)
+	b8 Gui::begin(string const& name, b8* p_open, EGuiWindow flags)
 	{
 		return ImGui::Begin(name.c_str(), (bool*)p_open, (ImGuiWindowFlags_)flags); // TODO: make flags
 	}
 
-	u8 Gui::button(string const& name)
+	b8 Gui::button(string const& name)
 	{
 		return ImGui::Button(name.c_str());
 	}
 
-	u8 Gui::checkbox(string const& name, u8 const* x)
+	b8 Gui::checkbox(string const& name, b8 const* x)
 	{
-		return ImGui::Checkbox(name.c_str(), (bool*)const_cast<u8*>(x));
+		return ImGui::Checkbox(name.c_str(), (bool*)const_cast<b8*>(x));
 	}
 
-	u8 Gui::drag_r32(string const& name, r32 const* r, r32 speed, r32 min, r32 max)
+	b8 Gui::drag_real(string const& name, real const* r, real speed, real min, real max)
 	{
-		return ImGui::DragFloat(name.c_str(), const_cast<r32*>(r), speed, min, max);
+		real* cc = const_cast<real*>(r);
+		float f = (float)*r;
+		u8 result = ImGui::DragFloat(name.c_str(), &f, (r32)speed, (r32)min, (r32)max);
+		*cc = (real)f;
+		return result;
 	}
 
-	u8 Gui::drag_s32(string const& name, s32 const* i, r32 speed, s32 min, s32 max)
+	b8 Gui::drag_s32(string const& name, s32 const* i, real speed, s32 min, s32 max)
 	{
 		if (max <= min || min > max)
 		{
 			s32 dummy = min;
-			return ImGui::DragInt(name.c_str(), &dummy, speed, min, max);
+			return ImGui::DragInt(name.c_str(), &dummy, (r32)speed, min, max);
 		}
-		return ImGui::DragInt(name.c_str(), const_cast<s32*>(i), speed, min, max);
+
+		return ImGui::DragInt(name.c_str(), const_cast<s32*>(i), (r32)speed, min, max);
 	}
 
-	u8 Gui::drag_vec2(string const& name, vec2 const* v, r32 speed, r32 min, r32 max)
+	b8 Gui::drag_vec2(string const& name, vec2 const* v, real speed, real min, real max)
 	{
-		return ImGui::DragFloat2(name.c_str(), const_cast<float*>((float*)v), speed, min, max);
+		vec2* cc = const_cast<vec2*>(v);
+		fvec2 cast = (fvec2)*v;
+		u8 result = ImGui::DragFloat2(name.c_str(), (float*)&cast, (r32)speed, (r32)min, (r32)max);
+		*cc = (fvec2)cast;
+		return result;
+
+		//return ImGui::DragFloat2(name.c_str(), const_cast<float*>((float*)v), speed, min, max);
 	};
 
-	u8 Gui::drag_vec3(string const& name, vec3 const* v, r32 speed, r32 min, r32 max)
+	b8 Gui::drag_vec3(string const& name, vec3 const* v, real speed, real min, real max)
 	{
-		return ImGui::DragFloat3(name.c_str(), const_cast<float*>((float*)v), speed, min, max);
+		vec3* cc = const_cast<vec3*>(v);
+		fvec3 cast = (fvec3)*v;
+		u8 result = ImGui::DragFloat3(name.c_str(), (float*)&cast, (r32)speed, (r32)min, (r32)max);
+		*cc = (fvec3)cast;
+		return result;
+		//return ImGui::DragFloat3(name.c_str(), const_cast<float*>((float*)v), speed, min, max);
 	};
 
-	u8 Gui::drag_vec4(string const& name, vec4 const* v, r32 speed, r32 min, r32 max)
+	b8 Gui::drag_vec4(string const& name, vec4 const* v, real speed, real min, real max)
 	{
-		return ImGui::DragFloat4(name.c_str(), const_cast<float*>((float*)v), speed, min, max);
+		vec4* cc = const_cast<vec4*>(v);
+		fvec4 cast = (fvec4)*v;
+		u8 result = ImGui::DragFloat4(name.c_str(), (float*)&cast, (r32)speed, (r32)min, (r32)max);
+		*cc = (fvec4)cast;
+		return result;
+		//return ImGui::DragFloat4(name.c_str(), const_cast<float*>((float*)v), speed, min, max);
 	};
 
-	u8 Gui::drag_ivec4(string const& name, ivec4 const* v, r32 speed, s32 min, s32 max)
+	b8 Gui::drag_ivec4(string const& name, ivec4 const* v, real speed, s32 min, s32 max)
 	{
-		return ImGui::DragInt4(name.c_str(), const_cast<int*>((int*)v), speed, min, max);
+		return ImGui::DragInt4(name.c_str(), const_cast<int*>((int*)v), (r32)speed, min, max);
+		//return ImGui::DragInt4(name.c_str(), const_cast<int*>((int*)v), speed, min, max);
 	}
 
-	u8 Gui::input_text(string const& name, string& out_buffer, string const& hint)
+	b8 Gui::input_text(string const& name, string& out_buffer, string const& hint)
 	{
 		if (hint.empty())
 		{
@@ -168,7 +190,7 @@ namespace night
 		}
 	}
 
-	u8 Gui::tree_node(string const& name, u8 selected)
+	b8 Gui::tree_node(string const& name, b8 selected)
 	{
 		s32 flags = 0;
 		flags |= ImGuiTreeNodeFlags_DefaultOpen;
@@ -183,7 +205,7 @@ namespace night
 		ImGui::TreePop();
 	}
 
-	u8 Gui::begin_menu_bar()
+	b8 Gui::begin_menu_bar()
 	{
 		return ImGui::BeginMenuBar();
 	}
@@ -193,7 +215,7 @@ namespace night
 		ImGui::EndMenuBar();
 	}
 
-	u8 Gui::begin_menu(string const& name)
+	b8 Gui::begin_menu(string const& name)
 	{
 		return ImGui::BeginMenu(name.c_str());
 	}
@@ -203,12 +225,12 @@ namespace night
 		ImGui::EndMenu();
 	}
 
-	u8 Gui::menu_item(string const& name, u8 selected)
+	b8 Gui::menu_item(string const& name, b8 selected)
 	{
 		return ImGui::MenuItem(name.c_str(), NULL, false);
 	}
 
-	u8 Gui::begin_list_box(string const& name)
+	b8 Gui::begin_list_box(string const& name)
 	{
 		return ImGui::BeginListBox(name.c_str());
 	}
@@ -223,13 +245,13 @@ namespace night
 	ImVec2 canvas_sz;
 	static ImVec2 canvas_p1;
 
-	u8 Gui::begin_canvas(string const& name, real height_ratio, Color const& fill)
+	b8 Gui::begin_canvas(string const& name, real height_ratio, Color const& fill)
 	{
 		canvas_p0 = ImGui::GetCursorScreenPos();
 		canvas_sz = ImGui::GetContentRegionAvail();   // Resize canvas to what's available
 		//if (canvas_sz.x > max_size.x) canvas_sz.x = max_size.x;
 		//if (canvas_sz.y > max_size.y) canvas_sz.y = max_size.y;
-		canvas_sz.y = canvas_sz.x * height_ratio;
+		canvas_sz.y = canvas_sz.x * (float)height_ratio;
 		canvas_p1 = ImVec2(canvas_p0.x + canvas_sz.x, canvas_p0.y + canvas_sz.y);
 
 		ImGui::InvisibleButton("Canvas", canvas_sz, ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight);
@@ -245,7 +267,7 @@ namespace night
 		return true;
 	}
 
-	u8 Gui::canvas_line(vec2 const& p1, vec2 const& p2, Color const& color, real thickness)
+	b8 Gui::canvas_line(vec2 const& p1, vec2 const& p2, Color const& color, real thickness)
 	{
 		vec2 p1p;
 		p1p.x = (p1.x + 1.0f) * canvas_sz.x / 2.0f;
@@ -258,16 +280,16 @@ namespace night
 		Color8 color8 = Color8(color);
 
 		draw_list->AddLine(
-			ImVec2(canvas_p0.x + p1p.x, canvas_p0.y + p1p.y),
-			ImVec2(canvas_p0.x + p2p.x, canvas_p0.y + p2p.y),
+			ImVec2(canvas_p0.x + (float)p1p.x, canvas_p0.y + (float)p1p.y),
+			ImVec2(canvas_p0.x + (float)p2p.x, canvas_p0.y + (float)p2p.y),
 			IM_COL32(color8.r, color8.g, color8.b, color8.a),
-			thickness
+			(float)thickness
 		);
 
 		return true;
 	}
 
-	u8 Gui::canvas_circle(vec2 const& point, real const& radius, Color const& color)
+	b8 Gui::canvas_circle(vec2 const& point, real const& radius, Color const& color)
 	{
 		vec2 pp;
 		pp.x = (point.x + 1.0f) * canvas_sz.x / 2.0f;
@@ -276,15 +298,15 @@ namespace night
 		Color8 color8 = Color8(color);
 
 		draw_list->AddCircle(
-			ImVec2(canvas_p0.x + pp.x, canvas_p0.y + pp.y),
-			radius,
+			ImVec2(canvas_p0.x + (float)pp.x, canvas_p0.y + (float)pp.y),
+			(float)radius,
 			IM_COL32(color8.r, color8.g, color8.b, color8.a)
 		);
 
 		return true;
 	}
 
-	u8 Gui::canvas_circle_filled(vec2 const& point, real const& radius, Color const& color)
+	b8 Gui::canvas_circle_filled(vec2 const& point, real const& radius, Color const& color)
 	{
 		vec2 pp;
 		pp.x = (point.x + 1.0f) * canvas_sz.x / 2.0f;
@@ -293,8 +315,8 @@ namespace night
 		Color8 color8 = Color8(color);
 
 		draw_list->AddCircleFilled(
-			ImVec2(canvas_p0.x + pp.x, canvas_p0.y + pp.y),
-			radius,
+			ImVec2(canvas_p0.x + (float)pp.x, canvas_p0.y + (float)pp.y),
+			(float)radius,
 			IM_COL32(color8.r, color8.g, color8.b, color8.a)
 		);
 
@@ -318,9 +340,9 @@ namespace night
 		ImGui::Spacing();
 	}
 
-	u8 Gui::begin_child(string const& name, vec2 size)
+	b8 Gui::begin_child(string const& name, vec2 size)
 	{
-		return ImGui::BeginChild(name.c_str(), {size.x, size.y}, ImGuiChildFlags_Borders | ImGuiChildFlags_ResizeX);
+		return ImGui::BeginChild(name.c_str(), { (float)size.x, (float)size.y}, ImGuiChildFlags_Borders | ImGuiChildFlags_ResizeX);
 	}
 
 	void Gui::end_child()
@@ -348,12 +370,12 @@ namespace night
 		ImGui::Separator();
 	}
 
-	u8 Gui::selectable(string const& label, u8 is_selected)
+	b8 Gui::selectable(string const& label, b8 is_selected)
 	{
 		return ImGui::Selectable(label.c_str(), is_selected);
 	}
 
-	u8 Gui::is_item_clicked(EMouse button)
+	b8 Gui::is_item_clicked(EMouse button)
 	{
 		ImGuiMouseButton_ b;
 
@@ -379,7 +401,7 @@ namespace night
 		return ImGui::IsItemClicked(b);
 	}
 
-	u8 Gui::is_mouse_down(EMouse button)
+	b8 Gui::is_mouse_down(EMouse button)
 	{
 		ImGuiMouseButton_ b;
 
@@ -405,7 +427,7 @@ namespace night
 		return ImGui::IsMouseDown(b);
 	}
 
-	u8 Gui::is_mouse_released(EMouse button)
+	b8 Gui::is_mouse_released(EMouse button)
 	{
 		ImGuiMouseButton_ b;
 
@@ -436,7 +458,7 @@ namespace night
 		return ImGui::GetFrameHeightWithSpacing();
 	}
 
-	u8 Gui::set_next_window_size(vec2 const& size)
+	b8 Gui::set_next_window_size(vec2 const& size)
 	{
 		s32 w = utility::window().width();
 		s32 h = utility::window().height();
@@ -445,11 +467,11 @@ namespace night
 		real x = (size.x * ar.x) / 2 * w;
 		real y = (size.y * ar.y) / 2 * h;
 
-		ImGui::SetNextWindowSize({ x, y });
+		ImGui::SetNextWindowSize({ (float)x, (float)y });
 		return true;
 	}
 
-	u8 Gui::set_next_window_position(vec2 const& position)
+	b8 Gui::set_next_window_position(vec2 const& position)
 	{
 		s32 w = utility::window().width();
 		s32 h = utility::window().height();
@@ -457,7 +479,7 @@ namespace night
 
 		real x = ((position.x * ar.x + 1.0f) / 2) * w;
 		real y = ((-position.y * ar.y + 1.0f) / 2) * h;
-		ImGui::SetNextWindowPos({ x, y });
+		ImGui::SetNextWindowPos({ (float)x, (float)y });
 		return true;
 	}
 
